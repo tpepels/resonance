@@ -212,8 +212,27 @@ def score_release(
     # Track count match
     track_count_match = evidence.track_count == release.track_count
 
-    # Duration fit (simplified for now)
-    duration_fit = 1.0 if track_count_match else 0.5
+    # Duration fit (deterministic integer bucketing)
+    if evidence.total_duration_seconds and all(
+        track.duration_seconds is not None for track in release.tracks
+    ):
+        release_total = sum(track.duration_seconds or 0 for track in release.tracks)
+        if release_total > 0:
+            diff = abs(evidence.total_duration_seconds - release_total)
+            if diff == 0:
+                duration_fit = 1.0
+            elif diff <= 5:
+                duration_fit = 0.9
+            elif diff <= 30:
+                duration_fit = 0.8
+            elif diff <= 60:
+                duration_fit = 0.7
+            else:
+                duration_fit = 0.5
+        else:
+            duration_fit = 1.0 if track_count_match else 0.5
+    else:
+        duration_fit = 1.0 if track_count_match else 0.5
 
     # Year penalty (placeholder)
     year_penalty = 0.0

@@ -110,6 +110,33 @@ def main() -> int:
         help="Cache database path",
     )
 
+    # Apply command (execute stored plan)
+    apply_parser = subparsers.add_parser(
+        "apply",
+        help="Apply a stored plan artifact",
+    )
+    apply_parser.add_argument(
+        "--plan",
+        type=Path,
+        help="Path to plan artifact",
+    )
+    apply_parser.add_argument(
+        "--state-db",
+        type=Path,
+        help="Directory state DB path",
+    )
+    apply_parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path.home() / ".config" / "resonance" / "settings.json",
+        help="Settings path (default: ~/.config/resonance/settings.json)",
+    )
+    apply_parser.add_argument(
+        "--tag-writer-backend",
+        choices=["meta-json", "mutagen"],
+        help="Override tag writer backend for this run",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -129,6 +156,9 @@ def main() -> int:
     elif args.command == "prescan":
         from .commands.prescan import run_prescan
         return run_prescan(args)
+    elif args.command == "apply":
+        from .commands.apply import run_apply
+        return run_apply(args)
     else:
         parser.print_help()
         return 1

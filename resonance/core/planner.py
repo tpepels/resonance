@@ -65,21 +65,30 @@ class Plan:
     # Metadata
     plan_version: str = "v1"
     is_compilation: bool = False
+    compilation_reason: Optional[str] = None
     is_classical: bool = False
 
 
-def _is_compilation(release: ProviderRelease) -> bool:
-    """Detect if release is a compilation (Various Artists)."""
-    # Simple heuristic: Various Artists in artist name or multiple distinct track artists
-    if "Various Artists" in release.artist:
-        return True
-
-    # Check if tracks have different artists
-    track_artists = {
-        getattr(track, "artist", None) for track in release.tracks if hasattr(track, "artist")
+_COMPILATION_TOKENS = frozenset(
+    {
+        "various artists",
+        "various artist",
+        "various",
+        "va",
     }
-    track_artists.discard(None)
-    return len(track_artists) > 1
+)
+
+
+def _normalize_artist_token(artist: str) -> str:
+    return " ".join(artist.strip().lower().replace(".", "").split())
+
+
+def _compilation_reason(release: ProviderRelease) -> Optional[str]:
+    """Return a stable reason if release is a compilation, otherwise None."""
+    normalized = _normalize_artist_token(release.artist)
+    if normalized in _COMPILATION_TOKENS:
+        return "artist_in_compilation_allowlist"
+    return None
 
 
 def _compute_destination_path(release: ProviderRelease, is_compilation: bool) -> Path:
@@ -125,7 +134,8 @@ def plan_directory(
         )
 
     # Detect compilation
-    is_compilation = _is_compilation(pinned_release)
+    compilation_reason = _compilation_reason(pinned_release)
+    is_compilation = compilation_reason is not None
 
     # Compute destination path
     destination_path = _compute_destination_path(pinned_release, is_compilation)
@@ -154,5 +164,6 @@ def plan_directory(
         operations=operations,
         non_audio_policy=non_audio_policy,
         is_compilation=is_compilation,
+        compilation_reason=compilation_reason,
         is_classical=False,  # TODO: Classical detection
     )

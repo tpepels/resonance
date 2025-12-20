@@ -229,6 +229,8 @@ def test_plan_path_regular_album(tmp_path: Path):
 
         # Destination should be exactly Artist/Album (as final two path components)
         dest = plan.destination_path
+        assert plan.is_compilation is False
+        assert plan.compilation_reason is None
         assert dest.parts[-2:] == ("Pink Floyd", "Dark Side of the Moon")
     finally:
         store.close()
@@ -264,7 +266,41 @@ def test_plan_path_compilation(tmp_path: Path):
 
         # Compilation should be exactly Various Artists/Album (as final two path components)
         dest = plan.destination_path
+        assert plan.is_compilation is True
+        assert plan.compilation_reason == "artist_in_compilation_allowlist"
         assert dest.parts[-2:] == ("Various Artists", "Now That's What I Call Music!")
+    finally:
+        store.close()
+
+
+def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
+    """Non-allowlist artist should not be treated as compilation."""
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-regular",
+        )
+
+        release = ProviderRelease(
+            provider="musicbrainz",
+            release_id="mb-regular",
+            title="Summer Mix",
+            artist="Various Artists & Friends",
+            tracks=(ProviderTrack(position=1, title="Track 1"),),
+        )
+
+        from resonance.core.planner import plan_directory
+
+        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+
+        dest = plan.destination_path
+        assert plan.is_compilation is False
+        assert plan.compilation_reason is None
+        assert dest.parts[-2:] == ("Various Artists & Friends", "Summer Mix")
     finally:
         store.close()
 

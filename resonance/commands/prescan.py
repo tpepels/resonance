@@ -61,8 +61,10 @@ def run_prescan(args: Namespace) -> int:
                 if not token:
                     continue
                 cache_key = f"{category}::{token}"
-                if cache.get_canonical_name(cache_key) is None:
-                    cache.set_canonical_name(cache_key, value.strip())
+                display = value.strip()
+                existing = cache.get_canonical_name(cache_key)
+                if existing is None or display < existing:
+                    cache.set_canonical_name(cache_key, display)
                     added += 1
 
     cache.close()

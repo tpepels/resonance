@@ -8,6 +8,9 @@ from pathlib import Path
 
 from ..app import ResonanceApp
 from ..core.models import AlbumInfo
+from ..core.identifier import identify
+from ..core.state import DirectoryState
+from ..infrastructure.scanner import LibraryScanner
 from ..infrastructure.cache import MetadataCache
 
 
@@ -63,3 +66,89 @@ def run_prompt(args: Namespace) -> int:
         cache.close()
 
     return 0
+
+
+def run_prompt_uncertain(
+    *,
+    store,
+    provider_client,
+    input_provider=input,
+    output_sink=print,
+    evidence_builder=None,
+) -> None:
+    """Resolve queued directories via injected I/O (testable)."""
+    queued = store.list_by_state(DirectoryState.QUEUED_PROMPT)
+    queued = sorted(
+        queued,
+        key=lambda record: (str(record.last_seen_path), record.dir_id),
+    )
+    extensions = LibraryScanner.DEFAULT_EXTENSIONS
+
+    for record in queued:
+        audio_files = sorted(
+            path
+            for path in record.last_seen_path.iterdir()
+            if path.is_file() and path.suffix.lower() in extensions
+        )
+        if not audio_files:
+            continue
+        if evidence_builder is None:
+            raise ValueError("evidence_builder is required")
+        evidence = evidence_builder(audio_files)
+        result = identify(evidence, provider_client)
+        candidates = list(result.candidates)
+
+        output_sink(f"Queued: {record.last_seen_path}")
+        output_sink("Tracks:")
+        for index, path in enumerate(audio_files, start=1):
+            duration = None
+            if index - 1 < len(evidence.tracks):
+                duration = evidence.tracks[index - 1].duration_seconds
+            duration_str = f" ({duration}s)" if duration else ""
+            output_sink(f"  {index}. {path.name}{duration_str}")
+        if candidates:
+            for idx, candidate in enumerate(candidates, start=1):
+                output_sink(
+                    f"[{idx}] {candidate.release.provider}:{candidate.release.release_id} "
+                    f"{candidate.release.artist} - {candidate.release.title}"
+                )
+        else:
+            output_sink("No candidates available.")
+
+        response = input_provider("Choice: ").strip().lower()
+        if not response:
+            continue
+        if response == "s":
+            store.set_state(record.dir_id, DirectoryState.JAILED)
+            continue
+        if response.isdigit():
+            choice = int(response)
+            if 1 <= choice <= len(candidates):
+                selected = candidates[choice - 1].release
+                store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_USER,
+                    pinned_provider=selected.provider,
+                    pinned_release_id=selected.release_id,
+                )
+            continue
+        if response.startswith("mb:"):
+            release_id = response[3:].strip()
+            if release_id:
+                store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_USER,
+                    pinned_provider="musicbrainz",
+                    pinned_release_id=release_id,
+                )
+            continue
+        if response.startswith("dg:"):
+            release_id = response[3:].strip()
+            if release_id:
+                store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_USER,
+                    pinned_provider="discogs",
+                    pinned_release_id=release_id,
+                )
+            continue

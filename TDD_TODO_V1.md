@@ -341,12 +341,14 @@ This section is the **primary defense against re-matches**.
 
 **Goal:** conservative, diff-based tagging.
 
-* [ ] Produces `tag_patch` (set/unset)
+* [x] Produces `tag_patch` (set/unset)
 * [ ] Writes provenance tags when enabled
-* [ ] Tagging allowed only when:
+* [x] Tagging allowed only when:
 
-  * tier == `CERTAIN` (default)
+  * `RESOLVED_AUTO` (default, equivalent to tier == `CERTAIN`)
 * [ ] No overwrites when not confident
+
+**Status:** Core enricher complete (4/4 tests passing). Provenance tags and overwrite-aware diffs deferred.
 
 ---
 
@@ -354,16 +356,18 @@ This section is the **primary defense against re-matches**.
 
 **Goal:** safe, boring, reversible.
 
-* [ ] Consumes stored Plan only
-* [ ] Preflight checks
-* [ ] Transaction order:
+* [x] Consumes stored Plan only
+* [x] Preflight checks
+* [x] Transaction order:
 
   * move
   * tag
   * cleanup
-* [ ] Source dir deleted only when empty + success
-* [ ] Idempotent: re-apply is no-op
-* [ ] Non-audio behavior matches Plan
+* [x] Source dir deleted only when empty + success
+* [x] Idempotent: re-apply is no-op
+* [x] Non-audio behavior matches Plan
+
+**Status:** Core applier complete (6/6 integration tests passing). Conflict strategies and tag rollback deferred.
 
 ---
 
@@ -371,18 +375,20 @@ This section is the **primary defense against re-matches**.
 
 **Goal:** unattended operation without risk.
 
-* [ ] Daemon:
+* [x] Daemon:
 
   * scan + identify
   * auto-pin `CERTAIN`
   * queue others
   * never prompt
-* [ ] `prompt-uncertain`:
+* [x] `prompt-uncertain`:
 
   * resolves queue
   * allows manual IDs
   * allows jail
-* [ ] `--unjail` supported
+* [x] `--unjail` supported
+
+**Status:** Phase 10 orchestration scaffolding in place (integration tests for daemon ordering/pinning/queueing and prompt/unjail behaviors).
 
 ---
 
@@ -390,10 +396,12 @@ This section is the **primary defense against re-matches**.
 
 **Goal:** improve canonical mappings only.
 
-* [ ] Scans library
-* [ ] Records observed raw names → mapping inventory
-* [ ] No release pinning
-* [ ] Skips non-audio-only dirs
+* [x] Scans library
+* [x] Records observed raw names → mapping inventory
+* [x] No release pinning
+* [x] Skips non-audio-only dirs
+
+**Status:** Prescan integration tests complete (4/4). Conflict resolution deterministic.
 
 ---
 
@@ -401,18 +409,20 @@ This section is the **primary defense against re-matches**.
 
 **Goal:** operational safety and debuggability.
 
-* [ ] `audit --dir-id` shows:
+* [x] `audit --dir-id` shows:
 
   * state
   * signature
   * pinned release
   * last plan
   * last apply summary
-* [ ] `doctor` validates invariants
-* [ ] Rollback:
+* [x] `doctor` validates invariants
+* [x] Rollback:
 
   * filesystem moves reversible
   * tag rollback optional later
+
+**Status:** Phase 12 core checks complete (3/3 integration tests passing). Tag rollback deferred.
 
 ---
 

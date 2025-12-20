@@ -9,6 +9,7 @@ from pathlib import Path
 
 from ..app import ResonanceApp
 from ..core.models import AlbumInfo
+from ..core.resolver import resolve_directory
 from ..infrastructure.cache import MetadataCache
 
 def run_daemon(args: Namespace) -> int:
@@ -74,3 +75,30 @@ def _process_cycle(app: ResonanceApp, cache_path: Path) -> None:
         pipeline.process(album)
 
     cache.close()
+
+
+def run_daemon_once(
+    *,
+    scanner,
+    store,
+    provider_client,
+    evidence_builder,
+) -> list:
+    """Run a single daemon pass using injected dependencies (testable)."""
+    batches = sorted(
+        list(scanner.iter_directories()),
+        key=lambda batch: (batch.dir_id, str(batch.directory)),
+    )
+    outcomes = []
+    for batch in batches:
+        evidence = evidence_builder(batch.files)
+        outcome = resolve_directory(
+            dir_id=batch.dir_id,
+            path=batch.directory,
+            signature_hash=batch.signature_hash,
+            evidence=evidence,
+            store=store,
+            provider_client=provider_client,
+        )
+        outcomes.append(outcome)
+    return outcomes

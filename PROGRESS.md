@@ -261,6 +261,19 @@ Every layer enforces deterministic behavior:
 
 ---
 
+## TDD_TODO Checkbox Audit — 2025-12-20
+
+Reviewed all unchecked items in TDD_TODO.md against current implementation and tests.
+
+Result: No safe [ ] → [x] updates.
+Reason: Remaining unchecked bullets correspond to unimplemented and/or untested work
+(e.g., Resolver interactive flow, Planner classical/filename policies, Enricher provenance/overwrite-aware diffs,
+Applier/Daemon/Prescan/Audit/Doctor).
+
+No changes made to TDD_TODO.md.
+
+---
+
 ## Next Steps
 
 1. **Phase 6: Resolver** - Connect Identifier to DirectoryStateStore

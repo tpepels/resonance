@@ -43,6 +43,60 @@ class DirectoryStateStore:
         with self._lock:
             self._conn.close()
 
+    def list_by_state(self, state: DirectoryState) -> list[DirectoryRecord]:
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT dir_id, last_seen_path, signature_hash, state,
+                       pinned_provider, pinned_release_id, pinned_confidence,
+                       created_at, updated_at
+                FROM directories
+                WHERE state = ?
+                """,
+                (state.value,),
+            ).fetchall()
+
+        return [
+            DirectoryRecord(
+                dir_id=row[0],
+                last_seen_path=Path(row[1]),
+                signature_hash=row[2],
+                state=DirectoryState(row[3]),
+                pinned_provider=row[4],
+                pinned_release_id=row[5],
+                pinned_confidence=row[6],
+                created_at=row[7],
+                updated_at=row[8],
+            )
+            for row in rows
+        ]
+
+    def list_all(self) -> list[DirectoryRecord]:
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT dir_id, last_seen_path, signature_hash, state,
+                       pinned_provider, pinned_release_id, pinned_confidence,
+                       created_at, updated_at
+                FROM directories
+                """
+            ).fetchall()
+
+        return [
+            DirectoryRecord(
+                dir_id=row[0],
+                last_seen_path=Path(row[1]),
+                signature_hash=row[2],
+                state=DirectoryState(row[3]),
+                pinned_provider=row[4],
+                pinned_release_id=row[5],
+                pinned_confidence=row[6],
+                created_at=row[7],
+                updated_at=row[8],
+            )
+            for row in rows
+        ]
+
     def get(self, dir_id: str) -> Optional[DirectoryRecord]:
         with self._lock:
             row = self._conn.execute(
