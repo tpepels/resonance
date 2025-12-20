@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=66", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resonance"
+version = "0.1.0"
+description = "Clean, focused audio metadata organizer using fingerprinting and canonical artist detection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Tom", email = "tom@example.com"}
+]
+dependencies = [
+    "mutagen>=1.47",           # Audio file metadata reading/writing
+    "pyacoustid>=1.2.2",       # AcoustID fingerprinting
+    "musicbrainzngs>=0.7.1",   # MusicBrainz API client
+    "watchdog>=4.0",           # File system monitoring for daemon mode
+    "pydantic>=2.6",           # Data validation
+    "PyYAML>=6.0",             # Configuration files
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "ruff",
+    "pytest",
+]
+
+[project.scripts]
+resonance = "resonance.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["resonance*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
