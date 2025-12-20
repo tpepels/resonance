@@ -104,6 +104,66 @@ class DiscogsClient:
         results = data.get("results", [])
         return results[0] if results else None
 
+    def search_releases(
+        self,
+        artist: Optional[str],
+        album: Optional[str],
+        title: Optional[str] = None,
+        limit: int = 5,
+    ) -> list[dict]:
+        """Search Discogs for release candidates."""
+        params: Dict[str, str] = {
+            "token": self.token,
+            "type": "release",
+            "per_page": str(limit),
+        }
+        if artist:
+            params["artist"] = artist
+        if album:
+            params["release_title"] = album
+        if title:
+            params["track"] = title
+
+        url = f"https://api.discogs.com/database/search?{urllib.parse.urlencode(params)}"
+        data = self._request(url)
+        if not data:
+            return []
+
+        results = data.get("results", [])
+        releases: list[dict] = []
+        for result in results[:limit]:
+            release_id = result.get("id")
+            if not release_id:
+                continue
+
+            title_val = result.get("title")
+            artist_val = result.get("artist")
+            parsed_artist, parsed_title = self._split_search_title(title_val)
+            if not artist_val:
+                artist_val = parsed_artist
+            if not result.get("release_title"):
+                title_val = parsed_title or title_val
+
+            release = {
+                "id": release_id,
+                "title": title_val,
+                "artist": artist_val,
+                "year": result.get("year"),
+                "track_count": None,
+            }
+
+            details = self._fetch_release(release_id)
+            if details:
+                release["track_count"] = len(details.get("tracklist", []))
+                if not release["title"]:
+                    release["title"] = details.get("title")
+                if not release["artist"]:
+                    release["artist"] = self._join_artists(details.get("artists", []))
+
+            releases.append(release)
+
+        return releases
+
     def _fetch_release(self, release_id: int) -> Optional[dict]:
         """Fetch full release details from Discogs."""
         # Check cache first
@@ -200,6 +260,16 @@ class DiscogsClient:
                 unique.append(entry)
 
         return ", ".join(unique) if unique else None
+
+    @staticmethod
+    def _split_search_title(value: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+        """Split search title into artist/title if it uses 'Artist - Title'."""
+        if not value or " - " not in value:
+            return None, None
+        parts = value.split(" - ", 1)
+        artist = parts[0].strip() or None
+        title = parts[1].strip() or None
+        return artist, title
 
     def _request(self, url: str) -> Optional[dict]:
         """Make HTTP request to Discogs API."""

@@ -11,6 +11,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from tests.helpers.scenarios import build_golden_scenario, GoldenScenario
+from tests.helpers.fs import AudioStubSpec, build_album_dir, AlbumFixture
 
 @pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
@@ -149,6 +151,9 @@ def create_test_audio_file(temp_dir: Path):
         album: str | None = None,
         track_number: int | None = None,
         duration: int = 180,  # seconds
+        composer: str | None = None,
+        conductor: str | None = None,
+        performer: str | None = None,
     ) -> Path:
         """Create a test audio file.
 
@@ -177,6 +182,9 @@ def create_test_audio_file(temp_dir: Path):
             "album": album,
             "track_number": track_number,
             "duration": duration,
+            "composer": composer,
+            "conductor": conductor,
+            "performer": performer,
         }
         metadata_path.write_text(json.dumps(metadata, indent=2))
 
@@ -258,6 +266,68 @@ class TestScenario:
             )
 
         return input_dir
+
+
+@pytest.fixture
+def album_dir_factory(temp_dir: Path):
+    """Factory for creating album directories with audio/non-audio stubs."""
+    def _create_album(
+        name: str,
+        audio_specs: list[AudioStubSpec],
+        non_audio_files: list[str] | None = None,
+    ) -> AlbumFixture:
+        return build_album_dir(temp_dir / "albums", name, audio_specs, non_audio_files)
+
+    return _create_album
+
+
+@pytest.fixture
+def golden_scenario_builder(temp_dir: Path):
+    """Factory for building golden scenario fixtures."""
+    def _build(name: str) -> GoldenScenario:
+        return build_golden_scenario(temp_dir, name)
+
+    return _build
+
+
+@pytest.fixture
+def pop_certain(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("pop_certain")
+
+
+@pytest.fixture
+def pop_probable(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("pop_probable")
+
+
+@pytest.fixture
+def compilation(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("compilation")
+
+
+@pytest.fixture
+def classical_single_composer(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("classical_single_composer")
+
+
+@pytest.fixture
+def classical_mixed_composer(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("classical_mixed_composer")
+
+
+@pytest.fixture
+def mixed_release_in_one_dir(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("mixed_release_in_one_dir")
+
+
+@pytest.fixture
+def non_audio_present(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("non_audio_present")
+
+
+@pytest.fixture
+def target_exists_conflict(golden_scenario_builder) -> GoldenScenario:
+    return golden_scenario_builder("target_exists_conflict")
 
 
 @pytest.fixture

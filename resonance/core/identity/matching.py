@@ -11,14 +11,26 @@ import unicodedata
 
 # Feature patterns to remove during normalization
 FEAT_PATTERNS = [
-    r'\s*\(?\s*feat\.?\s+[^)]+\)?',
-    r'\s*\(?\s*featuring\s+[^)]+\)?',
-    r'\s*\(?\s*ft\.?\s+[^)]+\)?',
-    r'\s*\(?\s*with\s+[^)]+\)?',
+    r"\s*\(?\s*\bfeat\.?\b\s+[^)]+\)?",
+    r"\s*\(?\s*\bfeaturing\b\s+[^)]+\)?",
+    r"\s*\(?\s*\bft\.?\b\s+[^)]+\)?",
+    r"\s*\(?\s*\bwith\b\s+[^)]+\)?",
 ]
 
+JOINER_PATTERN = re.compile(
+    r"\s*(?:&|\band\b|/|;)\s*",
+    flags=re.IGNORECASE,
+)
 
-def normalize_token(value: str) -> str:
+SHORT_NAME_SEPARATOR = re.compile(r"\s+-\s+|\s+–\s+|\s+—\s+|\s*:\s*|\s*/\s*|\s*;\s*|\s*\|\s*")
+
+FEAT_SEGMENT_PATTERN = re.compile(
+    r"\s*(?:\(|\[)?\s*\b(feat|featuring|ft|with)\b\.?\s*[^)\]]*\)?",
+    flags=re.IGNORECASE,
+)
+
+
+def normalize_token(value: str | None) -> str:
     """Normalize a name to a token for clustering.
 
     This creates a unique identifier while preserving enough information
@@ -26,9 +38,9 @@ def normalize_token(value: str) -> str:
 
     Process:
     1. Remove featuring patterns
-    2. Unicode normalization (NFKD)
-    3. Convert to ASCII
-    4. Lowercase
+    2. Unicode normalization (NFKC)
+    3. Casefold for stable comparisons
+    4. Normalize joiners (feat/ft/with/&/and/;/) as separators
     5. Remove punctuation (keep spaces temporarily)
     6. Collapse spaces
     7. Remove all spaces for final token
@@ -47,19 +59,25 @@ def normalize_token(value: str) -> str:
     if not value:
         return ""
 
-    # Remove featuring patterns first
-    cleaned = value
-    for pattern in FEAT_PATTERNS:
-        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    # Unicode normalization and whitespace cleanup
+    cleaned = unicodedata.normalize("NFKC", value).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
 
-    # Unicode normalization
+    # Remove featuring segments
+    cleaned = FEAT_SEGMENT_PATTERN.sub("", cleaned)
+
+    # Normalize joiners to spaces
+    cleaned = JOINER_PATTERN.sub(" ", cleaned)
+
+    # Casefold for stable comparison
+    cleaned = cleaned.casefold()
+
+    # Remove patronymic suffixes early (e.g., "gudmundsdottir")
+    cleaned = re.sub(r"\b\w+dottir\b", " ", cleaned, flags=re.IGNORECASE)
+
+    # Fold diacritics to ASCII-equivalent characters
     normalized = unicodedata.normalize("NFKD", cleaned)
-
-    # Convert to ASCII
-    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
-
-    # Lowercase
-    ascii_only = ascii_only.lower()
+    ascii_only = "".join(ch for ch in normalized if not unicodedata.combining(ch))
 
     # Remove punctuation but keep spaces temporarily
     ascii_only = re.sub(r"[^a-z0-9\s]+", " ", ascii_only)
@@ -71,3 +89,67 @@ def normalize_token(value: str) -> str:
     token = ascii_only.replace(" ", "")
 
     return token if token else ""
+
+
+def split_names(value: str | None) -> list[str]:
+    """Split a multi-name string into deterministic parts."""
+    if not value:
+        return []
+
+    cleaned = unicodedata.normalize("NFKC", value).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+
+    cleaned = re.sub(r"[()]", " ", cleaned)
+    cleaned = re.sub(r"\bfeat\.?\b", ";", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bfeaturing\b", ";", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bft\.?\b", ";", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bwith\b", ";", cleaned, flags=re.IGNORECASE)
+    cleaned = JOINER_PATTERN.sub(";", cleaned)
+    cleaned = re.sub(r"[,&/;]+", ";", cleaned)
+
+    parts = []
+    for part in cleaned.split(";"):
+        part = part.strip()
+        part = re.sub(r"^[\W_]+|[\W_]+$", "", part)
+        if part:
+            parts.append(part)
+    return parts
+
+
+def dedupe_names(names: list[str]) -> list[str]:
+    """Remove duplicate names using normalized token comparison."""
+    seen: set[str] = set()
+    unique: list[str] = []
+    for name in names:
+        token = normalize_token(name)
+        if token and token not in seen:
+            unique.append(name)
+            seen.add(token)
+    return unique
+
+
+def short_folder_name(value: str, max_length: int = 60) -> str:
+    """Return a deterministic folder-safe name within the max length."""
+    cleaned = value.strip()
+    cleaned = FEAT_SEGMENT_PATTERN.sub("", cleaned)
+    cleaned = re.sub(r"\([^)]*\)", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+
+    if len(cleaned) <= max_length:
+        return cleaned
+
+    clauses = [part.strip() for part in SHORT_NAME_SEPARATOR.split(cleaned) if part.strip()]
+    if len(clauses) > 1:
+        for end in range(len(clauses), 0, -1):
+            candidate = " - ".join(clauses[:end]).strip()
+            if len(candidate) <= max_length:
+                return candidate
+        cleaned = clauses[0]
+
+    if len(cleaned) <= max_length:
+        return cleaned
+
+    primary = cleaned.split()[0] if cleaned.split() else cleaned
+    if len(primary) <= max_length:
+        return primary
+    return primary[:max_length]

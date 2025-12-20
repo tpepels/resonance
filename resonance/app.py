@@ -103,7 +103,7 @@ class ResonanceApp:
         visitors = []
 
         # 1. Identify (fingerprinting + canonical names)
-        if self.musicbrainz and self.release_search:
+        if self.musicbrainz:
             visitors.append(IdentifyVisitor(
                 musicbrainz=self.musicbrainz,
                 canonicalizer=self.canonicalizer,

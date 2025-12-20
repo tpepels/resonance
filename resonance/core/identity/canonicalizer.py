@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-from .matching import normalize_token
+from .matching import normalize_token, split_names, dedupe_names
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -69,6 +69,7 @@ class IdentityCanonicalizer:
         # Check persistent cache
         canonical = self.cache.get_canonical_name(cache_key)
         if canonical:
+            canonical = canonical.strip()
             self._local_cache[cache_key] = canonical
             return canonical
 
@@ -90,27 +91,19 @@ class IdentityCanonicalizer:
         if not names:
             return names
 
-        # Split on common separators
-        parts = []
-        for sep in [";", ","]:
-            if sep in names:
-                parts = [p.strip() for p in names.split(sep) if p.strip()]
-                break
-
+        parts = dedupe_names(split_names(names))
         if not parts:
-            parts = [names.strip()]
+            return names
 
-        canonical_parts = []
-        seen = set()
+        canonical_parts: list[str] = []
+        seen: set[str] = set()
 
         for part in parts:
-            if part:
-                canonical = self.canonicalize(part, category)
-                # Avoid duplicates
-                canonical_lower = canonical.lower()
-                if canonical_lower not in seen:
-                    canonical_parts.append(canonical)
-                    seen.add(canonical_lower)
+            canonical = self.canonicalize(part, category)
+            token = normalize_token(canonical) or canonical.casefold()
+            if token and token not in seen:
+                canonical_parts.append(canonical)
+                seen.add(token)
 
         # Always use semicolon as separator (NEVER comma)
         return "; ".join(canonical_parts) if canonical_parts else names

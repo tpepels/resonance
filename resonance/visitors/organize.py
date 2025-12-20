@@ -52,6 +52,10 @@ class OrganizeVisitor(BaseVisitor):
             logger.info(f"  Skipping: jailed")
             return False
 
+        # Track original source directory for cleanup.
+        if album.source_directory is None:
+            album.source_directory = album.directory
+
         # Calculate destination
         destination_path = album.destination_path
         if not destination_path:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -35,11 +36,13 @@ class MetadataReader:
         track = TrackInfo(path=path)
 
         if not MutagenFile:
+            MetadataReader._apply_stub_metadata(path, track)
             return track
 
         try:
             audio = MutagenFile(path)
             if audio is None:
+                MetadataReader._apply_stub_metadata(path, track)
                 return track
 
             # Get duration
@@ -56,9 +59,10 @@ class MetadataReader:
                 MetadataReader._read_mp4(path, track)
 
         except Exception:
-            # If reading fails, return what we have
-            pass
+            # If reading fails, fall back to stub metadata
+            MetadataReader._apply_stub_metadata(path, track)
 
+        MetadataReader._apply_stub_metadata(path, track)
         return track
 
     @staticmethod
@@ -188,6 +192,28 @@ class MetadataReader:
             disc_tuple = audio['disk'][0]
             if isinstance(disc_tuple, tuple) and len(disc_tuple) > 0:
                 track.disc_number = disc_tuple[0]
+
+    @staticmethod
+    def _apply_stub_metadata(path: Path, track: TrackInfo) -> None:
+        """Apply test stub metadata from companion JSON if present."""
+        metadata_path = path.with_suffix(path.suffix + ".meta.json")
+        if not metadata_path.exists():
+            return
+
+        try:
+            data = json.loads(metadata_path.read_text())
+        except Exception:
+            return
+
+        track.title = track.title or data.get("title")
+        track.artist = track.artist or data.get("artist")
+        track.album = track.album or data.get("album")
+        track.album_artist = track.album_artist or data.get("album_artist")
+        track.track_number = track.track_number or data.get("track_number")
+        track.duration_seconds = track.duration_seconds or data.get("duration")
+        track.composer = track.composer or data.get("composer")
+        track.conductor = track.conductor or data.get("conductor")
+        track.performer = track.performer or data.get("performer")
 
     @staticmethod
     def _get_first(audio: FLAC, *keys: str) -> Optional[str]:

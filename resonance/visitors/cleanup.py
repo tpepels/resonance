@@ -38,20 +38,38 @@ class CleanupVisitor(BaseVisitor):
         Returns:
             True (always continues)
         """
-        # Note: album.directory now points to the NEW location after organize
-        # We need to track the original source directory separately
+        source_dir = album.source_directory
+        if not source_dir:
+            logger.debug("  Cleanup skipped: missing source directory")
+            return True
 
-        # This is a limitation of the current design - we don't track source dir
-        # For now, we'll just log and return
-        # TODO: Track original directory in AlbumInfo
+        # Skip cleanup if album was not moved.
+        try:
+            if source_dir.resolve() == album.directory.resolve():
+                logger.debug("  Cleanup skipped: source equals destination")
+                return True
+        except FileNotFoundError:
+            # If either path vanished, cleanup will handle it below.
+            pass
 
-        logger.info(f"Cleanup: {album.directory}")
-        logger.debug(f"  Cleanup not yet fully implemented (needs source dir tracking)")
+        logger.info(f"Cleanup: {source_dir}")
 
-        # In a full implementation, we would:
-        # 1. Check if source_directory is empty
-        # 2. If delete_nonaudio, delete non-audio files
-        # 3. Delete source_directory if empty
-        # 4. Recursively delete empty parent directories
+        deleted = self.file_service.delete_if_empty(
+            source_dir,
+            delete_nonaudio=self.delete_nonaudio,
+        )
+        if not deleted:
+            return True
+
+        # Recursively delete empty parent directories up to library root.
+        current = source_dir.parent
+        while True:
+            if current == current.parent:
+                break
+            if current == self.file_service.library_root:
+                break
+            if not self.file_service.delete_if_empty(current, delete_nonaudio=False):
+                break
+            current = current.parent
 
         return True

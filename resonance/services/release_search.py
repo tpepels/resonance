@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+import re
 from typing import Optional
 
 from ..core.models import AlbumInfo, TrackInfo
@@ -174,7 +175,7 @@ class ReleaseSearchService:
         if not self.discogs:
             return []
 
-        candidates = []
+        candidates: list[ReleaseCandidate] = []
 
         # Build search query from album info
         artist = album.canonical_artist or album.canonical_composer
@@ -184,10 +185,51 @@ class ReleaseSearchService:
             # Need at least artist or album
             return []
 
-        # Use Discogs client to search
-        # Note: We'd need to add a search method to DiscogsClient
-        # For now, return empty list
-        # TODO: Implement Discogs search in DiscogsClient
+        releases = self.discogs.search_releases(
+            artist=artist,
+            album=album_title,
+        )
+        if not releases:
+            return candidates
+
+        for release in releases:
+            release_id = str(release.get("id"))
+            title = release.get("title") or "Unknown"
+            release_artist = release.get("artist") or "Unknown"
+            year = release.get("year")
+            track_count = int(release.get("track_count") or 0)
+
+            score = 0.0
+            if artist and release_artist and self._normalize(artist) == self._normalize(release_artist):
+                score += 0.2
+            if album_title and title and self._normalize(album_title) == self._normalize(title):
+                score += 0.2
+
+            coverage = 0.0
+            if album.tracks and track_count:
+                ratio = min(len(album.tracks), track_count) / max(len(album.tracks), track_count)
+                coverage = ratio
+                if ratio >= 0.95:
+                    score += 0.15
+                elif ratio >= 0.85:
+                    score += 0.10
+                elif ratio >= 0.70:
+                    score += 0.05
+                elif ratio <= 0.40:
+                    score -= 0.15
+
+            candidates.append(
+                ReleaseCandidate(
+                    provider="discogs",
+                    release_id=release_id,
+                    title=title,
+                    artist=release_artist,
+                    year=year,
+                    track_count=track_count,
+                    score=max(0.0, score),
+                    coverage=coverage,
+                )
+            )
 
         return candidates
 
@@ -205,6 +247,13 @@ class ReleaseSearchService:
             pass
 
         return None
+
+    @staticmethod
+    def _normalize(value: str) -> str:
+        cleaned = value.casefold()
+        cleaned = re.sub(r"[^\w\s]+", " ", cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        return cleaned
 
     def auto_select_best(
         self,

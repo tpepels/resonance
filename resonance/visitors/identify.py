@@ -34,7 +34,7 @@ class IdentifyVisitor(BaseVisitor):
         musicbrainz: MusicBrainzClient,
         canonicalizer: IdentityCanonicalizer,
         cache: MetadataCache,
-        release_search: ReleaseSearchService,
+        release_search: Optional[ReleaseSearchService],
     ):
         super().__init__("Identify")
         self.musicbrainz = musicbrainz
@@ -104,7 +104,11 @@ class IdentifyVisitor(BaseVisitor):
         self._determine_canonical_identities(album)
 
         # Search for release candidates (if not already cached)
-        if not album.musicbrainz_release_id and not album.discogs_release_id:
+        if (
+            not album.musicbrainz_release_id
+            and not album.discogs_release_id
+            and self.release_search
+        ):
             candidates = self.release_search.search_releases(album)
 
             if candidates:

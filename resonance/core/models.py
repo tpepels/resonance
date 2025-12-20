@@ -75,6 +75,7 @@ class AlbumInfo:
     """
     # Source directory
     directory: Path
+    source_directory: Optional[Path] = None
 
     # Canonical identities
     canonical_artist: Optional[str] = None
@@ -113,6 +114,10 @@ class AlbumInfo:
         # Consider it classical if majority of tracks are classical
         classical_count = sum(1 for track in self.tracks if track.is_classical)
         return classical_count > len(self.tracks) / 2
+
+    def __post_init__(self) -> None:
+        if self.source_directory is None:
+            self.source_directory = self.directory
 
     @property
     def destination_path(self) -> Optional[Path]:

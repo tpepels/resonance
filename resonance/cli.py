@@ -69,6 +69,17 @@ def main() -> int:
         default=Path.home() / ".cache" / "resonance" / "metadata.db",
         help="Cache database path",
     )
+    daemon_parser.add_argument(
+        "--interval",
+        type=float,
+        default=10.0,
+        help="Polling interval in seconds (default: 10)",
+    )
+    daemon_parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Run a single scan cycle and exit",
+    )
 
     # Prompt command (answer deferred prompts)
     prompt_parser = subparsers.add_parser(
