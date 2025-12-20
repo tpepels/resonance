@@ -110,10 +110,25 @@ def run_prompt_uncertain(
             for idx, candidate in enumerate(candidates, start=1):
                 output_sink(
                     f"[{idx}] {candidate.release.provider}:{candidate.release.release_id} "
-                    f"{candidate.release.artist} - {candidate.release.title}"
+                    f"{candidate.release.artist} - {candidate.release.title} "
+                    f"score={candidate.total_score:.2f} coverage={candidate.fingerprint_coverage:.2f}"
                 )
         else:
             output_sink("No candidates available.")
+
+        if result.reasons:
+            output_sink(f"Reasons: {'; '.join(result.reasons)}")
+
+        options = [
+            "Options:",
+            "  [1..N] Select a release from the list",
+            "  [mb:ID] Provide MusicBrainz release ID",
+            "  [dg:ID] Provide Discogs release ID",
+            "  [s] Jail this directory",
+            "  [enter] Skip for now",
+        ]
+        for line in options:
+            output_sink(line)
 
         response = input_provider("Choice: ").strip().lower()
         if not response:

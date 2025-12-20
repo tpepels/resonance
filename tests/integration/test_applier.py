@@ -274,6 +274,99 @@ def test_applier_noop_on_reapply(tmp_path: Path) -> None:
         store.close()
 
 
+def test_applier_conflict_policy_skip(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    plan = Plan(
+        dir_id=plan.dir_id,
+        source_path=plan.source_path,
+        signature_hash=plan.signature_hash,
+        provider=plan.provider,
+        release_id=plan.release_id,
+        release_title=plan.release_title,
+        release_artist=plan.release_artist,
+        destination_path=plan.destination_path,
+        operations=plan.operations,
+        non_audio_policy=plan.non_audio_policy,
+        plan_version=plan.plan_version,
+        is_compilation=plan.is_compilation,
+        compilation_reason=plan.compilation_reason,
+        is_classical=plan.is_classical,
+        conflict_policy="SKIP",
+    )
+    collision = tmp_path / "library/Artist/Album/01 - Track A.flac"
+    collision.parent.mkdir(parents=True, exist_ok=True)
+    collision.write_text("exists")
+    store = _init_store(tmp_path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        assert (tmp_path / "library/Artist/Album/02 - Track B.flac").exists()
+        assert (fixture.path / "01 - Track A.flac").exists()
+    finally:
+        store.close()
+
+
+def test_applier_conflict_policy_rename(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    plan = Plan(
+        dir_id=plan.dir_id,
+        source_path=plan.source_path,
+        signature_hash=plan.signature_hash,
+        provider=plan.provider,
+        release_id=plan.release_id,
+        release_title=plan.release_title,
+        release_artist=plan.release_artist,
+        destination_path=plan.destination_path,
+        operations=plan.operations,
+        non_audio_policy=plan.non_audio_policy,
+        plan_version=plan.plan_version,
+        is_compilation=plan.is_compilation,
+        compilation_reason=plan.compilation_reason,
+        is_classical=plan.is_classical,
+        conflict_policy="RENAME",
+    )
+    collision = tmp_path / "library/Artist/Album/01 - Track A.flac"
+    collision.parent.mkdir(parents=True, exist_ok=True)
+    collision.write_text("exists")
+    store = _init_store(tmp_path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        renamed = tmp_path / "library/Artist/Album/01 - Track A (1).flac"
+        assert renamed.exists()
+        assert collision.exists()
+    finally:
+        store.close()
+
+
 def test_applier_moves_non_audio_with_album(tmp_path: Path) -> None:
     fixture = build_album_dir(
         tmp_path / "source",

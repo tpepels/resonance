@@ -273,6 +273,112 @@ def test_plan_path_compilation(tmp_path: Path):
         store.close()
 
 
+def test_plan_path_classical_single_composer(tmp_path: Path):
+    """Classical single-composer release should use Composer/Album path."""
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-classical",
+        )
+
+        release = ProviderRelease(
+            provider="musicbrainz",
+            release_id="mb-classical",
+            title="Symphonies",
+            artist="London Symphony Orchestra",
+            tracks=(
+                ProviderTrack(position=1, title="Symphony No.1", composer="Mozart"),
+                ProviderTrack(position=2, title="Symphony No.2", composer="Mozart"),
+            ),
+        )
+
+        from resonance.core.planner import plan_directory
+
+        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        dest = plan.destination_path
+        assert plan.is_classical is True
+        assert dest.parts[-2:] == ("Mozart", "Symphonies")
+    finally:
+        store.close()
+
+
+def test_plan_path_classical_mixed_composer(tmp_path: Path):
+    """Classical mixed-composer release should use PerformerOrAlbumArtist/Album path."""
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-classical-mixed",
+        )
+
+        release = ProviderRelease(
+            provider="musicbrainz",
+            release_id="mb-classical-mixed",
+            title="Piano Works",
+            artist="Glenn Gould",
+            tracks=(
+                ProviderTrack(position=1, title="Partita", composer="Bach"),
+                ProviderTrack(position=2, title="Sonata", composer="Mozart"),
+            ),
+        )
+
+        from resonance.core.planner import plan_directory
+
+        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        dest = plan.destination_path
+        assert plan.is_classical is True
+        assert dest.parts[-2:] == ("Glenn Gould", "Piano Works")
+    finally:
+        store.close()
+
+
+def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Path):
+    """Planner should canonicalize folder display names without changing pinned metadata."""
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-canon",
+        )
+
+        release = ProviderRelease(
+            provider="musicbrainz",
+            release_id="mb-canon",
+            title="Abbey Road",
+            artist="Beatles, The",
+            tracks=(ProviderTrack(position=1, title="Come Together"),),
+        )
+
+        def canonicalize_display(value: str, category: str) -> str:
+            if category == "artist" and value == "Beatles, The":
+                return "The Beatles"
+            return value
+
+        from resonance.core.planner import plan_directory
+
+        plan = plan_directory(
+            dir_id=record.dir_id,
+            store=store,
+            pinned_release=release,
+            canonicalize_display=canonicalize_display,
+        )
+
+        assert plan.destination_path.parts[-2:] == ("The Beatles", "Abbey Road")
+        assert plan.release_artist == "Beatles, The"
+    finally:
+        store.close()
+
+
 def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
     """Non-allowlist artist should not be treated as compilation."""
     store = DirectoryStateStore(tmp_path / "state.db")
@@ -387,5 +493,54 @@ def test_plan_operations_have_stable_ordering(tmp_path: Path):
             "02 - Track B.flac",
             "03 - Track C.flac",
         ]
+    finally:
+        store.close()
+
+
+def test_sanitize_filename_removes_forbidden_chars() -> None:
+    from resonance.core.planner import sanitize_filename
+
+    name = 'A/B\\C:D*E?F"G<H>I|J'
+    assert sanitize_filename(name) == "A B C D E F G H I J"
+
+
+def test_sanitize_filename_trims_and_collapses_whitespace() -> None:
+    from resonance.core.planner import sanitize_filename
+
+    name = "  A   B   C  "
+    assert sanitize_filename(name) == "A B C"
+
+
+def test_sanitize_filename_handles_reserved_names() -> None:
+    from resonance.core.planner import sanitize_filename
+
+    assert sanitize_filename("CON") == "_CON"
+    assert sanitize_filename("prn") == "_prn"
+    assert sanitize_filename("LPT1") == "_LPT1"
+
+
+def test_plan_conflict_policy_default_is_fail(tmp_path: Path):
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-123",
+        )
+
+        release = ProviderRelease(
+            provider="musicbrainz",
+            release_id="mb-123",
+            title="Album",
+            artist="Artist",
+            tracks=(ProviderTrack(position=1, title="Track"),),
+        )
+
+        from resonance.core.planner import plan_directory
+
+        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        assert plan.conflict_policy == "FAIL"
     finally:
         store.close()

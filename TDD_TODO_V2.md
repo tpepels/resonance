@@ -100,22 +100,22 @@ Each section: **tests first**, then minimal implementation.
 
 ### 15.1 Provenance schema (Unit)
 
-* [ ] Test: provenance tags include tool name, version, date, plan hash, pinned release id
-* [ ] Test: provenance tags are deterministic (no local time; use UTC ISO8601 or fixed test clock)
-* [ ] Implement: `Provenance` object and TagPatch augmentation
+* [x] Test: provenance tags include tool name, version, date, plan hash, pinned release id
+* [x] Test: provenance tags are deterministic (no local time; use UTC ISO8601 or fixed test clock)
+* [x] Implement: `Provenance` object and TagPatch augmentation
 
 ### 15.2 Overwrite policy (Unit)
 
-* [ ] Test: when overwrite disabled, existing non-empty tags are not overwritten
-* [ ] Test: when overwrite enabled, overwrites are recorded in provenance
-* [ ] Test: per-field policies supported (e.g., overwrite title but not artist)
-* [ ] Implement: overwrite-aware TagPatch generation and application rules
+* [x] Test: when overwrite disabled, existing non-empty tags are not overwritten
+* [x] Test: when overwrite enabled, overwrites are recorded in provenance
+* [x] Test: per-field policies supported (e.g., overwrite title but not artist)
+* [x] Implement: overwrite-aware TagPatch generation and application rules
 
 ### 15.3 Tag rollback (Integration, optional but recommended)
 
-* [ ] Test: apply records persist a “before” tag snapshot when real writer enabled
-* [ ] Test: rollback restores pre-apply tag snapshot (formats supported)
-* [ ] Implement: store tag snapshots in apply record; rollback writes them back
+* [x] Test: apply records persist a “before” tag snapshot when real writer enabled
+* [x] Test: rollback restores pre-apply tag snapshot (formats supported)
+* [x] Implement: store tag snapshots in apply record; rollback writes them back
 
 ---
 
@@ -125,23 +125,23 @@ Each section: **tests first**, then minimal implementation.
 
 ### 16.1 Classical v1 path rules (Unit)
 
-* [ ] Test: single composer → `Composer/Album`
-* [ ] Test: mixed composer → `PerformerOrAlbumArtist/Album`
-* [ ] Test: canonicalization applied to folder display names only (not keys)
-* [ ] Implement: classical folder artist selector (pure)
+* [x] Test: single composer → `Composer/Album`
+* [x] Test: mixed composer → `PerformerOrAlbumArtist/Album`
+* [x] Test: canonicalization applied to folder display names only (not keys)
+* [x] Implement: classical folder artist selector (pure)
 
 ### 16.2 Safe filename policy (Unit)
 
-* [ ] Test: deterministic sanitization of forbidden chars (`/ \ : * ? " < > |`)
-* [ ] Test: whitespace collapse and trimming is deterministic
-* [ ] Test: reserved Windows names handled deterministically (CON, PRN, etc.)
-* [ ] Implement: `sanitize_filename()` pure function
+* [x] Test: deterministic sanitization of forbidden chars (`/ \ : * ? " < > |`)
+* [x] Test: whitespace collapse and trimming is deterministic
+* [x] Test: reserved Windows names handled deterministically (CON, PRN, etc.)
+* [x] Implement: `sanitize_filename()` pure function
 
 ### 16.3 Deterministic conflict strategy encoded in plan (Unit/Integration)
 
-* [ ] Test: plan encodes conflict action: FAIL vs SKIP vs RENAME
-* [ ] Test: default is FAIL (safe)
-* [ ] Implement: extend Plan schema with conflict policy and applier enforcement
+* [x] Test: plan encodes conflict action: FAIL vs SKIP vs RENAME
+* [x] Test: default is FAIL (safe)
+* [x] Implement: extend Plan schema with conflict policy and applier enforcement
 
 ---
 
@@ -151,25 +151,20 @@ Each section: **tests first**, then minimal implementation.
 
 ### 17.1 Cache keys + serialization stability (Unit)
 
-* [ ] Test: provider cache key includes provider name + request type + normalized query + version
-* [ ] Test: cached payload serialization is stable (sorted keys; stable lists)
-* [ ] Implement: canonical JSON serialization for provider payloads
+* [x] Test: provider cache key includes provider name + request type + normalized query + version
+* [x] Test: cached payload serialization is stable (sorted keys; stable lists)
+* [x] Implement: canonical JSON serialization for provider payloads
 
 ### 17.2 Cache invalidation versioning (Unit)
 
-* [ ] Test: bumping provider client version invalidates cache deterministically
-* [ ] Test: settings_hash changes do not invalidate provider caches unless relevant
-* [ ] Implement: cache schema includes `client_version`
+* [x] Test: bumping provider client version invalidates cache deterministically
+* [x] Test: settings_hash changes do not invalidate provider caches unless relevant
+* [x] Implement: cache schema includes `client_version`
 
-### 17.3 Rate limiting / backoff (Integration)
+### 17.3 Cache bounding / eviction (Unit)
 
-* [ ] Test: daemon respects rate limiting deterministically (no jitter randomness)
-* [ ] Implement: deterministic backoff schedule or fixed pacing per provider
-
-### 17.4 Offline mode (Integration)
-
-* [ ] Test: `--offline` uses cache only and never calls provider network
-* [ ] Implement: provider client rejects network calls in offline mode with stable message
+* [x] Test: cache eviction is deterministic by key ordering
+* [x] Implement: per-namespace cache limit with deterministic eviction
 
 ---
 
@@ -179,9 +174,9 @@ Each section: **tests first**, then minimal implementation.
 
 ### 18.1 `scan` / `identify` / `plan` / `apply` commands (Integration)
 
-* [ ] Test: each command emits machine-readable JSON (`--json`) deterministically
-* [ ] Test: default output remains human-readable but stable
-* [ ] Implement: output sinks + JSON schema versioning
+* [x] Test: each command emits machine-readable JSON (`--json`) deterministically
+* [x] Test: default output remains human-readable but stable
+* [x] Implement: output sinks + JSON schema versioning
 
 ### 18.2 Prompt CLI ergonomics (Integration)
 

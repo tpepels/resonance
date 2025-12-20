@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Optional
 
 from ..core.models import AlbumInfo, UserSkippedError
@@ -52,7 +50,7 @@ class PromptService:
             print(f"Album: {album.canonical_album}")
 
         # Show sample tracks
-        print(f"\nSample tracks:")
+        print("\nSample tracks:")
         for i, track in enumerate(album.tracks[:5], 1):
             duration_str = f" ({track.duration_seconds}s)" if track.duration_seconds else ""
             title = track.title or track.path.stem
@@ -72,13 +70,13 @@ class PromptService:
                 print(f"      [{provider_tag}] {candidate.track_count} tracks | "
                       f"score: {candidate.score:.2f} | coverage: {candidate.coverage:.0%}")
 
-        print(f"\nOptions:")
+        print("\nOptions:")
         if candidates:
             print(f"  [1-{min(5, len(candidates))}] Select a release from the list")
-        print(f"  [s] Skip this directory (jail it)")
-        print(f"  [mb:ID] Provide MusicBrainz release ID")
-        print(f"  [dg:ID] Provide Discogs release ID")
-        print(f"  [enter] Skip for now (will prompt again)")
+        print("  [s] Skip this directory (jail it)")
+        print("  [mb:ID] Provide MusicBrainz release ID")
+        print("  [dg:ID] Provide Discogs release ID")
+        print("  [enter] Skip for now (will prompt again)")
 
         # Get user input
         try:
@@ -122,13 +120,13 @@ class PromptService:
         print(f"{'='*70}\n")
 
         if album.is_classical:
-            print(f"Type: Classical")
+            print("Type: Classical")
             if album.canonical_composer:
                 print(f"Composer: {album.canonical_composer}")
             if album.canonical_performer:
                 print(f"Performer: {album.canonical_performer}")
         else:
-            print(f"Type: Popular")
+            print("Type: Popular")
             if album.canonical_artist:
                 print(f"Artist: {album.canonical_artist}")
             if album.canonical_album:

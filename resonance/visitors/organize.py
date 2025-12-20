@@ -45,11 +45,11 @@ class OrganizeVisitor(BaseVisitor):
 
         # Skip if uncertain or skipped
         if album.is_uncertain:
-            logger.info(f"  Skipping: uncertain match")
+            logger.info("  Skipping: uncertain match")
             return False
 
         if album.is_skipped:
-            logger.info(f"  Skipping: jailed")
+            logger.info("  Skipping: jailed")
             return False
 
         # Track original source directory for cleanup.
@@ -59,7 +59,7 @@ class OrganizeVisitor(BaseVisitor):
         # Calculate destination
         destination_path = album.destination_path
         if not destination_path:
-            logger.warning(f"  Cannot determine destination path")
+            logger.warning("  Cannot determine destination path")
             return False
 
         # Make destination absolute within library
@@ -78,7 +78,7 @@ class OrganizeVisitor(BaseVisitor):
 
         # Check if already in correct location
         if album.directory.resolve() == destination_path.resolve():
-            logger.info(f"  Already in correct location")
+            logger.info("  Already in correct location")
             return True
 
         # Move files with transaction support

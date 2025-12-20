@@ -52,6 +52,11 @@ def main() -> int:
         action="store_true",
         help="Show what would be done without actually moving files",
     )
+    scan_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
 
     # Daemon command
     daemon_parser = subparsers.add_parser(
@@ -91,6 +96,41 @@ def main() -> int:
         type=Path,
         default=Path.home() / ".cache" / "resonance" / "metadata.db",
         help="Cache database path",
+    )
+
+    identify_parser = subparsers.add_parser(
+        "identify",
+        help="Identify a directory and score provider candidates",
+    )
+    identify_parser.add_argument(
+        "directory",
+        type=Path,
+        help="Directory to identify",
+    )
+    identify_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    plan_parser = subparsers.add_parser(
+        "plan",
+        help="Create a plan artifact for a resolved directory",
+    )
+    plan_parser.add_argument(
+        "--dir-id",
+        required=True,
+        help="Directory identifier to plan",
+    )
+    plan_parser.add_argument(
+        "--state-db",
+        type=Path,
+        help="Directory state DB path",
+    )
+    plan_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
     )
 
     # Prescan command (build canonical name mappings)
@@ -136,6 +176,11 @@ def main() -> int:
         choices=["meta-json", "mutagen"],
         help="Override tag writer backend for this run",
     )
+    apply_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
 
     args = parser.parse_args()
 
@@ -153,6 +198,12 @@ def main() -> int:
     elif args.command == "prompt":
         from .commands.prompt import run_prompt
         return run_prompt(args)
+    elif args.command == "identify":
+        from .commands.identify import run_identify
+        return run_identify(args, provider_client=None)
+    elif args.command == "plan":
+        from .commands.plan import run_plan
+        return run_plan(args)
     elif args.command == "prescan":
         from .commands.prescan import run_prescan
         return run_prescan(args)

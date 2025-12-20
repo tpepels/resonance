@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import re
 from typing import Optional
 
-from ..core.models import AlbumInfo, TrackInfo
+from ..core.models import AlbumInfo
 from ..providers.musicbrainz import MusicBrainzClient
 from ..providers.discogs import DiscogsClient
 

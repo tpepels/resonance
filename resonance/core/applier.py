@@ -9,7 +9,7 @@ import shutil
 from typing import Optional
 
 from resonance.core.enricher import TagPatch
-from resonance.core.planner import Plan
+from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.services.tag_writer import MetaJsonTagWriter, TagWriter
@@ -36,6 +36,7 @@ class TagOpResult:
     file_path: Path
     tags_set: tuple[str, ...]
     tags_skipped: tuple[str, ...]
+    before_tags: tuple[tuple[str, str], ...] = ()
     error: Optional[str] = None
 
 
@@ -195,9 +196,10 @@ def apply_plan(
             if not any(_is_within(root, dest) for root in allowed_roots):
                 errors.append(f"Destination outside allowed roots: {dest}")
 
-    for _, dest in file_moves:
-        if dest.exists():
-            errors.append(f"Destination already exists: {dest}")
+    if plan.conflict_policy == "FAIL":
+        for _, dest in file_moves:
+            if dest.exists():
+                errors.append(f"Destination already exists: {dest}")
 
     if errors:
         return _fail(errors)
@@ -226,11 +228,32 @@ def apply_plan(
     rollback_success = False
     try:
         for src, dest in file_moves:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(src), str(dest))
-            completed_moves.append((src, dest))
+            target = dest
+            if target.exists():
+                if plan.conflict_policy == "SKIP":
+                    file_ops.append(
+                        FileOpResult(
+                            source_path=src,
+                            destination_path=target,
+                            status="SKIPPED",
+                        )
+                    )
+                    continue
+                if plan.conflict_policy == "RENAME":
+                    base = target.stem
+                    suffix = target.suffix
+                    index = 1
+                    while True:
+                        candidate = target.with_name(f"{base} ({index}){suffix}")
+                        if not candidate.exists():
+                            target = candidate
+                            break
+                        index += 1
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(src), str(target))
+            completed_moves.append((src, target))
             file_ops.append(
-                FileOpResult(source_path=src, destination_path=dest, status="MOVED")
+                FileOpResult(source_path=src, destination_path=target, status="MOVED")
             )
     except Exception as exc:  # noqa: BLE001 - surface rollback behavior
         file_ops.append(
@@ -276,25 +299,55 @@ def apply_plan(
         rollback_success = False
         by_position = {op.track_position: op for op in ordered_ops}
         album_tags = tag_patch.album_patch.set_tags if tag_patch.album_patch else {}
+        provenance_tags = tag_patch.provenance_tags
+        overwrite_fields = set(tag_patch.overwrite_fields or ())
         for track_patch in tag_patch.track_patches:
-            op = by_position.get(track_patch.track_position)
-            if not op:
+            operation: TrackOperation | None = by_position.get(track_patch.track_position)
+            if operation is None:
                 tags_errors.append(
                     f"Missing track position in plan: {track_patch.track_position}"
                 )
                 continue
             try:
-                dest = _resolve_destination_path(op.destination_path, allowed_roots)
+                dest = _resolve_destination_path(operation.destination_path, allowed_roots)
+                existing = tag_writer.read_tags(dest)
+                before_snapshot = tuple(sorted(existing.items()))
+                combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
+                planned_set: dict[str, str] = {}
+                planned_skipped: list[str] = []
+                overwritten: list[str] = []
+                for key, value in combined.items():
+                    existing_value = existing.get(key)
+                    is_provenance = key.startswith("resonance.prov.")
+                    has_value = (
+                        existing_value is not None
+                        and str(existing_value).strip() != ""
+                    )
+                    if has_value and not (
+                        is_provenance
+                        or tag_patch.allow_overwrite
+                        or key in overwrite_fields
+                    ):
+                        planned_skipped.append(key)
+                        continue
+                    if has_value and not is_provenance:
+                        overwritten.append(key)
+                    planned_set[key] = value
+                if overwritten:
+                    planned_set["resonance.prov.overwrote_keys"] = ",".join(
+                        sorted(set(overwritten))
+                    )
                 write_result = tag_writer.apply_patch(
                     dest,
-                    {**album_tags, **track_patch.set_tags},
-                    tag_patch.allow_overwrite,
+                    planned_set,
+                    allow_overwrite=True,
                 )
                 tag_ops.append(
                     TagOpResult(
                         file_path=write_result.file_path,
-                        tags_set=tuple(sorted(write_result.tags_set)),
-                        tags_skipped=tuple(sorted(write_result.tags_skipped)),
+                        tags_set=tuple(sorted(planned_set.keys())),
+                        tags_skipped=tuple(sorted(planned_skipped)),
+                        before_tags=before_snapshot,
                     )
                 )
             except Exception as exc:  # noqa: BLE001 - surface tag error
@@ -304,6 +357,7 @@ def apply_plan(
                         file_path=dest,
                         tags_set=(),
                         tags_skipped=(),
+                        before_tags=(),
                         error=str(exc),
                     )
                 )

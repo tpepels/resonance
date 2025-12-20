@@ -1,0 +1,65 @@
+"""Plan command - create deterministic plan artifact."""
+
+from __future__ import annotations
+
+from argparse import Namespace
+
+from resonance.commands.output import emit_output
+from resonance.core.identifier import ProviderRelease
+from resonance.core.planner import plan_directory
+from resonance.infrastructure.directory_store import DirectoryStateStore
+
+
+def _plan_payload(plan) -> dict:
+    return {
+        "dir_id": plan.dir_id,
+        "signature_hash": plan.signature_hash,
+        "plan_version": plan.plan_version,
+        "destination_path": str(plan.destination_path),
+        "operations_count": len(plan.operations),
+        "conflict_policy": plan.conflict_policy,
+        "non_audio_policy": plan.non_audio_policy,
+    }
+
+
+def run_plan(
+    args: Namespace,
+    *,
+    store: DirectoryStateStore | None = None,
+    pinned_release: ProviderRelease | None = None,
+    canonicalize_display=None,
+    output_sink=print,
+) -> int:
+    """Generate a plan for a resolved directory."""
+    close_store = False
+    if store is None:
+        if not args.state_db:
+            raise ValueError("state_db is required")
+        store = DirectoryStateStore(args.state_db)
+        close_store = True
+    if pinned_release is None:
+        raise ValueError("pinned_release is required")
+
+    try:
+        plan = plan_directory(
+            dir_id=args.dir_id,
+            store=store,
+            pinned_release=pinned_release,
+            canonicalize_display=canonicalize_display,
+        )
+    finally:
+        if close_store:
+            store.close()
+
+    payload = _plan_payload(plan)
+    emit_output(
+        command="plan",
+        payload=payload,
+        json_output=getattr(args, "json", False),
+        output_sink=output_sink,
+        human_lines=(
+            f"plan: dir_id={payload['dir_id']} ops={payload['operations_count']}",
+            f"plan: destination={payload['destination_path']}",
+        ),
+    )
+    return 0

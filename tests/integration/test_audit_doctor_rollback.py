@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from resonance.core.applier import ApplyReport, ApplyStatus, FileOpResult
+from resonance.core.applier import ApplyReport, ApplyStatus, FileOpResult, TagOpResult
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 import pytest
@@ -129,5 +129,63 @@ def test_audit_includes_tag_errors(tmp_path: Path) -> None:
 
         audit = run_audit(store=store, dir_id=record.dir_id, apply_report=report)
         assert audit["last_apply_errors"] == report.errors
+    finally:
+        store.close()
+
+
+def test_rollback_restores_tag_snapshot(tmp_path: Path) -> None:
+    store = _make_store(tmp_path)
+    try:
+        source = tmp_path / "source"
+        source.mkdir(parents=True, exist_ok=True)
+        src_file = source / "track.flac"
+        src_file.write_text("audio")
+        dest_root = tmp_path / "library"
+        dest_root.mkdir(parents=True, exist_ok=True)
+        dest_file = dest_root / "Artist" / "Album" / "track.flac"
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        src_file.replace(dest_file)
+
+        from resonance.services.tag_writer import MetaJsonTagWriter
+
+        writer = MetaJsonTagWriter()
+        writer.apply_patch(dest_file, {"title": "After"}, allow_overwrite=True)
+
+        report = ApplyReport(
+            dir_id="dir-1",
+            plan_version="v1",
+            tagpatch_version="v1",
+            status=ApplyStatus.FAILED,
+            dry_run=False,
+            file_ops=(
+                FileOpResult(
+                    source_path=source / "track.flac",
+                    destination_path=dest_file,
+                    status="MOVED",
+                    error=None,
+                ),
+            ),
+            tag_ops=(
+                TagOpResult(
+                    file_path=dest_file,
+                    tags_set=("title",),
+                    tags_skipped=(),
+                    before_tags=(("title", "Before"),),
+                ),
+            ),
+            errors=(),
+            rollback_attempted=True,
+            rollback_success=False,
+        )
+        from resonance.commands.rollback import run_rollback
+
+        result = run_rollback(
+            report=report,
+            source_dir=source,
+            destination_dir=dest_root,
+            tag_writer=writer,
+        )
+        assert result["restored"] is True
+        assert writer.read_tags(source / "track.flac")["title"] == "Before"
     finally:
         store.close()

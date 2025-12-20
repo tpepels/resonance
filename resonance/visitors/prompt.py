@@ -57,7 +57,7 @@ class PromptVisitor(BaseVisitor):
 
         # Defer if in non-interactive mode
         if not self.prompt_service.interactive:
-            logger.info(f"  Deferring prompt (daemon mode)")
+            logger.info("  Deferring prompt (daemon mode)")
             self.cache.add_deferred_prompt(
                 album.directory,
                 reason="uncertain_match"
@@ -92,7 +92,7 @@ class PromptVisitor(BaseVisitor):
                 return True
             else:
                 # User pressed enter - defer for now
-                logger.info(f"  User deferred decision")
+                logger.info("  User deferred decision")
                 self.cache.add_deferred_prompt(
                     album.directory,
                     reason="user_deferred"

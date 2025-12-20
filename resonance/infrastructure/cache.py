@@ -21,16 +21,18 @@ from typing import Any, Optional
 class MetadataCache:
     """SQLite-backed cache for expensive operations and user decisions."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, cache_limit_per_namespace: int | None = None) -> None:
         """Initialize the cache.
 
         Args:
             path: Path to SQLite database file
+            cache_limit_per_namespace: Optional deterministic limit per namespace
         """
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = Lock()
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
+        self._cache_limit_per_namespace = cache_limit_per_namespace
         self._init_schema()
 
     def _init_schema(self) -> None:
@@ -164,7 +166,25 @@ class MetadataCache:
                 "VALUES (?, ?, ?, ?)",
                 (namespace, key, json.dumps(value), datetime.now().isoformat()),
             )
+            self._enforce_cache_limit(namespace)
             self._conn.commit()
+
+    def _enforce_cache_limit(self, namespace: str) -> None:
+        """Evict cache entries deterministically when limits are set."""
+        if self._cache_limit_per_namespace is None:
+            return
+        rows = self._conn.execute(
+            "SELECT key FROM cache WHERE namespace = ? ORDER BY key ASC",
+            (namespace,),
+        ).fetchall()
+        if len(rows) <= self._cache_limit_per_namespace:
+            return
+        excess = rows[self._cache_limit_per_namespace :]
+        keys = [row[0] for row in excess]
+        self._conn.executemany(
+            "DELETE FROM cache WHERE namespace = ? AND key = ?",
+            [(namespace, key) for key in keys],
+        )
 
     # MusicBrainz cache
     def get_mb_release(self, release_id: str) -> Optional[dict[str, Any]]:

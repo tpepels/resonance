@@ -5,12 +5,17 @@ This module generates pure, deterministic TagPatch artifacts without I/O.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
 from typing import Optional
 
 from resonance.core.identifier import ProviderRelease
 from resonance.core.planner import Plan
 from resonance.core.state import DirectoryState
+from resonance import __version__
 
 TAGPATCH_VERSION = "v1"
 
@@ -43,6 +48,8 @@ class TagPatch:
     allowed: bool
     reason: Optional[str]
     allow_overwrite: bool
+    overwrite_fields: tuple[str, ...]
+    provenance_tags: dict[str, str]
     album_patch: Optional[AlbumTagPatch]
     track_patches: tuple[TrackTagPatch, ...]
 
@@ -62,9 +69,49 @@ def _empty_patch(
         allowed=False,
         reason=reason,
         allow_overwrite=allow_overwrite,
+        overwrite_fields=(),
+        provenance_tags={},
         album_patch=None,
         track_patches=(),
     )
+
+
+def _stable_plan_hash(plan: Plan) -> str:
+    payload = asdict(plan)
+
+    def convert_paths(obj):
+        if isinstance(obj, Path):
+            return str(obj)
+        if isinstance(obj, dict):
+            return {k: convert_paths(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [convert_paths(item) for item in obj]
+        return obj
+
+    payload = convert_paths(payload)
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _provenance_tags(
+    plan: Plan,
+    release: ProviderRelease,
+    now_fn,
+) -> dict[str, str]:
+    now = now_fn()
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    timestamp = now.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    return {
+        "resonance.prov.version": "1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": __version__,
+        "resonance.prov.dir_id": plan.dir_id,
+        "resonance.prov.plan_hash": _stable_plan_hash(plan),
+        "resonance.prov.pinned_provider": release.provider,
+        "resonance.prov.pinned_release_id": release.release_id,
+        "resonance.prov.applied_at_utc": timestamp,
+    }
 
 
 def build_tag_patch(
@@ -74,6 +121,8 @@ def build_tag_patch(
     *,
     allow_user_resolved: bool = False,
     allow_overwrite: bool = False,
+    overwrite_fields: tuple[str, ...] = (),
+    now_fn=lambda: datetime.now(timezone.utc),
 ) -> TagPatch:
     """Build a deterministic tag patch from a plan and pinned release."""
     if resolution_state not in (
@@ -131,6 +180,8 @@ def build_tag_patch(
         allowed=True,
         reason=None,
         allow_overwrite=allow_overwrite,
+        overwrite_fields=overwrite_fields,
+        provenance_tags=_provenance_tags(plan, pinned_release, now_fn),
         album_patch=album_patch,
         track_patches=track_patches,
     )

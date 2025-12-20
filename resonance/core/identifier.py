@@ -6,11 +6,10 @@ Provider I/O is abstracted behind the ProviderClient interface.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Callable, Optional, Protocol
 
 
 class ConfidenceTier(str, Enum):
@@ -52,6 +51,7 @@ class ProviderTrack:
     title: str
     duration_seconds: Optional[int] = None
     fingerprint_id: Optional[str] = None
+    composer: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -142,7 +142,8 @@ SCORING_V1_THRESHOLDS = {
 
 
 def extract_evidence(
-    audio_files: list[Path], fingerprint_reader: Optional[callable] = None
+    audio_files: list[Path],
+    fingerprint_reader: Optional[Callable[[Path], str | None]] = None,
 ) -> DirectoryEvidence:
     """Extract evidence from audio files.
 

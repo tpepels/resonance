@@ -6,14 +6,14 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from ..core.models import AlbumInfo, TrackInfo, MatchSource
+from ..core.models import AlbumInfo, MatchSource
 from ..core.visitor import BaseVisitor
 from ..core.identity import IdentityCanonicalizer
 from ..core.identity.matching import strip_featuring
 from ..infrastructure.cache import MetadataCache
 from ..providers.musicbrainz import MusicBrainzClient
 from ..services.metadata_reader import MetadataReader
-from ..services.release_search import ReleaseSearchService, ReleaseCandidate
+from ..services.release_search import ReleaseSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -129,18 +129,18 @@ class IdentifyVisitor(BaseVisitor):
                     # Store candidates for prompt visitor
                     album.extra["release_candidates"] = candidates
                     album.is_uncertain = True
-                    logger.info(f"  Uncertain - will prompt user")
+                    logger.info("  Uncertain - will prompt user")
             else:
-                logger.warning(f"  No release candidates found")
+                logger.warning("  No release candidates found")
                 album.is_uncertain = True
 
         # Check if we have enough information
         if not album.canonical_artist and not album.canonical_composer:
-            logger.warning(f"  Unable to determine artist/composer")
+            logger.warning("  Unable to determine artist/composer")
             album.is_uncertain = True
 
         if not album.canonical_album and not album.canonical_performer:
-            logger.warning(f"  Unable to determine album/performer")
+            logger.warning("  Unable to determine album/performer")
             album.is_uncertain = True
 
         # Log what we found

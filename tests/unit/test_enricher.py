@@ -8,7 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from datetime import datetime, timezone
+
 from resonance.core.enricher import build_tag_patch
+from resonance import __version__
 from resonance.core.identifier import ProviderRelease, ProviderTrack
 from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
@@ -97,7 +100,10 @@ def test_enricher_builds_patch_for_resolved_auto() -> None:
     plan = _make_plan()
     release = _make_release()
 
-    patch = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+    fixed_now = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    patch = build_tag_patch(
+        plan, release, DirectoryState.RESOLVED_AUTO, now_fn=lambda: fixed_now
+    )
 
     assert patch.allowed is True
     assert patch.album_patch is not None
@@ -111,6 +117,11 @@ def test_enricher_builds_patch_for_resolved_auto() -> None:
         "Track B",
     ]
     assert [tp.set_tags["tracknumber"] for tp in patch.track_patches] == ["1", "2"]
+    assert patch.provenance_tags["resonance.prov.tool"] == "resonance"
+    assert patch.provenance_tags["resonance.prov.tool_version"] == __version__
+    assert patch.provenance_tags["resonance.prov.dir_id"] == plan.dir_id
+    assert patch.provenance_tags["resonance.prov.pinned_release_id"] == release.release_id
+    assert patch.provenance_tags["resonance.prov.applied_at_utc"] == "2024-01-01T00:00:00Z"
 
 
 def test_enricher_orders_patches_by_track_position() -> None:
@@ -170,7 +181,12 @@ def test_enricher_is_byte_identical_for_same_inputs() -> None:
     plan = _make_plan()
     release = _make_release()
 
-    patch1 = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
-    patch2 = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+    fixed_now = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    patch1 = build_tag_patch(
+        plan, release, DirectoryState.RESOLVED_AUTO, now_fn=lambda: fixed_now
+    )
+    patch2 = build_tag_patch(
+        plan, release, DirectoryState.RESOLVED_AUTO, now_fn=lambda: fixed_now
+    )
 
     assert _stable_json_patch(patch1) == _stable_json_patch(patch2)

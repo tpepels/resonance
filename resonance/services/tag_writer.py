@@ -55,6 +55,9 @@ class TagWriter(Protocol):
     ) -> TagWriteResult:
         ...
 
+    def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None:
+        ...
+
 
 def get_tag_writer(backend: str) -> TagWriter:
     if backend == "meta-json":
@@ -95,6 +98,11 @@ class MetaJsonTagWriter:
             tags_set=tuple(tags_set),
             tags_skipped=tuple(tags_skipped),
         )
+
+    def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None:
+        meta_path = path.with_suffix(path.suffix + ".meta.json")
+        meta_path.parent.mkdir(parents=True, exist_ok=True)
+        meta_path.write_text(json.dumps({"tags": dict(tags)}, indent=2, sort_keys=True))
 
 
 class MutagenTagWriter:
@@ -198,3 +206,38 @@ class MutagenTagWriter:
             tags_set=tuple(tags_set),
             tags_skipped=tuple(tags_skipped),
         )
+
+    def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None:
+        self._require_mutagen()
+        ext = path.suffix.lower()
+        if ext == ".mp3":
+            id3 = ID3()
+            for key, frame in self._MP3_KEYS.items():
+                if key in tags and frame:
+                    id3.add(frame(encoding=3, text=str(tags[key])))
+            id3.save(path)
+            return
+        if ext == ".flac":
+            audio = FLAC(path)
+            audio.clear()
+            for key, value in tags.items():
+                audio[key.upper()] = str(value)
+            audio.save()
+            return
+        if ext in (".m4a", ".mp4"):
+            audio = MP4(path)
+            audio.tags.clear()
+            mapping = {
+                "title": "\xa9nam",
+                "artist": "\xa9ART",
+                "album": "\xa9alb",
+                "albumartist": "aART",
+                "tracknumber": "trkn",
+                "discnumber": "disk",
+            }
+            for key, mp4_key in mapping.items():
+                if key in tags:
+                    audio.tags[mp4_key] = [tags[key]]
+            audio.save()
+            return
+        raise ValueError(f"Unsupported audio format: {ext}")
