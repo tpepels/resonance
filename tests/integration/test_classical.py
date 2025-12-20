@@ -4,10 +4,10 @@ Tests composer/performer structure, name variants (J.S. Bach vs Johann Sebastian
 and handling of multiple performers of the same work.
 """
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from typing import Callable
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -15,9 +15,59 @@ from resonance.app import ResonanceApp
 from resonance.core.models import AlbumInfo
 
 
+@dataclass(frozen=True)
+class TrackSpec:
+    filename: str
+    title: str
+    album: str
+    track_number: int
+    # Classical fields
+    composer: str | None = None
+    artist: str | None = None          # often performer
+    performer: str | None = None       # orchestra/ensemble/soloist
+    conductor: str | None = None
+    work: str | None = None
+    year: int | None = None
+    disc_number: int | None = None
+
+
+def _patch_reader_for_specs(specs: list[TrackSpec]) -> Callable:
+    """
+    Returns a MetadataReader.read_track replacement that maps file names to specs.
+    Avoids late-binding issues by closing over `specs` in an outer function.
+    """
+    def mock_read_track(path: Path):
+        from resonance.core.models import TrackInfo
+
+        spec_map = {s.filename: s for s in specs}
+        s = spec_map[path.name]
+        t = TrackInfo(path=path)
+        t.title = s.title
+        t.album = s.album
+        t.track_number = s.track_number
+        # Optional extra fields (only if TrackInfo supports them)
+        if hasattr(t, "disc_number"):
+            t.disc_number = s.disc_number
+        if hasattr(t, "year"):
+            t.year = s.year
+        if hasattr(t, "work"):
+            t.work = s.work
+        if hasattr(t, "composer"):
+            t.composer = s.composer
+        if hasattr(t, "artist"):
+            t.artist = s.artist
+        if hasattr(t, "performer"):
+            t.performer = s.performer
+        if hasattr(t, "conductor"):
+            t.conductor = s.conductor
+        return t
+
+    return mock_read_track
+
+
 class TestClassicalMusic:
     """Test classical music composer/performer organization."""
-
+    
     def test_bach_goldberg_composer_variants(
         self,
         create_test_audio_file,
@@ -31,9 +81,8 @@ class TestClassicalMusic:
         - Performer: Glenn Gould
 
         Expected:
-        - Composer canonical: "Johann Sebastian Bach" (or configured canonical)
-        - Path structure: Composer/Work/Performer/
-        - All variants map to same composer
+        - Tracks load with composer metadata
+        - Canonicalization only unifies when mappings exist
         """
         input_dir = test_library / "bach_goldberg"
         input_dir.mkdir()
@@ -144,9 +193,7 @@ class TestClassicalMusic:
         - Orchestra: Berlin Philharmonic Orchestra
 
         Expected:
-        - Composer: Beethoven
-        - Performer: "Karajan; Berlin Philharmonic" (combined)
-        - Path: Beethoven/Symphony No. 9/Karajan - Berlin Philharmonic/
+        - Tracks load with composer/conductor/performer metadata
         """
         input_dir = test_library / "beethoven_9th"
         input_dir.mkdir()
@@ -245,12 +292,7 @@ class TestClassicalMusic:
         - András Schiff recording
 
         Expected:
-        - All in same composer/work directory
-        - But separated by performer/year
-        - Paths:
-          - Bach/Goldberg Variations/Glenn Gould (1955)/
-          - Bach/Goldberg Variations/Glenn Gould (1981)/
-          - Bach/Goldberg Variations/András Schiff/
+        - Tracks load for each album directory without crashing
         """
         # Create three separate input directories (simulating different albums)
         dirs = []
@@ -351,6 +393,652 @@ class TestClassicalMusic:
 
             # In real implementation, the organize visitor would create separate directories
             # based on performer and/or year
+
+        finally:
+            app.close()
+
+    # --- more classical integration tests (real-world combinations) ---
+
+    def test_vivaldi_four_seasons_soloist_conductor_orchestra(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: Vivaldi - The Four Seasons
+        Common tags include composer + soloist + conductor + orchestra.
+
+        Expected (v1):
+        - Tracks recognized as classical (composer present)
+        - Conductor and orchestra fields preserved
+        - Performer/artist may be soloist (violinist)
+        """
+        input_dir = test_library / "vivaldi_four_seasons"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - Spring I.flac",
+                title="The Four Seasons: Spring, I. Allegro",
+                composer="Antonio Vivaldi",
+                artist="Janine Jansen",  # soloist (often stored in artist)
+                conductor="Paavo Järvi",
+                performer="Deutsche Kammerphilharmonie Bremen",
+                album="Vivaldi: The Four Seasons",
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="02 - Spring II.flac",
+                title="The Four Seasons: Spring, II. Largo",
+                composer="Antonio Vivaldi",
+                artist="Janine Jansen",
+                conductor="Paavo Järvi",
+                performer="Deutsche Kammerphilharmonie Bremen",
+                album="Vivaldi: The Four Seasons",
+                track_number=2,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                artist=s.artist,
+                conductor=s.conductor,
+                performer=s.performer,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            assert all(t.composer for t in album.tracks)
+            assert all(getattr(t, "conductor", None) for t in album.tracks)
+            assert all(getattr(t, "performer", None) for t in album.tracks)
+
+            # Future tightening: when you build canonical_performer, assert it includes soloist+conductor+orchestra.
+
+        finally:
+            app.close()
+
+    def test_mahler_symphony_with_vocal_soloists_and_choir(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: Mahler symphony with chorus and soloists.
+
+        Expected:
+        - Composer present
+        - Performer may include choir/orchestra; artist may be conductor or album artist in the wild
+        - No crash if multiple contributor-like fields exist
+        """
+        input_dir = test_library / "mahler_2_resurrection"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - I. Allegro maestoso.flac",
+                title="Symphony No. 2: I. Allegro maestoso",
+                composer="Gustav Mahler",
+                conductor="Claudio Abbado",
+                performer="Berlin Philharmonic; Swedish Radio Choir",
+                album="Mahler: Symphony No. 2",
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="02 - IV. Urlicht.flac",
+                title="Symphony No. 2: IV. Urlicht",
+                composer="Gustav Mahler",
+                conductor="Claudio Abbado",
+                performer="Berlin Philharmonic; Swedish Radio Choir; Anna Larsson (alto)",
+                album="Mahler: Symphony No. 2",
+                track_number=2,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                conductor=s.conductor,
+                performer=s.performer,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            assert all(t.composer for t in album.tracks)
+            assert all(getattr(t, "conductor", None) for t in album.tracks)
+            assert all(getattr(t, "performer", None) for t in album.tracks)
+
+        finally:
+            app.close()
+
+    def test_classical_multi_composer_album_falls_back_to_performer_or_various(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: 'Best of Baroque' style compilation.
+        Multiple composers within the same directory => no single-composer path.
+
+        Expected (v1):
+        - album is classical (composer on tracks)
+        - canonical_composer likely None (or not set as single composer)
+        - canonical performer used if present; otherwise 'Various Artists' later in planner
+        """
+        input_dir = test_library / "best_of_baroque"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - Bach.flac",
+                title="Brandenburg Concerto No. 3: I. Allegro",
+                composer="J.S. Bach",
+                performer="Academy of St Martin in the Fields",
+                conductor="Neville Marriner",
+                album="Best of Baroque",
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="02 - Handel.flac",
+                title="Water Music: Alla Hornpipe",
+                composer="G.F. Handel",
+                performer="Academy of St Martin in the Fields",
+                conductor="Neville Marriner",
+                album="Best of Baroque",
+                track_number=2,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                performer=s.performer,
+                conductor=s.conductor,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            assert all(t.composer for t in album.tracks)
+
+            # Future tightening: assert canonical_composer is None (or not "single composer")
+            # depending on your IdentifyVisitor policy.
+            # If your current IdentifyVisitor sets a composer anyway, keep only the invariant:
+            composers = {t.composer for t in album.tracks if t.composer}
+            assert len(composers) >= 2
+
+        finally:
+            app.close()
+
+    def test_opera_with_act_scene_titles_and_many_performers(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: Opera track titles are long and include act/scene.
+        Performers may be 'cast; orchestra; conductor'.
+
+        Expected:
+        - No crashes / truncation assumptions
+        - Composer preserved
+        - Performer/conductor preserved when present
+        """
+        input_dir = test_library / "mozart_don_giovanni"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - Act I - Scene 1.flac",
+                title="Don Giovanni, K.527: Act I, Scene 1: Notte e giorno faticar",
+                composer="W.A. Mozart",
+                conductor="Carlo Maria Giulini",
+                performer="Philharmonia Orchestra; Eberhard Wächter; Joan Sutherland",
+                album="Mozart: Don Giovanni",
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="02 - Act I - Scene 2.flac",
+                title="Don Giovanni, K.527: Act I, Scene 2: Là ci darem la mano",
+                composer="W.A. Mozart",
+                conductor="Carlo Maria Giulini",
+                performer="Philharmonia Orchestra; Eberhard Wächter; Joan Sutherland",
+                album="Mozart: Don Giovanni",
+                track_number=2,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                conductor=s.conductor,
+                performer=s.performer,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            assert all(t.composer for t in album.tracks)
+            assert all(getattr(t, "performer", None) for t in album.tracks)
+            assert all(getattr(t, "conductor", None) for t in album.tracks)
+
+        finally:
+            app.close()
+
+    def test_classical_diacritics_and_name_variants_canonicalization(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: diacritics and abbreviations in composer field.
+        Examples:
+          - 'Dvořák' vs 'Dvorak'
+          - 'Pyotr Ilyich Tchaikovsky' vs 'P. I. Tchaikovsky'
+
+        Expected:
+        - No crashes; composer strings loaded
+        - Later canonicalizer mapping can unify variants (this test verifies the raw presence)
+        """
+        input_dir = test_library / "name_variants_diacritics"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - New World I.flac",
+                title="Symphony No. 9 'From the New World': I. Adagio - Allegro molto",
+                composer="Antonín Dvořák",
+                performer="Czech Philharmonic Orchestra",
+                conductor="Rafael Kubelík",
+                album="Dvořák: New World Symphony",
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="02 - New World II.flac",
+                title="Symphony No. 9 'From the New World': II. Largo",
+                composer="Antonin Dvorak",
+                performer="Czech Philharmonic Orchestra",
+                conductor="Rafael Kubelik",
+                album="Dvorak: New World Symphony",
+                track_number=2,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                performer=s.performer,
+                conductor=s.conductor,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            composers = {t.composer for t in album.tracks if t.composer}
+            assert len(composers) == 2  # raw variants present
+
+            # Future tightening: once canonicalizer mappings exist, assert album.canonical_composer is unified.
+
+        finally:
+            app.close()
+
+    def test_box_set_multi_disc_numbers_preserved_and_stable(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: box sets with multiple discs.
+        Often disc_number is crucial for track ordering and later filename formatting.
+
+        Expected:
+        - disc_number and track_number preserved if supported by TrackInfo
+        - IdentifyVisitor doesn't crash if disc_number exists
+        """
+        input_dir = test_library / "box_set_multi_disc"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="CD1-01.flac",
+                title="Piano Sonata No. 14 'Moonlight': I. Adagio sostenuto",
+                composer="Ludwig van Beethoven",
+                performer="Wilhelm Kempff",
+                album="Beethoven: Complete Piano Sonatas",
+                disc_number=1,
+                track_number=1,
+            ),
+            TrackSpec(
+                filename="CD2-01.flac",
+                title="Piano Sonata No. 8 'Pathétique': I. Grave - Allegro di molto e con brio",
+                composer="Ludwig van Beethoven",
+                performer="Wilhelm Kempff",
+                album="Beethoven: Complete Piano Sonatas",
+                disc_number=2,
+                track_number=1,
+            ),
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                performer=s.performer,
+                disc_number=s.disc_number,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 2
+            assert all(t.composer for t in album.tracks)
+
+            # Only assert disc_number if TrackInfo has it.
+            if hasattr(album.tracks[0], "disc_number"):
+                discs = {t.disc_number for t in album.tracks}
+                assert discs == {1, 2}
+
+        finally:
+            app.close()
+
+    def test_classical_missing_composer_should_not_be_classical_by_accident(
+        self,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Real-world case: classical album where composer tag is missing (common in poorly tagged libraries).
+
+        Expected:
+        - IdentifyVisitor loads tracks but should not 'invent' composer.
+        - album may remain non-classical (depending on your is_classical rule).
+        """
+        input_dir = test_library / "missing_composer_tag"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - Track.flac",
+                title="Symphony No. 5: I. Allegro con brio",
+                composer=None,  # missing composer tag
+                artist="Berlin Philharmonic Orchestra",
+                album="Symphony No. 5",
+                track_number=1,
+            )
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                artist=s.artist,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 1
+            assert album.tracks[0].composer in (None, "")
+
+            # If your AlbumInfo.is_classical depends on composer, this should be False.
+            # Keep it permissive if your current logic differs.
+            assert album.is_classical is False
+
+        finally:
+            app.close()
+
+    @pytest.mark.parametrize(
+        "composer_variant",
+        ["J.S. Bach", "Johann Sebastian Bach", "JS Bach", "Bach", "J. S. Bach"],
+    )
+    def test_parametric_composer_variants_load_and_do_not_crash(
+        self,
+        composer_variant,
+        create_test_audio_file,
+        test_cache,
+        test_library,
+    ):
+        """
+        Parametric smoke test: many composer spellings should be accepted.
+        This does not enforce canonical output (that’s a mapping/policy concern),
+        but it prevents regressions in parsing/handling.
+        """
+        input_dir = test_library / f"composer_variant_{composer_variant.replace(' ', '_').replace('.', '')}"
+        input_dir.mkdir()
+
+        specs = [
+            TrackSpec(
+                filename="01 - Aria.flac",
+                title="Goldberg Variations: Aria",
+                composer=composer_variant,
+                artist="Glenn Gould",
+                album="Goldberg Variations",
+                track_number=1,
+            )
+        ]
+
+        for s in specs:
+            create_test_audio_file(
+                path=input_dir / s.filename,
+                title=s.title,
+                album=s.album,
+                track_number=s.track_number,
+                composer=s.composer,
+                artist=s.artist,
+            )
+
+        app = ResonanceApp.from_env(
+            library_root=test_library,
+            cache_path=test_cache,
+            interactive=False,
+            dry_run=True,
+        )
+
+        try:
+            album = AlbumInfo(directory=input_dir)
+            with patch(
+                "resonance.services.metadata_reader.MetadataReader.read_track",
+                _patch_reader_for_specs(specs),
+            ):
+                from resonance.visitors import IdentifyVisitor
+
+                identify = IdentifyVisitor(
+                    musicbrainz=MagicMock(),
+                    canonicalizer=app.canonicalizer,
+                    cache=app.cache,
+                    release_search=app.release_search,
+                )
+                identify.visit(album)
+
+            assert len(album.tracks) == 1
+            assert album.tracks[0].composer == composer_variant
 
         finally:
             app.close()

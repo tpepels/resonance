@@ -9,23 +9,15 @@ import re
 import unicodedata
 
 
-# Feature patterns to remove during normalization
-FEAT_PATTERNS = [
-    r"\s*\(?\s*\bfeat\.?\b\s+[^)]+\)?",
-    r"\s*\(?\s*\bfeaturing\b\s+[^)]+\)?",
-    r"\s*\(?\s*\bft\.?\b\s+[^)]+\)?",
-    r"\s*\(?\s*\bwith\b\s+[^)]+\)?",
-]
-
 JOINER_PATTERN = re.compile(
-    r"\s*(?:&|\band\b|/|;)\s*",
+    r"\s*(?:&|\band\b|/|;|\bx\b|×)\s*",
     flags=re.IGNORECASE,
 )
 
 SHORT_NAME_SEPARATOR = re.compile(r"\s+-\s+|\s+–\s+|\s+—\s+|\s*:\s*|\s*/\s*|\s*;\s*|\s*\|\s*")
 
 FEAT_SEGMENT_PATTERN = re.compile(
-    r"\s*(?:\(|\[)?\s*\b(feat|featuring|ft|with)\b\.?\s*[^)\]]*\)?",
+    r"\s*(?:\(|\[)?\s*\b(feat|featuring|ft|including)\b\.?\s*[^)\]]*\)?",
     flags=re.IGNORECASE,
 )
 
@@ -40,7 +32,7 @@ def normalize_token(value: str | None) -> str:
     1. Remove featuring patterns
     2. Unicode normalization (NFKC)
     3. Casefold for stable comparisons
-    4. Normalize joiners (feat/ft/with/&/and/;/) as separators
+    4. Normalize joiners (&/and/;/x) as separators
     5. Remove punctuation (keep spaces temporarily)
     6. Collapse spaces
     7. Remove all spaces for final token
@@ -72,9 +64,6 @@ def normalize_token(value: str | None) -> str:
     # Casefold for stable comparison
     cleaned = cleaned.casefold()
 
-    # Remove patronymic suffixes early (e.g., "gudmundsdottir")
-    cleaned = re.sub(r"\b\w+dottir\b", " ", cleaned, flags=re.IGNORECASE)
-
     # Fold diacritics to ASCII-equivalent characters
     normalized = unicodedata.normalize("NFKD", cleaned)
     ascii_only = "".join(ch for ch in normalized if not unicodedata.combining(ch))
@@ -99,11 +88,10 @@ def split_names(value: str | None) -> list[str]:
     cleaned = unicodedata.normalize("NFKC", value).strip()
     cleaned = re.sub(r"\s+", " ", cleaned)
 
-    cleaned = re.sub(r"[()]", " ", cleaned)
     cleaned = re.sub(r"\bfeat\.?\b", ";", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\bfeaturing\b", ";", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\bft\.?\b", ";", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\bwith\b", ";", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bincluding\b", ";", cleaned, flags=re.IGNORECASE)
     cleaned = JOINER_PATTERN.sub(";", cleaned)
     cleaned = re.sub(r"[,&/;]+", ";", cleaned)
 
@@ -128,11 +116,24 @@ def dedupe_names(names: list[str]) -> list[str]:
     return unique
 
 
+def strip_featuring(value: str | None) -> str | None:
+    """Remove featuring segments from a display name without other normalization."""
+    if not value:
+        return value
+
+    cleaned = unicodedata.normalize("NFKC", value).strip()
+    cleaned = FEAT_SEGMENT_PATTERN.sub("", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
 def short_folder_name(value: str, max_length: int = 60) -> str:
     """Return a deterministic folder-safe name within the max length."""
     cleaned = value.strip()
     cleaned = FEAT_SEGMENT_PATTERN.sub("", cleaned)
     cleaned = re.sub(r"\([^)]*\)", "", cleaned)
+    # Clean up any unmatched brackets left over from featuring removal
+    cleaned = re.sub(r"[\[\]]", "", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     if len(cleaned) <= max_length:

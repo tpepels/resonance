@@ -1,0 +1,359 @@
+"""Pure identification logic for release matching.
+
+This module contains deterministic scoring and candidate ranking logic.
+Provider I/O is abstracted behind the ProviderClient interface.
+"""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Optional, Protocol
+
+
+class ConfidenceTier(str, Enum):
+    """Confidence levels for automatic vs manual resolution."""
+
+    CERTAIN = "CERTAIN"  # Safe for auto-pin
+    PROBABLE = "PROBABLE"  # Propose but require user confirmation
+    UNSURE = "UNSURE"  # Multiple conflicts or low coverage
+
+
+@dataclass(frozen=True)
+class TrackEvidence:
+    """Evidence extracted from a single audio track."""
+
+    fingerprint_id: Optional[str]
+    duration_seconds: Optional[int]
+    existing_tags: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class DirectoryEvidence:
+    """Evidence extracted from a directory for identification."""
+
+    tracks: tuple[TrackEvidence, ...]
+    track_count: int
+    total_duration_seconds: int
+
+    @property
+    def has_fingerprints(self) -> bool:
+        """Check if any tracks have fingerprint data."""
+        return any(t.fingerprint_id for t in self.tracks)
+
+
+@dataclass(frozen=True)
+class ProviderTrack:
+    """Track information from a provider (MB/Discogs)."""
+
+    position: int
+    title: str
+    duration_seconds: Optional[int] = None
+    fingerprint_id: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ProviderRelease:
+    """Release candidate from a provider."""
+
+    provider: str  # "musicbrainz" or "discogs"
+    release_id: str
+    title: str
+    artist: str
+    tracks: tuple[ProviderTrack, ...]
+    year: Optional[int] = None
+
+    @property
+    def track_count(self) -> int:
+        """Number of tracks in this release."""
+        return len(self.tracks)
+
+
+@dataclass(frozen=True)
+class ReleaseScore:
+    """Scoring breakdown for a release candidate."""
+
+    release: ProviderRelease
+    fingerprint_coverage: float  # 0.0 to 1.0
+    track_count_match: bool
+    duration_fit: float  # 0.0 to 1.0
+    year_penalty: float  # 0.0 (no penalty) to 1.0 (max penalty)
+    total_score: float
+
+    def __lt__(self, other: ReleaseScore) -> bool:
+        """Sort by total_score descending, then by provider/release_id."""
+        if self.total_score != other.total_score:
+            return self.total_score > other.total_score
+        if self.release.provider != other.release.provider:
+            return self.release.provider < other.release.provider
+        return self.release.release_id < other.release.release_id
+
+
+@dataclass(frozen=True)
+class IdentificationResult:
+    """Result of release identification."""
+
+    candidates: tuple[ReleaseScore, ...]
+    tier: ConfidenceTier
+    reasons: tuple[str, ...]
+    evidence: DirectoryEvidence
+    scoring_version: str = "v1"
+
+    @property
+    def best_candidate(self) -> Optional[ReleaseScore]:
+        """Return the highest-scoring candidate, if any."""
+        return self.candidates[0] if self.candidates else None
+
+
+class ProviderClient(Protocol):
+    """Abstract interface for provider queries (MB, Discogs, etc.)."""
+
+    def search_by_fingerprints(
+        self, fingerprints: list[str]
+    ) -> list[ProviderRelease]:
+        """Search for releases matching the given fingerprints.
+
+        Results must be deterministically ordered by the provider.
+        """
+        ...
+
+    def search_by_metadata(
+        self, artist: Optional[str], album: Optional[str], track_count: int
+    ) -> list[ProviderRelease]:
+        """Search for releases matching metadata hints.
+
+        Results must be deterministically ordered by the provider.
+        """
+        ...
+
+
+# Scoring thresholds (versioned)
+SCORING_V1_THRESHOLDS = {
+    "fingerprint_weight": 0.6,
+    "track_count_weight": 0.2,
+    "duration_weight": 0.2,
+    "certain_min_score": 0.85,
+    "certain_min_coverage": 0.85,
+    "probable_min_score": 0.65,
+    "multi_release_min_support": 0.30,
+}
+
+
+def extract_evidence(
+    audio_files: list[Path], fingerprint_reader: Optional[callable] = None
+) -> DirectoryEvidence:
+    """Extract evidence from audio files.
+
+    Args:
+        audio_files: List of audio file paths
+        fingerprint_reader: Optional function to read fingerprints from files
+
+    Returns:
+        DirectoryEvidence with track information
+    """
+    # For now, stub implementation - will be filled in
+    tracks: list[TrackEvidence] = []
+    total_duration = 0
+
+    for audio_file in sorted(audio_files):
+        # Placeholder - real implementation would read from files
+        track = TrackEvidence(
+            fingerprint_id=None,
+            duration_seconds=None,
+            existing_tags={},
+        )
+        tracks.append(track)
+
+    return DirectoryEvidence(
+        tracks=tuple(tracks),
+        track_count=len(tracks),
+        total_duration_seconds=total_duration,
+    )
+
+
+def score_release(
+    evidence: DirectoryEvidence,
+    release: ProviderRelease,
+    thresholds: dict = SCORING_V1_THRESHOLDS,
+) -> ReleaseScore:
+    """Score a single release candidate against evidence.
+
+    Deterministic scoring based on:
+    - Fingerprint coverage (primary)
+    - Track count match
+    - Duration fit
+    - Optional year penalty
+
+    Args:
+        evidence: Directory evidence
+        release: Provider release candidate
+        thresholds: Scoring weights and thresholds
+
+    Returns:
+        ReleaseScore with breakdown
+    """
+    # Fingerprint coverage
+    if evidence.has_fingerprints:
+        matched = sum(
+            1
+            for ev_track in evidence.tracks
+            if ev_track.fingerprint_id
+            and any(
+                pv_track.fingerprint_id == ev_track.fingerprint_id
+                for pv_track in release.tracks
+            )
+        )
+        coverage = matched / evidence.track_count if evidence.track_count > 0 else 0.0
+    else:
+        coverage = 0.0
+
+    # Track count match
+    track_count_match = evidence.track_count == release.track_count
+
+    # Duration fit (simplified for now)
+    duration_fit = 1.0 if track_count_match else 0.5
+
+    # Year penalty (placeholder)
+    year_penalty = 0.0
+
+    # Total score
+    total_score = (
+        coverage * thresholds["fingerprint_weight"]
+        + (1.0 if track_count_match else 0.0) * thresholds["track_count_weight"]
+        + duration_fit * thresholds["duration_weight"]
+        - year_penalty
+    )
+
+    return ReleaseScore(
+        release=release,
+        fingerprint_coverage=coverage,
+        track_count_match=track_count_match,
+        duration_fit=duration_fit,
+        year_penalty=year_penalty,
+        total_score=total_score,
+    )
+
+
+def merge_and_rank_candidates(
+    scored_releases: list[ReleaseScore],
+) -> tuple[ReleaseScore, ...]:
+    """Merge candidates from multiple providers with deterministic tie-breaking.
+
+    Sort order:
+    1. Total score (descending)
+    2. Provider name (lexicographic)
+    3. Release ID (lexicographic)
+
+    Args:
+        scored_releases: List of scored releases from all providers
+
+    Returns:
+        Tuple of sorted ReleaseScore objects
+    """
+    return tuple(sorted(scored_releases))
+
+
+def calculate_tier(
+    candidates: tuple[ReleaseScore, ...],
+    evidence: DirectoryEvidence,
+    thresholds: dict = SCORING_V1_THRESHOLDS,
+) -> tuple[ConfidenceTier, tuple[str, ...]]:
+    """Calculate confidence tier and reasons.
+
+    Args:
+        candidates: Sorted candidate releases
+        evidence: Directory evidence
+        thresholds: Scoring thresholds
+
+    Returns:
+        Tuple of (tier, reasons)
+    """
+    reasons: list[str] = []
+
+    if not candidates:
+        return ConfidenceTier.UNSURE, ("No candidates found",)
+
+    best = candidates[0]
+
+    # Check for multi-release conflict
+    if len(candidates) >= 2:
+        second_best = candidates[1]
+        if second_best.total_score >= thresholds["multi_release_min_support"]:
+            if (best.total_score - second_best.total_score) < 0.15:
+                reasons.append(
+                    f"Multiple releases with similar scores: {best.total_score:.2f} vs {second_best.total_score:.2f}"
+                )
+                return ConfidenceTier.UNSURE, tuple(reasons)
+
+    # CERTAIN tier requirements
+    if (
+        best.total_score >= thresholds["certain_min_score"]
+        and best.fingerprint_coverage >= thresholds["certain_min_coverage"]
+        and best.track_count_match
+    ):
+        reasons.append(
+            f"High confidence: score={best.total_score:.2f}, coverage={best.fingerprint_coverage:.2f}"
+        )
+        return ConfidenceTier.CERTAIN, tuple(reasons)
+
+    # PROBABLE tier
+    if best.total_score >= thresholds["probable_min_score"]:
+        reasons.append(f"Probable match: score={best.total_score:.2f}")
+        return ConfidenceTier.PROBABLE, tuple(reasons)
+
+    # UNSURE
+    reasons.append(f"Low confidence: score={best.total_score:.2f}")
+    return ConfidenceTier.UNSURE, tuple(reasons)
+
+
+def identify(
+    evidence: DirectoryEvidence,
+    provider_client: ProviderClient,
+    thresholds: dict = SCORING_V1_THRESHOLDS,
+) -> IdentificationResult:
+    """Identify a directory by scoring provider candidates.
+
+    Pure function that delegates I/O to provider_client.
+
+    Args:
+        evidence: Extracted directory evidence
+        provider_client: Provider search interface
+        thresholds: Scoring configuration
+
+    Returns:
+        IdentificationResult with scored candidates and confidence tier
+    """
+    # Gather candidates from provider
+    candidates: list[ProviderRelease] = []
+
+    # Search by fingerprints if available
+    if evidence.has_fingerprints:
+        fingerprints = [
+            t.fingerprint_id for t in evidence.tracks if t.fingerprint_id
+        ]
+        candidates.extend(provider_client.search_by_fingerprints(fingerprints))
+
+    # Search by metadata if no fingerprints or as fallback
+    # (Extract from existing tags - placeholder for now)
+    candidates.extend(
+        provider_client.search_by_metadata(None, None, evidence.track_count)
+    )
+
+    # Score all candidates
+    scored = [score_release(evidence, release, thresholds) for release in candidates]
+
+    # Merge and rank
+    ranked = merge_and_rank_candidates(scored)
+
+    # Calculate tier
+    tier, reasons = calculate_tier(ranked, evidence, thresholds)
+
+    return IdentificationResult(
+        candidates=ranked,
+        tier=tier,
+        reasons=reasons,
+        evidence=evidence,
+        scoring_version="v1",
+    )

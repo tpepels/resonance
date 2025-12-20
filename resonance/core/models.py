@@ -63,8 +63,18 @@ class TrackInfo:
 
     @property
     def is_classical(self) -> bool:
-        """Check if this track appears to be classical music."""
-        return self.composer is not None or self.work is not None
+        """Check if this track appears to be classical music.
+
+        True if work is present (even without composer) OR if composer is non-blank.
+        False if composer is blank/whitespace-only.
+        """
+        # Work present means classical, even without composer
+        if self.work and self.work.strip():
+            return True
+        # Composer must be non-blank
+        if self.composer and self.composer.strip():
+            return True
+        return False
 
 
 @dataclass(slots=True)
@@ -119,6 +129,12 @@ class AlbumInfo:
         if self.source_directory is None:
             self.source_directory = self.directory
 
+    def _normalize_path_component(self, value: Optional[str]) -> Optional[str]:
+        """Normalize a path component by stripping whitespace."""
+        if not value:
+            return None
+        return value.strip() if value.strip() else None
+
     @property
     def destination_path(self) -> Optional[Path]:
         """Calculate the destination path for this album.
@@ -131,40 +147,43 @@ class AlbumInfo:
         - Classical compilation: Various Artists/Album
         - Regular music: Artist/Album
         """
+        # Normalize all components
+        composer = self._normalize_path_component(self.canonical_composer)
+        performer = self._normalize_path_component(self.canonical_performer)
+        artist = self._normalize_path_component(self.canonical_artist)
+        album = self._normalize_path_component(self.canonical_album)
+
         if self.is_classical:
             # Case 1: Single composer (most classical music)
-            if self.canonical_composer:
-                if self.canonical_album and self.canonical_performer:
+            if composer:
+                if album and performer:
                     # Composer/Work/Performer (e.g., Bach/Goldberg Variations/Glenn Gould)
-                    return Path(self.canonical_composer) / self.canonical_album / self.canonical_performer
-                elif self.canonical_album:
+                    return Path(composer) / album / performer
+                elif album:
                     # Composer/Work (no specific performer credited)
-                    return Path(self.canonical_composer) / self.canonical_album
-                elif self.canonical_performer:
-                    # Composer/Performer (no work name - rare edge case)
-                    return Path(self.canonical_composer) / self.canonical_performer
+                    return Path(composer) / album
                 else:
-                    # Just composer (very rare)
-                    return Path(self.canonical_composer)
+                    # Just composer root (no album means we can't organize further)
+                    return Path(composer)
 
             # Case 2: No single composer (compilations, multi-composer albums)
             else:
-                if self.canonical_performer and self.canonical_album:
+                if performer and album:
                     # Performer/Album (e.g., Berlin Philharmonic/Greatest Symphonies)
-                    return Path(self.canonical_performer) / self.canonical_album
-                elif self.canonical_performer:
+                    return Path(performer) / album
+                elif performer:
                     # Just performer (rare)
-                    return Path(self.canonical_performer)
-                elif self.canonical_album:
+                    return Path(performer)
+                elif album:
                     # Various Artists/Album (compilation)
-                    return Path("Various Artists") / self.canonical_album
+                    return Path("Various Artists") / album
                 else:
                     # Cannot organize
                     return None
         else:
             # Regular music: Artist/Album
-            if self.canonical_artist and self.canonical_album:
-                return Path(self.canonical_artist) / self.canonical_album
+            if artist and album:
+                return Path(artist) / album
             else:
                 return None
 
@@ -199,6 +218,7 @@ def parse_int(value: Any) -> Optional[int]:
     """Parse an integer from various input types.
 
     Handles strings like "3/12" (track number/total) by taking the first part.
+    Supports leading/trailing whitespace, plus signs, and negative numbers.
     """
     if value is None:
         return None
@@ -208,9 +228,11 @@ def parse_int(value: Any) -> Optional[int]:
         cleaned = value.strip()
         if "/" in cleaned:
             cleaned = cleaned.split("/", 1)[0].strip()
-        if cleaned.isdigit():
+        # Try to parse as integer (handles +/- signs)
+        try:
             return int(cleaned)
-        return None
+        except ValueError:
+            return None
     try:
         as_str = str(value).strip()
         if as_str.isdigit():

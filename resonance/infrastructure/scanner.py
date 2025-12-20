@@ -8,12 +8,17 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from resonance.core.identity import dir_signature, dir_id
+
 
 @dataclass
 class DirectoryBatch:
-    """A directory containing audio files."""
+    """A directory containing audio and non-audio files."""
     directory: Path
     files: list[Path]
+    non_audio_files: list[Path]
+    signature_hash: str
+    dir_id: str
 
 
 class LibraryScanner:
@@ -42,26 +47,37 @@ class LibraryScanner:
         """Iterate over all directories containing audio files.
 
         Yields:
-            DirectoryBatch objects with directory path and list of audio files
+            DirectoryBatch objects with directory path and file lists
         """
         for root in self.roots:
             if not root.exists():
                 continue
 
-            for dirpath, _, filenames in os.walk(root):
+            for dirpath, dirnames, filenames in os.walk(root):
+                dirnames.sort()
+                filenames.sort()
                 directory = Path(dirpath)
                 files: list[Path] = []
+                non_audio: list[Path] = []
 
                 for name in filenames:
                     file_path = directory / name
                     if not file_path.is_file():
                         continue
-                    if not self._should_include(file_path):
-                        continue
-                    files.append(file_path)
+                    if self._should_include(file_path):
+                        files.append(file_path)
+                    else:
+                        non_audio.append(file_path)
 
                 if files:
-                    yield DirectoryBatch(directory=directory, files=files)
+                    signature = dir_signature(files)
+                    yield DirectoryBatch(
+                        directory=directory,
+                        files=sorted(files),
+                        non_audio_files=sorted(non_audio),
+                        signature_hash=signature.signature_hash,
+                        dir_id=dir_id(signature),
+                    )
 
     def collect_directory(self, directory: Path) -> DirectoryBatch | None:
         """Collect audio files from a single directory.
@@ -80,11 +96,23 @@ class LibraryScanner:
             for path in directory.iterdir()
             if path.is_file() and self._should_include(path)
         ]
+        non_audio = [
+            path
+            for path in directory.iterdir()
+            if path.is_file() and not self._should_include(path)
+        ]
 
         if not files:
             return None
 
-        return DirectoryBatch(directory=directory, files=files)
+        signature = dir_signature(sorted(files))
+        return DirectoryBatch(
+            directory=directory,
+            files=sorted(files),
+            non_audio_files=sorted(non_audio),
+            signature_hash=signature.signature_hash,
+            dir_id=dir_id(signature),
+        )
 
     def _should_include(self, path: Path) -> bool:
         """Check if file should be included based on extension and exclude patterns."""

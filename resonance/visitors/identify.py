@@ -9,6 +9,7 @@ from typing import Optional
 from ..core.models import AlbumInfo, TrackInfo, MatchSource
 from ..core.visitor import BaseVisitor
 from ..core.identity import IdentityCanonicalizer
+from ..core.identity.matching import strip_featuring
 from ..infrastructure.cache import MetadataCache
 from ..providers.musicbrainz import MusicBrainzClient
 from ..services.metadata_reader import MetadataReader
@@ -176,7 +177,8 @@ class IdentifyVisitor(BaseVisitor):
         for track in album.tracks:
             # Canonicalize and count artists
             if track.artist:
-                canonical = self.canonicalizer.canonicalize(track.artist, "artist")
+                base_artist = strip_featuring(track.artist)
+                canonical = self.canonicalizer.canonicalize(base_artist, "artist")
                 artists[canonical] = artists.get(canonical, 0) + 1
 
             # Canonicalize and count composers
