@@ -11,9 +11,9 @@ from dataclasses import dataclass
 import re
 from typing import Optional
 
-from ..core.models import AlbumInfo
-from ..providers.musicbrainz import MusicBrainzClient
-from ..providers.discogs import DiscogsClient
+from .models import AlbumInfo
+from .musicbrainz import MusicBrainzClient
+from .discogs import DiscogsClient
 
 logger = logging.getLogger(__name__)
 

@@ -583,3 +583,133 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 *This document supersedes: AUDIT_SUMMARY.md, CANONICALIZATION_AUDIT.md, TEST_AUDIT.md, V3_TEST_AUDIT.md, GOLDEN_CORPUS_ROADMAP.md*
 
 *Note: This audit does not touch TDD_TODO_V3.md, which remains the authoritative implementation roadmap.*
+---
+
+## 9. Minimal‑Churn TODO (V2 Close‑Out → V3 Unblock)
+
+The following TODO integrates the agreed **minimal‑churn plan** directly into the audit.
+It represents the **only remaining work** required to fully close V2 and safely unblock V3.
+No scope expansion is implied.
+
+### Goal
+
+Finish V2 cleanly and unblock V3 by:
+
+- removing the **last legacy ambiguity**
+- freezing **canonicalization + identity**
+- enabling the **V3 golden‑corpus gate**
+
+No new features. No refactors beyond what is strictly necessary.
+
+---
+
+### 9.1 Decide Canonicalization Ownership (Single Decision)
+
+**Decision (recommended):**
+
+- Canonicalization logic lives in **core as pure functions**
+- Learned / explicit aliases are persisted in **DirectoryStateStore**
+- `MetadataCache` is **not** used for canonicalization
+
+**Tasks**
+- [ ] Declare `MetadataCache` read‑only or deprecated for canonicalization
+- [ ] Add explicit documentation:
+
+  > “Canonicalization is pure; persistence (if any) lives in DirectoryStateStore.”
+
+This is a decision task, not an implementation refactor.
+
+---
+
+### 9.2 Extract Canonicalization into a Single Explicit Surface
+
+Freeze existing behavior; do not redesign.
+
+**Tasks**
+- [ ] Create `core/canonicalize.py` exposing:
+  - `canonical_display_*`
+  - `canonical_match_key_*`
+- [ ] Move existing normalization logic without behavior changes
+- [ ] Add unit tests covering:
+  - diacritics (Björk / Bjork)
+  - punctuation & slashes (AC/DC)
+  - comma‑style names (Beatles, The)
+  - collaboration markers (`feat`, `with`, `w/`)
+
+---
+
+### 9.3 Remove Final Legacy Model Dependency (Surgical)
+
+This completes V2 removal.
+
+**Tasks**
+- [ ] Replace remaining uses of `TrackInfo` / `AlbumInfo` with V3 DTOs
+- [ ] Delete `resonance/core/models.py`
+- [ ] Fix imports and tests until green
+
+---
+
+### 9.4 Add Golden Corpus Skeleton (Infrastructure Only)
+
+Minimal V3 scaffolding; no providers yet.
+
+**Tasks**
+- [ ] Add `tests/golden/` base structure
+- [ ] Add deterministic corpus builder:
+  - audio file creation
+  - extras handling
+- [ ] Add **one** golden scenario:
+  - standard album (no Discogs / MB)
+- [ ] Snapshot:
+  - layout
+  - tags
+  - state
+- [ ] Assert idempotency (second run = no‑op)
+
+---
+
+### 9.5 Lock “No Re‑Match” at Integration Level
+
+Primary user‑visible invariant.
+
+**Tasks**
+- [ ] Integration test:
+  - scan → resolve → apply
+  - rerun → no provider calls, no plan, no mutations
+- [ ] Integration test:
+  - manual rename
+  - rerun → deterministic repair, no re‑identify
+
+---
+
+### 9.6 Explicitly Close V2
+
+Eliminate ambiguity and cognitive overhead.
+
+**Tasks**
+- [ ] Add V2 section:
+  **“Deferred to V3”**
+  - offline provider mode
+  - provider fusion
+  - golden corpus expansion
+- [ ] Declare V2 **closed**
+
+---
+
+### Out of Scope (By Design)
+
+- No new provider features
+- No canonicalization improvements beyond freezing
+- No golden corpus expansion beyond one scenario
+- No CLI / UX changes
+- No refactors not blocking V3
+
+---
+
+### Result After Completion
+
+- Legacy code fully removed
+- Canonicalization has a single authority
+- Identity and rematch behavior frozen
+- V3 can proceed with confidence
+- Regressions surface immediately via tests

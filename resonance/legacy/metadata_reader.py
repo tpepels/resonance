@@ -17,7 +17,7 @@ except ImportError:
     FLAC = None
     MP4 = None
 
-from ..core.models import TrackInfo, parse_int
+from .models import TrackInfo, parse_int
 
 
 class MetadataReader:

@@ -158,7 +158,21 @@ class MetaJsonTagWriter:
             tags_set.append(key)
         meta_path = path.with_suffix(path.suffix + ".meta.json")
         meta_path.parent.mkdir(parents=True, exist_ok=True)
-        meta_path.write_text(json.dumps({"tags": existing}, indent=2, sort_keys=True))
+
+        # CRITICAL: Preserve existing metadata (fingerprint_id, duration_seconds, etc.)
+        # when writing tags to avoid breaking identity signatures
+        if meta_path.exists():
+            try:
+                existing_meta = json.loads(meta_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                existing_meta = {}
+        else:
+            existing_meta = {}
+
+        # Update only the tags field, preserve other fields (fingerprint_id, duration_seconds, etc.)
+        existing_meta["tags"] = existing
+        meta_path.write_text(json.dumps(existing_meta, indent=2, sort_keys=True))
+
         return TagWriteResult(
             file_path=path,
             tags_set=tuple(tags_set),

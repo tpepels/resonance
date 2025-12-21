@@ -35,12 +35,13 @@ def test_cli_maps_io_error(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     assert cli.main() == IOFailure.exit_code
 
 
-def test_cli_maps_runtime_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_maps_runtime_error(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     from resonance import cli
 
     def raise_runtime(_args, **_kwargs):
         raise RuntimeFailure("boom")
 
-    monkeypatch.setattr("resonance.commands.prescan.run_prescan", raise_runtime)
-    monkeypatch.setattr(sys, "argv", ["resonance", "prescan", "path"])
+    monkeypatch.setattr("resonance.commands.plan.run_plan", raise_runtime)
+    state_db = tmp_path / "state.db"
+    monkeypatch.setattr(sys, "argv", ["resonance", "plan", "--dir-id", "d", "--state-db", str(state_db)])
     assert cli.main() == RuntimeFailure.exit_code

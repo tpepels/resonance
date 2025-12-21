@@ -35,7 +35,7 @@ except ModuleNotFoundError:
     MutagenFile = None
 
 from ..core.heuristics import PathGuess, guess_metadata_from_path
-from ..core.models import TrackInfo
+from .models import TrackInfo
 from ..infrastructure.cache import MetadataCache
 from .. import __version__ as RESONANCE_VERSION
 

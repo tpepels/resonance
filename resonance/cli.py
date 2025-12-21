@@ -56,22 +56,7 @@ def main() -> int:
         help="Emit machine-readable JSON output",
     )
 
-    # Prescan command (build canonical name mappings)
-    prescan_parser = subparsers.add_parser(
-        "prescan",
-        help="Scan library to build canonical artist/composer mappings",
-    )
-    prescan_parser.add_argument(
-        "directory",
-        type=Path,
-        help="Library root to scan",
-    )
-    prescan_parser.add_argument(
-        "--cache",
-        type=Path,
-        default=Path.home() / ".cache" / "resonance" / "metadata.db",
-        help="Cache database path",
-    )
+    # Prescan command removed - moved to resonance.legacy (V2 code)
 
     # Apply command (execute stored plan)
     apply_parser = subparsers.add_parser(
@@ -126,9 +111,7 @@ def main() -> int:
                 return run_plan(args, store=store)
             finally:
                 store.close()
-        elif args.command == "prescan":
-            from .commands.prescan import run_prescan
-            return run_prescan(args)
+        # prescan command removed - V2 legacy code in resonance.legacy
         elif args.command == "apply":
             if not args.state_db:
                 raise ValueError("state_db is required")

@@ -241,7 +241,14 @@ def test_applier_fails_on_signature_mismatch(tmp_path: Path) -> None:
     plan = _make_plan(fixture.path)
     store = _init_store(tmp_path, plan.signature_hash, fixture.path)
     try:
-        (fixture.path / "01 - Track A.flac").write_text("changed")
+        # Change fingerprint_id in meta.json to trigger signature mismatch
+        # (size_bytes no longer affects signature, so we need to change content-based fields)
+        import json
+        meta_file = fixture.path / "01 - Track A.flac.meta.json"
+        meta_data = json.loads(meta_file.read_text())
+        meta_data["fingerprint_id"] = "fp-changed"
+        meta_file.write_text(json.dumps(meta_data, indent=2))
+
         report = apply_plan(
             plan,
             tag_patch=None,

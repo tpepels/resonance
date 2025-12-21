@@ -8,7 +8,7 @@ import urllib.request
 import pytest
 
 from resonance.infrastructure.cache import MetadataCache
-from resonance.providers.discogs import DiscogsClient
+from resonance.legacy.discogs import DiscogsClient
 
 
 def test_discogs_offline_uses_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

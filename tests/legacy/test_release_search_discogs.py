@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from resonance.services.release_search import ReleaseSearchService
+from resonance.legacy.release_search import ReleaseSearchService
 
 
 @dataclass

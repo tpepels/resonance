@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from resonance.services.metadata_reader import MetadataReader
+from resonance.legacy.metadata_reader import MetadataReader
 
 
 def test_stub_metadata_reads_disc_number(

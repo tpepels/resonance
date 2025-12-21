@@ -9,7 +9,7 @@ from pathlib import Path
 from ..core.identity.matching import normalize_token
 from ..infrastructure.cache import MetadataCache
 from ..infrastructure.scanner import LibraryScanner
-from ..services.metadata_reader import MetadataReader
+from .metadata_reader import MetadataReader
 
 
 def run_prescan(args: Namespace) -> int:

@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 import pytest
 
-from resonance.providers.discogs import DiscogsClient
+from resonance.legacy.discogs import DiscogsClient
 
 
 class _FakeResponse:

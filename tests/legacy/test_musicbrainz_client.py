@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import urllib.error
 
-from resonance.providers.musicbrainz import MusicBrainzClient
+from resonance.legacy.musicbrainz import MusicBrainzClient
 
 
 def _load_fixture(name: str) -> dict:

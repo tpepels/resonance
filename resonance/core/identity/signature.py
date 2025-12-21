@@ -38,15 +38,28 @@ def dir_signature(
     audio_files: Iterable[Path],
     non_audio_files: Iterable[Path] | None = None,
 ) -> DirectorySignature:
-    """Compute a deterministic directory signature from audio files."""
+    """Compute a deterministic directory signature from audio files.
+
+    CRITICAL: The signature_hash (used for dir_id) is based ONLY on:
+    - fingerprint_id (content identity)
+    - duration_seconds (content identity)
+
+    It explicitly EXCLUDES size_bytes to ensure identity stability when:
+    - Tags are written (changes file size)
+    - Files are moved (doesn't change content)
+
+    This implements the Phase A.2 invariant: "once resolved, never re-matched
+    unless content changes."
+    """
     signatures = [file_signature(path) for path in audio_files]
     signatures.sort(key=lambda item: item.sort_key())
 
+    # Identity payload: ONLY content-based fields, NO size_bytes
     payload = [
         {
             "fingerprint_id": sig.fingerprint_id,
             "duration_seconds": sig.duration_seconds,
-            "size_bytes": sig.size_bytes,
+            # size_bytes deliberately excluded - changes when tags written
         }
         for sig in signatures
     ]

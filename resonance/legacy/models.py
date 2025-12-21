@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-from resonance.core.layout import compute_destination_path
+from ..core.layout import compute_destination_path
 
 
 class MatchSource(str, Enum):

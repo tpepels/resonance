@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import sqlite3
 
-from resonance.commands.prescan import run_prescan
+from resonance.legacy.prescan_cmd import run_prescan
 from resonance.core.identity.matching import normalize_token
 from resonance.infrastructure.cache import MetadataCache
 
