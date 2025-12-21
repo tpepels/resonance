@@ -117,34 +117,32 @@ For each scenario, freeze the following **expected artifacts**:
 
 ### 0.7 Controlled updates
 
-- [ ] Add `--regen-golden` (or a helper script) to intentionally regenerate snapshots
+- [x] Add `scripts/regen_golden.py` helper to regenerate snapshots
 - [ ] Snapshot changes require an explicit justification (bug fix or deliberate behavior change)
 
 ### 0.8 Golden corpus expansion for V3 (from CANONICALIZATION_AUDIT.md)
 
-**Current corpus:** 22 scenarios (includes 2 canonicalization-gated scenarios slated for removal)
-**V3 target:** 26 scenarios (+6 new deterministic scenarios)
+**Current corpus:** 26 scenarios (includes one non-audio-only skip scenario)
+**V3 target:** 26 scenarios
 
 **Status summary:**
-- ✅ **6 scenarios already added:** opus_normalization, conductor_vs_performer, multi_performer_work, catalog_variants, partial_opera, partial_tags
-- 🎯 **6 scenarios ready to add** (Phase 1, ~3 hours total) - see GOLDEN_CORPUS_ROADMAP.md
-- ⚠️ **2 scenarios deferred** (require canonicalization system) - see below
+- ✅ **12 scenarios added (Phase 1 complete):** opus_normalization, conductor_vs_performer, multi_performer_work, catalog_variants, partial_opera, partial_tags, duplicate_files, remaster_vs_original, non_audio_only, hidden_track, unicode_normalization, invalid_year
+- ⚠️ **3 scenarios deferred** (require canonicalization system) - see below
 - 🔧 **2 scenarios for integration tests** (not golden corpus) - see below
 - ❌ **1 scenario skipped** (non-deterministic)
 
-**Phase 1: Add these 8 deterministic scenarios for V3:**
-- [x] GC-5 Partial opera excerpts (non-contiguous Act II + IV)
-- [x] GC-10 Partial tags (missing album/artist, infer from siblings)
-- [ ] GC-11 Duplicate files (same fingerprint_id, different filenames)
-- [ ] GC-13 Remaster vs original (1973 vs 2023 release years)
-- [ ] GC-14 Non-audio-only directory (only .jpg/.cue/.log, no audio)
-- [ ] GC-15 Hidden track (track 0 pregap + track 99 secret)
-- [ ] GC-17 Unicode normalization (NFD vs NFC: "Café" different encodings)
-- [ ] GC-18 Invalid year tags ("0000" or "UNKNOWN")
+**Phase 1: Deterministic scenarios (complete):**
+- [x] GC-11 Duplicate files (same fingerprint_id, different filenames)
+- [x] GC-13 Remaster vs original (1973 vs 2023 release years)
+- [x] GC-14 Non-audio-only directory (only .jpg/.cue/.log, no audio; validated via scanner skip)
+- [x] GC-15 Hidden track (track 0 pregap + track 99 secret)
+- [x] GC-17 Unicode normalization (NFD vs NFC: "Café" different encodings)
+- [x] GC-18 Invalid year tags ("0000" or "UNKNOWN")
 
-**Implementation:** See CANONICALIZATION_AUDIT.md section 3.2 for full specs and GOLDEN_CORPUS_ROADMAP.md for steps.
+**Implementation:** Snapshots regenerated via `scripts/regen_golden.py`. See GOLDEN_CORPUS_ROADMAP.md for details.
 
 **Deferred (requires canonicalization system):**
+- [ ] featured_artist (feat/ft/featuring normalization)
 - [ ] work_nickname (work alias canonicalization)
 - [ ] ensemble_variants (artist abbreviation canonicalization)
 
@@ -169,10 +167,10 @@ This section is complete when:
 
 ### 1.1 Discogs client basics (Unit)
 
-- [ ] Build `DiscogsClient`:
+- [x] Build `DiscogsClient`:
   - search (release/master)
   - fetch release details (tracklist, artists, labels, year, formats)
-- [ ] Unit tests with recorded fixtures:
+- [x] Unit tests with recorded fixtures:
   - stable ordering for identical inputs
   - handles “no results”, “multiple results”, “rate limited”, “timeouts”
 - [ ] Canonicalize Discogs output into internal `ReleaseCandidate`:
@@ -182,13 +180,13 @@ This section is complete when:
 
 ### 1.2 Matching heuristics: Discogs (Integration)
 
-- [ ] E2E: singleton dir → Discogs match (CERTAIN) → plan → apply → tags written
-- [ ] E2E: ambiguous results → QUEUED_PROMPT with candidate list + reasons
+- [x] E2E: singleton dir → Discogs match (CERTAIN) → plan → apply → tags written
+- [x] E2E: ambiguous results → QUEUED_PROMPT with candidate list + reasons
 - [ ] Heuristics tests:
-  - duration tolerance windows
-  - track-count match scoring
-  - fuzzy title normalization (feat variants, punctuation, apostrophes, diacritics)
-  - “Various Artists” compilation handling
+  - [x] duration tolerance windows
+  - [x] track-count match scoring
+  - [x] fuzzy title normalization (feat variants, punctuation, apostrophes, diacritics)
+  - [x] “Various Artists” compilation handling
 
 ### 1.3 Discogs: Singles / EP detection (Feature)
 
@@ -202,27 +200,27 @@ This section is complete when:
 
 ### 2.1 MB client basics (Unit)
 
-- [ ] Build `MusicBrainzClient`:
+- [x] Build `MusicBrainzClient`:
   - release search (primary)
   - fetch release (tracks, mediums/discs, relationships if needed)
-- [ ] Unit tests with fixtures:
+- [x] Unit tests with fixtures:
   - multi-medium preserves disc structure
   - handles missing barcodes/dates
   - rate limiting behavior
 
 ### 2.2 Matching heuristics: MB (Integration)
 
-- [ ] E2E: multi-disc dir → MB multi-medium release → plan → apply
-- [ ] E2E: classical case (composer/work/performers heavy)
+- [x] E2E: multi-disc dir → MB multi-medium release → plan → apply
+- [x] E2E: classical case (composer/work/performers heavy)
 - [ ] Scoring tests:
-  - prefer exact medium/track count match
-  - penalize mismatched disc counts
-  - prefer higher track-duration alignment
+  - [x] prefer exact medium/track count match
+  - [x] penalize mismatched disc counts
+  - [x] prefer higher track-duration alignment
 
 ### 2.3 MB IDs in tags (Feature)
 
-- [ ] Test: write MB Release ID + Recording IDs into tags (per format)
-- [ ] Test: rerun does not rematch once MB IDs exist and dir is resolved
+- [x] Test: write MB Release ID + Recording IDs into tags (per format)
+- [x] Test: rerun does not rematch once MB IDs exist and dir is resolved
 
 ---
 
@@ -231,13 +229,13 @@ This section is complete when:
 ### 3.1 Resolution strategy (Feature)
 
 - [ ] Implement:
-  - query MB and Discogs (order configurable)
-  - merge candidates into unified ranked list
-  - provenance display + reason codes
-- [ ] Integration tests:
-  - both providers agree → auto-resolve CERTAIN
-  - disagree → queue prompt with both sets
-  - one provider down → still works with the other
+  - [x] query MB and Discogs (order configurable)
+  - [x] merge candidates into unified ranked list
+  - [x] provenance display + reason codes
+- [x] Integration tests:
+  - [x] both providers agree → auto-resolve CERTAIN
+  - [x] disagree → queue prompt with both sets
+  - [x] one provider down → still works with the other
 
 ### 3.2 Cache/offline behavior (Feature support)
 

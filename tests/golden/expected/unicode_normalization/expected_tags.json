@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist N/Unicode Album/01 - Caf\u00e9.flac",
+      "tags": {
+        "album": "Unicode Album",
+        "albumartist": "Artist N",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "4b72a143d344635b70699215fff4f94295453134f8bd67e00c4412ee185dd765",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-unicode-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Caf\u00e9",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist N/Unicode Album/02 - Cafe\u0301.flac",
+      "tags": {
+        "album": "Unicode Album",
+        "albumartist": "Artist N",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "4b72a143d344635b70699215fff4f94295453134f8bd67e00c4412ee185dd765",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-unicode-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Cafe\u0301",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

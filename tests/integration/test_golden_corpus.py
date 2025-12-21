@@ -152,6 +152,10 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
     output_root = tmp_path / "organized"
     scanner = LibraryScanner([corpus_root])
     batches = sorted(scanner.iter_directories(), key=lambda b: b.dir_id)
+    scanned = {batch.directory.name for batch in batches}
+    expected_skip = {"non_audio_only"}
+    assert expected_skip.issubset(fixtures)
+    assert expected_skip.isdisjoint(scanned)
 
     regen = os.environ.get("REGEN_GOLDEN") == "1"
     fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)

@@ -52,6 +52,8 @@ class ProviderTrack:
     duration_seconds: Optional[int] = None
     fingerprint_id: Optional[str] = None
     composer: Optional[str] = None
+    disc_number: Optional[int] = None
+    recording_id: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -210,8 +212,23 @@ def score_release(
     else:
         coverage = 0.0
 
-    # Track count match
-    track_count_match = evidence.track_count == release.track_count
+    # Track count + disc count match
+    evidence_discs = {
+        int(tag)
+        for track in evidence.tracks
+        for tag in (track.existing_tags.get("discnumber"), track.existing_tags.get("disc_number"))
+        if isinstance(tag, str) and tag.strip().isdigit()
+    }
+    release_discs = {
+        track.disc_number
+        for track in release.tracks
+        if track.disc_number is not None
+    }
+    disc_count_match = True
+    if evidence_discs and release_discs:
+        disc_count_match = len(evidence_discs) == len(release_discs)
+
+    track_count_match = evidence.track_count == release.track_count and disc_count_match
 
     # Duration fit (deterministic integer bucketing)
     if evidence.total_duration_seconds and all(
@@ -369,6 +386,9 @@ def identify(
 
     # Calculate tier
     tier, reasons = calculate_tier(ranked, evidence, thresholds)
+    providers = sorted({candidate.release.provider for candidate in ranked})
+    if providers:
+        reasons = (f"providers={','.join(providers)}",) + reasons
 
     return IdentificationResult(
         candidates=ranked,

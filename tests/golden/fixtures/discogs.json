@@ -18,5 +18,11 @@
   "multi_performer_work": [],
   "catalog_variants": [],
   "partial_opera": [],
-  "partial_tags": []
+  "partial_tags": [],
+  "duplicate_files": [],
+  "remaster_vs_original": [],
+  "non_audio_only": [],
+  "hidden_track": [],
+  "unicode_normalization": [],
+  "invalid_year": []
 }

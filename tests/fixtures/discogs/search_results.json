@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "id": 100,
+      "title": "Artist One - Album One",
+      "year": 2001,
+      "release_title": "Album One",
+      "artist": "Artist One"
+    },
+    {
+      "id": 200,
+      "title": "Artist Two - Album Two",
+      "year": 2002,
+      "release_title": "Album Two",
+      "artist": "Artist Two"
+    }
+  ]
+}

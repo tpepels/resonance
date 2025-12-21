@@ -259,5 +259,66 @@
         {"position": 2, "title": "Track 2", "duration_seconds": 182, "fingerprint_id": "fp-pt-02"}
       ]
     }
+  ],
+  "duplicate_files": [
+    {
+      "release_id": "mb-dup-1",
+      "title": "Duplicate Files",
+      "artist": "Artist K",
+      "year": 2010,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 180, "fingerprint_id": "fp-dup-01"},
+        {"position": 2, "title": "Track A", "duration_seconds": 180, "fingerprint_id": "fp-dup-01"}
+      ]
+    }
+  ],
+  "remaster_vs_original": [
+    {
+      "release_id": "mb-rem-1",
+      "title": "Remaster Album (2023 Remaster)",
+      "artist": "Artist L",
+      "year": 2023,
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 180, "fingerprint_id": "fp-rem-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 181, "fingerprint_id": "fp-rem-02"}
+      ]
+    }
+  ],
+  "non_audio_only": [],
+  "hidden_track": [
+    {
+      "release_id": "mb-hidden-1",
+      "title": "Hidden Track Album",
+      "artist": "Artist M",
+      "year": 2003,
+      "tracks": [
+        {"position": 0, "title": "Hidden Intro", "duration_seconds": 15, "fingerprint_id": "fp-hidden-00"},
+        {"position": 1, "title": "Track 1", "duration_seconds": 200, "fingerprint_id": "fp-hidden-01"},
+        {"position": 99, "title": "Secret Track", "duration_seconds": 120, "fingerprint_id": "fp-hidden-99"}
+      ]
+    }
+  ],
+  "unicode_normalization": [
+    {
+      "release_id": "mb-unicode-1",
+      "title": "Unicode Album",
+      "artist": "Artist N",
+      "year": 2022,
+      "tracks": [
+        {"position": 1, "title": "Café", "duration_seconds": 180, "fingerprint_id": "fp-unicode-01"},
+        {"position": 2, "title": "Cafe\u0301", "duration_seconds": 181, "fingerprint_id": "fp-unicode-02"}
+      ]
+    }
+  ],
+  "invalid_year": [
+    {
+      "release_id": "mb-year-1",
+      "title": "Invalid Year Album",
+      "artist": "Artist O",
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 180, "fingerprint_id": "fp-year-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 181, "fingerprint_id": "fp-year-02"}
+      ]
+    }
   ]
 }

@@ -1,0 +1,52 @@
+{
+  "tracks": [
+    {
+      "path": "Artist M/Hidden Track Album/00 - Hidden Intro.flac",
+      "tags": {
+        "album": "Hidden Track Album",
+        "albumartist": "Artist M",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "f651700d80e71c9257b2c77caf4d1015fa4ebbb3a629c5caca7e9458ab32fd2a",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-hidden-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Hidden Intro",
+        "tracknumber": "0"
+      }
+    },
+    {
+      "path": "Artist M/Hidden Track Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Hidden Track Album",
+        "albumartist": "Artist M",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "f651700d80e71c9257b2c77caf4d1015fa4ebbb3a629c5caca7e9458ab32fd2a",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-hidden-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist M/Hidden Track Album/99 - Secret Track.flac",
+      "tags": {
+        "album": "Hidden Track Album",
+        "albumartist": "Artist M",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "f651700d80e71c9257b2c77caf4d1015fa4ebbb3a629c5caca7e9458ab32fd2a",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-hidden-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Secret Track",
+        "tracknumber": "99"
+      }
+    }
+  ]
+}

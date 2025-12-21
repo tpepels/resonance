@@ -1,0 +1,38 @@
+{
+  "id": "mb-release-1",
+  "title": "Multi Medium Album",
+  "date": "1999-05-01",
+  "artist-credit": [{"name": "Artist MM"}],
+  "medium-list": [
+    {
+      "position": 1,
+      "format": "CD",
+      "track-list": [
+        {
+          "position": 1,
+          "number": "1",
+          "recording": {"id": "rec-1", "title": "Track 1"},
+          "length": 180000
+        },
+        {
+          "position": 2,
+          "number": "2",
+          "recording": {"id": "rec-2", "title": "Track 2"},
+          "length": 181000
+        }
+      ]
+    },
+    {
+      "position": 2,
+      "format": "CD",
+      "track-list": [
+        {
+          "position": 1,
+          "number": "1",
+          "recording": {"id": "rec-3", "title": "Track 3"},
+          "length": 182000
+        }
+      ]
+    }
+  ]
+}

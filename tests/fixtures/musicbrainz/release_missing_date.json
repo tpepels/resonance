@@ -1,0 +1,19 @@
+{
+  "id": "mb-release-2",
+  "title": "Missing Date Album",
+  "artist-credit": [{"name": "Artist ND"}],
+  "medium-list": [
+    {
+      "position": 1,
+      "format": "Vinyl",
+      "track-list": [
+        {
+          "position": 1,
+          "number": "A1",
+          "recording": {"id": "rec-nd-1", "title": "Track ND"},
+          "length": 200000
+        }
+      ]
+    }
+  ]
+}

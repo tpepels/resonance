@@ -59,7 +59,7 @@ def _make_release() -> ProviderRelease:
         release_id="mb-123",
         title="Album",
         artist="Artist",
-        tracks=(ProviderTrack(position=1, title="Track A"),),
+        tracks=(ProviderTrack(position=1, title="Track A", recording_id="rec-123"),),
     )
 
 
@@ -101,6 +101,8 @@ def test_metajson_tag_writer_apply_and_read(tmp_path: Path) -> None:
         assert tags["albumartist"] == "Artist"
         assert tags["title"] == "Track A"
         assert tags["tracknumber"] == "1"
+        assert tags["musicbrainz_albumid"] == "mb-123"
+        assert tags["musicbrainz_recordingid"] == "rec-123"
         assert tags["resonance.prov.applied_at_utc"] == "2024-01-01T00:00:00Z"
         assert tags["resonance.prov.dir_id"] == plan.dir_id
     finally:
@@ -325,13 +327,75 @@ def test_mutagen_tag_writer_flac_corpus(tmp_path: Path) -> None:
     writer = MutagenTagWriter()
     writer.apply_patch(
         flac_path,
-        {"title": "Track A", "artist": "Artist", "album": "Album", "albumartist": "Artist"},
+        {
+            "title": "Track A",
+            "artist": "Artist",
+            "album": "Album",
+            "albumartist": "Artist",
+            "musicbrainz_albumid": "mb-123",
+            "musicbrainz_recordingid": "rec-123",
+        },
         allow_overwrite=True,
     )
     tags = writer.read_tags(flac_path)
     assert tags["title"] == "Track A"
     assert tags["artist"] == "Artist"
     assert tags["album"] == "Album"
+    assert tags["musicbrainz_albumid"] == "mb-123"
+    assert tags["musicbrainz_recordingid"] == "rec-123"
+
+
+def test_mutagen_tag_writer_mp3_round_trip(tmp_path: Path) -> None:
+    pytest.importorskip("mutagen")
+    mp3_path = tmp_path / "track.mp3"
+    mp3_path.write_bytes(b"")
+    writer = MutagenTagWriter()
+    writer.apply_patch(
+        mp3_path,
+        {
+            "title": "Track A",
+            "artist": "Artist",
+            "album": "Album",
+            "albumartist": "Artist",
+            "musicbrainz_albumid": "mb-123",
+            "musicbrainz_recordingid": "rec-123",
+        },
+        allow_overwrite=True,
+    )
+    tags = writer.read_tags(mp3_path)
+    assert tags["title"] == "Track A"
+    assert tags["artist"] == "Artist"
+    assert tags["album"] == "Album"
+    assert tags["musicbrainz_albumid"] == "mb-123"
+    assert tags["musicbrainz_recordingid"] == "rec-123"
+
+
+def test_mutagen_tag_writer_m4a_round_trip(tmp_path: Path) -> None:
+    pytest.importorskip("mutagen")
+    corpus_path = Path("tests/fixtures/tag_corpus/m4a/corpus.m4a")
+    if not corpus_path.exists():
+        pytest.skip("m4a corpus fixture not available")
+    m4a_path = tmp_path / "corpus.m4a"
+    m4a_path.write_bytes(corpus_path.read_bytes())
+    writer = MutagenTagWriter()
+    writer.apply_patch(
+        m4a_path,
+        {
+            "title": "Track A",
+            "artist": "Artist",
+            "album": "Album",
+            "albumartist": "Artist",
+            "musicbrainz_albumid": "mb-123",
+            "musicbrainz_recordingid": "rec-123",
+        },
+        allow_overwrite=True,
+    )
+    tags = writer.read_tags(m4a_path)
+    assert tags["title"] == "Track A"
+    assert tags["artist"] == "Artist"
+    assert tags["album"] == "Album"
+    assert tags["musicbrainz_albumid"] == "mb-123"
+    assert tags["musicbrainz_recordingid"] == "rec-123"
 
 
 def test_mutagen_tag_writer_rejects_unsupported_format(tmp_path: Path) -> None:

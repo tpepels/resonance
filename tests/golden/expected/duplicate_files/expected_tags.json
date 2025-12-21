@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist K/Duplicate Files/01 - Track A.flac",
+      "tags": {
+        "album": "Duplicate Files",
+        "albumartist": "Artist K",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "19b396bbecc3fbdf9a67632be3391f1a9396711fd0abe70a146ae7f925a02674",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-dup-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist K/Duplicate Files/02 - Track A.flac",
+      "tags": {
+        "album": "Duplicate Files",
+        "albumartist": "Artist K",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "19b396bbecc3fbdf9a67632be3391f1a9396711fd0abe70a146ae7f925a02674",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-dup-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

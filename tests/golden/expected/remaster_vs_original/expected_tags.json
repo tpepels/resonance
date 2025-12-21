@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist L/Remaster Album (2023 Remaster)/01 - Track 1.flac",
+      "tags": {
+        "album": "Remaster Album (2023 Remaster)",
+        "albumartist": "Artist L",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "a2914710b8b3e8dacccb1b431d3742cd74883792e081f1b05cedb86111c63bbd",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-rem-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist L/Remaster Album (2023 Remaster)/02 - Track 2.flac",
+      "tags": {
+        "album": "Remaster Album (2023 Remaster)",
+        "albumartist": "Artist L",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "a2914710b8b3e8dacccb1b431d3742cd74883792e081f1b05cedb86111c63bbd",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-rem-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

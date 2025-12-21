@@ -35,6 +35,8 @@ def _release_from_dict(provider: str, data: dict[str, Any]) -> ProviderRelease:
             duration_seconds=track.get("duration_seconds"),
             fingerprint_id=track.get("fingerprint_id"),
             composer=track.get("composer"),
+            disc_number=track.get("disc_number"),
+            recording_id=track.get("recording_id"),
         )
         for track in data["tracks"]
     )

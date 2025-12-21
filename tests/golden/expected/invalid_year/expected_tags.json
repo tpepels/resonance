@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist O/Invalid Year Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Invalid Year Album",
+        "albumartist": "Artist O",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "f198eefc81268218c10cd0b89834b7bbf6557ed687a52ce2e13ec1829956c117",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-year-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist O/Invalid Year Album/02 - Track 2.flac",
+      "tags": {
+        "album": "Invalid Year Album",
+        "albumartist": "Artist O",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "f198eefc81268218c10cd0b89834b7bbf6557ed687a52ce2e13ec1829956c117",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-year-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

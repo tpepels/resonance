@@ -144,11 +144,15 @@ def build_tag_patch(
             reason="user_resolved_not_allowed",
         )
 
+    album_tags = {
+        "album": pinned_release.title,
+        "albumartist": pinned_release.artist,
+    }
+    if pinned_release.provider == "musicbrainz":
+        album_tags["musicbrainz_albumid"] = pinned_release.release_id
+
     album_patch = AlbumTagPatch(
-        set_tags={
-            "album": pinned_release.title,
-            "albumartist": pinned_release.artist,
-        },
+        set_tags=album_tags,
         unset_tags=(),
     )
 
@@ -166,6 +170,11 @@ def build_tag_patch(
             set_tags={
                 "title": track_by_position[op.track_position].title,
                 "tracknumber": str(op.track_position),
+                **(
+                    {"musicbrainz_recordingid": track_by_position[op.track_position].recording_id}
+                    if track_by_position[op.track_position].recording_id
+                    else {}
+                ),
             },
             unset_tags=(),
         )

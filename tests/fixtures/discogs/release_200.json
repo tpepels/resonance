@@ -1,0 +1,9 @@
+{
+  "id": 200,
+  "title": "Album Two",
+  "artists": [{"name": "Artist Two"}],
+  "tracklist": [
+    {"position": "1", "title": "Track 1", "duration": "3:15"},
+    {"position": "2", "title": "Track 2", "duration": "4:05"}
+  ]
+}

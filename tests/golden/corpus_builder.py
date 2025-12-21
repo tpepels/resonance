@@ -621,6 +621,183 @@ def scenarios() -> list[CorpusScenario]:
             ],
             non_audio_files=[],
         ),
+        CorpusScenario(
+            name="duplicate_files",
+            description="Same track copied with different filenames.",
+            audio_specs=[
+                _spec(
+                    "01 - Track A.flac",
+                    "fp-dup-01",
+                    180,
+                    {
+                        "title": "Track A",
+                        "artist": "Artist K",
+                        "album": "Duplicate Files",
+                        "album_artist": "Artist K",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "01 - Track A (copy).flac",
+                    "fp-dup-01",
+                    180,
+                    {
+                        "title": "Track A",
+                        "artist": "Artist K",
+                        "album": "Duplicate Files",
+                        "album_artist": "Artist K",
+                        "track_number": 2,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="remaster_vs_original",
+            description="Same album with remaster year tags.",
+            audio_specs=[
+                _spec(
+                    "01 - Track 1.flac",
+                    "fp-rem-01",
+                    180,
+                    {
+                        "title": "Track 1",
+                        "artist": "Artist L",
+                        "album": "Remaster Album (2023 Remaster)",
+                        "album_artist": "Artist L",
+                        "track_number": 1,
+                        "date": "2023",
+                    },
+                ),
+                _spec(
+                    "02 - Track 2.flac",
+                    "fp-rem-02",
+                    181,
+                    {
+                        "title": "Track 2",
+                        "artist": "Artist L",
+                        "album": "Remaster Album (2023 Remaster)",
+                        "album_artist": "Artist L",
+                        "track_number": 2,
+                        "date": "2023",
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="non_audio_only",
+            description="Directory with no audio files.",
+            audio_specs=[],
+            non_audio_files=["cover.jpg", "album.cue", "rip.log", "notes.txt"],
+        ),
+        CorpusScenario(
+            name="hidden_track",
+            description="Album with track 0 and track 99.",
+            audio_specs=[
+                _spec(
+                    "00 - Hidden Intro.flac",
+                    "fp-hidden-00",
+                    15,
+                    {
+                        "title": "Hidden Intro",
+                        "artist": "Artist M",
+                        "album": "Hidden Track Album",
+                        "album_artist": "Artist M",
+                        "track_number": 0,
+                    },
+                ),
+                _spec(
+                    "01 - Track 1.flac",
+                    "fp-hidden-01",
+                    200,
+                    {
+                        "title": "Track 1",
+                        "artist": "Artist M",
+                        "album": "Hidden Track Album",
+                        "album_artist": "Artist M",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "99 - Secret Track.flac",
+                    "fp-hidden-99",
+                    120,
+                    {
+                        "title": "Secret Track",
+                        "artist": "Artist M",
+                        "album": "Hidden Track Album",
+                        "album_artist": "Artist M",
+                        "track_number": 99,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="unicode_normalization",
+            description="Unicode NFC vs NFD normalization in tags.",
+            audio_specs=[
+                _spec(
+                    "01 - Cafe.flac",
+                    "fp-unicode-01",
+                    180,
+                    {
+                        "title": "Café",
+                        "artist": "Artist N",
+                        "album": "Unicode Album",
+                        "album_artist": "Artist N",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "02 - Cafe-alt.flac",
+                    "fp-unicode-02",
+                    181,
+                    {
+                        "title": "Cafe\u0301",
+                        "artist": "Artist N",
+                        "album": "Unicode Album",
+                        "album_artist": "Artist N",
+                        "track_number": 2,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="invalid_year",
+            description="Invalid year tags that should be sanitized.",
+            audio_specs=[
+                _spec(
+                    "01 - Track 1.flac",
+                    "fp-year-01",
+                    180,
+                    {
+                        "title": "Track 1",
+                        "artist": "Artist O",
+                        "album": "Invalid Year Album",
+                        "album_artist": "Artist O",
+                        "track_number": 1,
+                        "date": "0000",
+                    },
+                ),
+                _spec(
+                    "02 - Track 2.flac",
+                    "fp-year-02",
+                    181,
+                    {
+                        "title": "Track 2",
+                        "artist": "Artist O",
+                        "album": "Invalid Year Album",
+                        "album_artist": "Artist O",
+                        "track_number": 2,
+                        "date": "UNKNOWN",
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
     ]
 
 

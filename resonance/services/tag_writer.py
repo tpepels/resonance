@@ -9,7 +9,7 @@ from typing import Optional, Protocol
 
 try:
     from mutagen import File as MutagenFile
-    from mutagen.id3 import ID3, TIT2, TPE1, TALB, TPE2, TRCK, TPOS
+    from mutagen.id3 import ID3, TIT2, TPE1, TALB, TPE2, TRCK, TPOS, TXXX
     from mutagen.flac import FLAC
     from mutagen.mp4 import MP4
 except ImportError:  # pragma: no cover - optional dependency
@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - optional dependency
     TPE2 = None
     TRCK = None
     TPOS = None
+    TXXX = None
     FLAC = None
     MP4 = None
 
@@ -116,6 +117,10 @@ class MutagenTagWriter:
         "tracknumber": TRCK,
         "discnumber": TPOS,
     }
+    _MP3_MB_DESCS = {
+        "musicbrainz_albumid": "MusicBrainz Album Id",
+        "musicbrainz_recordingid": "MusicBrainz Recording Id",
+    }
 
     def _require_mutagen(self) -> None:
         if MutagenFile is None:
@@ -136,6 +141,11 @@ class MutagenTagWriter:
                 if frame and frame.__name__ in id3:
                     value = id3.get(frame.__name__).text[0]
                     tags[key] = str(value)
+            for frame in id3.getall("TXXX"):
+                if frame.desc in self._MP3_MB_DESCS.values():
+                    for key, desc in self._MP3_MB_DESCS.items():
+                        if frame.desc == desc and frame.text:
+                            tags[key] = str(frame.text[0])
             return tags
         audio = MutagenFile(path)
         if audio is None or audio.tags is None:
@@ -151,12 +161,16 @@ class MutagenTagWriter:
                 "albumartist": "aART",
                 "tracknumber": "trkn",
                 "discnumber": "disk",
+                "musicbrainz_albumid": "----:com.apple.iTunes:MusicBrainz Album Id",
+                "musicbrainz_recordingid": "----:com.apple.iTunes:MusicBrainz Track Id",
             }
             for key, mp4_key in mapping.items():
                 if mp4_key in audio.tags:
                     value = audio.tags[mp4_key][0]
                     if isinstance(value, tuple):
                         value = value[0]
+                    if isinstance(value, bytes):
+                        value = value.decode("utf-8", errors="ignore")
                     tags[key] = str(value)
             return tags
         return {}
@@ -181,6 +195,9 @@ class MutagenTagWriter:
             for key, frame in self._MP3_KEYS.items():
                 if key in existing and frame:
                     id3.add(frame(encoding=3, text=str(existing[key])))
+            for key, desc in self._MP3_MB_DESCS.items():
+                if key in existing:
+                    id3.add(TXXX(encoding=3, desc=desc, text=str(existing[key])))
             id3.save(path)
         elif ext == ".flac":
             audio = FLAC(path)
@@ -196,6 +213,8 @@ class MutagenTagWriter:
                 "albumartist": "aART",
                 "tracknumber": "trkn",
                 "discnumber": "disk",
+                "musicbrainz_albumid": "----:com.apple.iTunes:MusicBrainz Album Id",
+                "musicbrainz_recordingid": "----:com.apple.iTunes:MusicBrainz Track Id",
             }
             for key, mp4_key in mapping.items():
                 if key in existing:
@@ -205,9 +224,18 @@ class MutagenTagWriter:
             raise ValueError(f"Unsupported audio format: {ext}")
         supported_keys: set[str]
         if ext == ".mp3":
-            supported_keys = set(self._MP3_KEYS.keys())
+            supported_keys = set(self._MP3_KEYS.keys()) | set(self._MP3_MB_DESCS.keys())
         elif ext in (".m4a", ".mp4"):
-            supported_keys = {"title", "artist", "album", "albumartist", "tracknumber", "discnumber"}
+            supported_keys = {
+                "title",
+                "artist",
+                "album",
+                "albumartist",
+                "tracknumber",
+                "discnumber",
+                "musicbrainz_albumid",
+                "musicbrainz_recordingid",
+            }
         else:
             supported_keys = set(set_tags.keys())
         readback = self.read_tags(path)
