@@ -108,7 +108,7 @@ def run_scan(args: Namespace, *, output_sink=print) -> int:
 
     try:
         # Create visitor pipeline
-        pipeline = app.create_pipeline()
+        pipeline = app.create_pipeline(allow_legacy=True)
 
         # Scan directory
         batch = app.scanner.collect_directory(directory)

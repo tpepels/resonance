@@ -67,7 +67,7 @@ def run_daemon(args: Namespace) -> int:
 def _process_cycle(app: ResonanceApp, cache_path: Path) -> None:
     cache = MetadataCache(cache_path)
     deferred = {path for path, _ in cache.get_deferred_prompts()}
-    pipeline = app.create_pipeline()
+    pipeline = app.create_pipeline(allow_legacy=True)
 
     for batch in app.scanner.iter_directories():
         if cache.is_directory_skipped(batch.directory):

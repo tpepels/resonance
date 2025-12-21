@@ -128,7 +128,8 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 - [ ] If deprecated: Remove `resonance/visitors/`, update CLI to use V3 exclusively
 - [ ] If harmonized: Refactor visitors to call V3 pipeline functions
 
-**Status:** CLI `scan/daemon/prompt` now require `--legacy` to run V2 visitors, defaulting to V3-only paths.
+**Status:** CLI `scan/daemon/prompt` require `--legacy` and `ResonanceApp.create_pipeline()` now
+requires `allow_legacy=True`, preventing accidental V2 usage outside explicit legacy paths.
 
 ---
 

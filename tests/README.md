@@ -208,7 +208,7 @@ def test_your_scenario(
     # Run test
     try:
         album = AlbumInfo(directory=input_dir)
-        pipeline = app.create_pipeline()
+        pipeline = app.create_pipeline(allow_legacy=True)
         success = pipeline.process(album)
 
         # Assertions

@@ -55,7 +55,7 @@ def run_prompt(args: Namespace) -> int:
     )
 
     try:
-        pipeline = app.create_pipeline()
+    pipeline = app.create_pipeline(allow_legacy=True)
         for directory, _reason in deferred:
             if not directory.exists():
                 cache.remove_deferred_prompt(directory)

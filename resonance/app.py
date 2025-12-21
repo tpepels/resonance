@@ -98,12 +98,16 @@ class ResonanceApp:
                 discogs=self.discogs,
             )
 
-    def create_pipeline(self) -> VisitorPipeline:
+    def create_pipeline(self, *, allow_legacy: bool = False) -> VisitorPipeline:
         """Create the visitor pipeline.
 
         Returns:
             VisitorPipeline with all 5 visitors
         """
+        if not allow_legacy:
+            raise ValueError(
+                "V2 visitor pipeline is deprecated; pass allow_legacy=True to use it."
+            )
         visitors = []
 
         # 1. Identify (fingerprinting + canonical names)

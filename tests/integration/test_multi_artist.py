@@ -101,7 +101,7 @@ class TestMultiArtistAlbums:
 
         try:
             # Create pipeline
-            pipeline = app.create_pipeline()
+            pipeline = app.create_pipeline(allow_legacy=True)
 
             # Create album
             album = AlbumInfo(directory=input_dir)
