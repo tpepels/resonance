@@ -294,11 +294,12 @@ This section is complete when:
 
 ### 5.2 Extras handling (Feature)
 
-- [ ] Policy: keep/move/rename extras (cover.jpg, booklet.pdf, .cue, .log)
+- [x] Policy: keep/move/rename extras (cover.jpg, booklet.pdf, .cue, .log)
 - [ ] Tests:
   - cover art follows album
   - extras don’t collide across discs
   - unknown extras handled deterministically (kept or moved to Extras)
+  - Status: cover art, unknown extras, and cross-disc collision covered
 
 ### 5.3 Collision policy (Integration)
 

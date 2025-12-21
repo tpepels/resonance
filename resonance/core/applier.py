@@ -101,7 +101,7 @@ def _collect_audio_files(source_path: Path) -> list[Path]:
     extensions = LibraryScanner.DEFAULT_EXTENSIONS
     files = [
         path
-        for path in source_path.iterdir()
+        for path in source_path.rglob("*")
         if path.is_file()
         and not path.is_symlink()
         and path.suffix.lower() in extensions
@@ -362,12 +362,16 @@ def apply_plan(
             errors.append(str(exc))
         else:
             audio_sources = {src.resolve() for src, _ in file_moves}
-            for entry in sorted(plan.source_path.iterdir(), key=lambda p: p.name):
-                if not entry.is_file():
+            for entry in sorted(
+                plan.source_path.rglob("*"),
+                key=lambda p: p.as_posix(),
+            ):
+                if not entry.is_file() or entry.is_symlink():
                     continue
                 if entry.resolve() in audio_sources:
                     continue
-                file_moves.append((entry, dest_root / entry.name))
+                rel = entry.relative_to(plan.source_path)
+                file_moves.append((entry, dest_root / rel))
 
     for src, _ in file_moves:
         if not src.exists():

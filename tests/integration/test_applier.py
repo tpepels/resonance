@@ -13,10 +13,15 @@ from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
 from resonance.core.identity.signature import dir_signature
 from resonance.core.identifier import ProviderRelease, ProviderTrack
-from resonance.core.planner import Plan, TrackOperation
+from resonance.core.planner import Plan, TrackOperation, plan_directory
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
-from tests.helpers.fs import AudioStubSpec, build_album_dir
+from tests.helpers.fs import (
+    AudioStubSpec,
+    build_album_dir,
+    create_audio_stub,
+    create_non_audio_stub,
+)
 
 
 def _make_release() -> ProviderRelease:
@@ -662,6 +667,133 @@ def test_applier_moves_non_audio_with_album(tmp_path: Path) -> None:
         assert report.status == ApplyStatus.APPLIED
         assert not (fixture.path / "cover.jpg").exists()
         assert (tmp_path / "library/Artist/Album/cover.jpg").exists()
+    finally:
+        store.close()
+
+
+def test_applier_moves_multiple_extras_with_album(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+        non_audio_files=["cover.jpg", "booklet.pdf", "disc1.cue", "disc1.log"],
+    )
+    plan = replace(_make_plan(fixture.path), non_audio_policy="MOVE_WITH_ALBUM")
+    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        dest_root = tmp_path / "library/Artist/Album"
+        for name in ("cover.jpg", "booklet.pdf", "disc1.cue", "disc1.log"):
+            assert (dest_root / name).exists()
+            assert not (fixture.path / name).exists()
+    finally:
+        store.close()
+
+
+def test_applier_moves_unknown_extras_deterministically(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+        non_audio_files=["notes.txt", "readme.nfo"],
+    )
+    plan = replace(_make_plan(fixture.path), non_audio_policy="MOVE_WITH_ALBUM")
+    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        dest_root = tmp_path / "library/Artist/Album"
+        assert (dest_root / "notes.txt").exists()
+        assert (dest_root / "readme.nfo").exists()
+        assert not (fixture.path / "notes.txt").exists()
+        assert not (fixture.path / "readme.nfo").exists()
+    finally:
+        store.close()
+
+
+def test_applier_moves_extras_without_disc_collisions(tmp_path: Path) -> None:
+    source_dir = tmp_path / "source" / "album"
+    disc1 = source_dir / "Disc 1"
+    disc2 = source_dir / "Disc 2"
+    audio_files = [
+        create_audio_stub(
+            disc1 / "01 - Track A.flac",
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+        ),
+        create_audio_stub(
+            disc2 / "02 - Track B.flac",
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ),
+    ]
+    create_non_audio_stub(disc1 / "cover.jpg")
+    create_non_audio_stub(disc2 / "cover.jpg")
+
+    release = ProviderRelease(
+        provider="discogs",
+        release_id="dg-extras-disc",
+        title="Album",
+        artist="Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track A", disc_number=1),
+            ProviderTrack(position=2, title="Track B", disc_number=2),
+        ),
+        year=2000,
+    )
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        signature_hash = dir_signature(audio_files).signature_hash
+        record = store.get_or_create("dir-extras-disc", source_dir, signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="discogs",
+            pinned_release_id="dg-extras-disc",
+        )
+
+        plan = plan_directory(
+            dir_id=record.dir_id,
+            store=store,
+            pinned_release=release,
+            source_files=audio_files,
+        )
+        store.set_state(
+            plan.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        dest_root = tmp_path / "library/Artist/2000 - Album"
+        assert (dest_root / "Disc 1/cover.jpg").exists()
+        assert (dest_root / "Disc 2/cover.jpg").exists()
     finally:
         store.close()
 
