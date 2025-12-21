@@ -20,7 +20,7 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 **Critical Gaps:**
 - 🔴 **Dual Architecture:** V2 visitor pipeline coexists with V3, creating determinism bypass risk
 - 🟡 **Crash Recovery:** Core crash cases covered; still missing DB/WAL, disk-full, and permission failures
-- 🔴 **Schema Versioning:** No downgrade protection, untested migrations
+- 🟡 **Schema Versioning:** Downgrade protection + migrations covered; concurrent/compat tests remain
 - 🔴 **Service Construction:** No single composition root (violates stated architecture)
 
 **Overall Grade:** 🟡 **B-** (Good coverage, strong determinism, but architectural debt and safety gaps)
@@ -37,7 +37,7 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 | **Integration Tests** | ~280 | ✅ GREEN | Full pipeline, provider fusion, CLI |
 | **Golden Corpus** | 26 scenarios | ✅ GREEN | Snapshot-based regression tests |
 | **Crash Recovery** | 3 | 🟡 IN PROGRESS | Covers move-before-commit, rollback failure, tag-write crash |
-| **Schema Versioning** | 2 | 🔴 GAP | No migration or downgrade tests |
+| **Schema Versioning** | 4 | 🟡 IN PROGRESS | Downgrade protection + migrations covered |
 | **Security (Path Safety)** | 8 | ✅ GOOD | Path traversal, SafePath validation |
 
 **Determinism Score:** 🟢 **Excellent**
@@ -302,17 +302,17 @@ include DB/WAL failure modes, disk full, and permission failures.
 
 ### 3.2 Schema Versioning (STOP-SHIP GAP)
 
-**Coverage:** 🔴 **36%** (2.5/7 scenarios)
+**Coverage:** 🟡 **57%** (4/7 scenarios)
 
 | Scenario | Tested? | Risk | Priority |
 |----------|---------|------|----------|
-| v0.2.0 DB opened by v0.1.0 (downgrade) | ❌ | **CRITICAL** | P0 |
-| v0.1.0 DB opened by v0.2.0 (upgrade migration) | ❌ | **CRITICAL** | P0 |
+| v0.2.0 DB opened by v0.1.0 (downgrade) | ✅ | **CRITICAL** | P0 |
+| v0.1.0 DB opened by v0.2.0 (upgrade migration) | ✅ | **CRITICAL** | P0 |
 | Concurrent v1 and v2 running | ❌ | **HIGH** | P1 |
 | Signature v1 + v2 algorithm (warns user) | ⚠️ | **MEDIUM** | P1 |
 | Provenance v1 tags + app using v2 | ❌ | **MEDIUM** | P2 |
 
-**Critical Gap:** Downgrading Resonance version (v0.2.0 → v0.1.0) silently corrupts DB by ignoring unknown columns/tables.
+**Critical Gap:** Concurrent versions and signature-version mismatches need explicit handling.
 
 **Recommended Test:**
 ```python
@@ -325,7 +325,8 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
     # Assert: raises ValueError("DB schema 99 > supported 4. Please upgrade Resonance.")
 ```
 
-**Status:** Added migration coverage from schema v3 to v4 (`test_schema_migration_from_v3_preserves_records`).
+**Status:** Downgrade protection + migrations covered (`test_directory_store_rejects_future_schema_version`,
+`test_schema_migration_from_v1_preserves_records`, `test_schema_migration_from_v3_preserves_records`).
 
 ---
 
@@ -482,7 +483,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 - **Tests:** 483 (up from 234 in Dec 2020)
 - **Golden Corpus:** 26 scenarios (V3 target: complete)
 - **Determinism:** Excellent (no flaky tests, explicit ordering)
-- **Coverage:** Strong happy paths, gaps in schema versioning and remaining crash modes
+- **Coverage:** Strong happy paths, remaining gaps in crash recovery and schema concurrency
 
 ### Grade Progression
 
@@ -497,7 +498,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 | Risk Area | Current | Target | Priority |
 |-----------|---------|--------|----------|
 | **Crash Recovery** | 🟡 38% | 🟢 80% | P0 - STOP-SHIP |
-| **Schema Versioning** | 🔴 36% | 🟢 90% | P0 - STOP-SHIP |
+| **Schema Versioning** | 🟡 57% | 🟢 90% | P0 - STOP-SHIP |
 | **Tag Validation** | 🔴 0% | 🟢 80% | P1 - HIGH |
 | **Path Safety** | 🟢 75% | 🟢 90% | P2 - MEDIUM |
 | **V2/V3 Dual Arch** | 🔴 PRESENT | ✅ REMOVED | P0 - CRITICAL |

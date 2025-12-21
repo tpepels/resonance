@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 from pathlib import Path
 import shutil
 
@@ -242,5 +243,51 @@ def test_applier_fails_on_tag_write_crash(tmp_path: Path) -> None:
         assert report.status == ApplyStatus.FAILED
         assert report.rollback_attempted is True
         assert any("Tag write failed" in err for err in report.errors)
+    finally:
+        store.close()
+
+
+def test_applier_fails_on_disk_full(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        def fail_move(_src: Path, _dest: Path) -> None:
+            raise OSError(errno.ENOSPC, "No space left on device")
+
+        monkeypatch.setattr("resonance.core.applier._move_file", fail_move)
+
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert report.rollback_attempted is True
+        assert any("Move failed" in err for err in report.errors)
+        assert any("No space left" in err for err in report.errors)
     finally:
         store.close()
