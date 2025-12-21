@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Sequence
 
 try:
     from mutagen import File as MutagenFile
@@ -60,6 +60,51 @@ class TagWriter(Protocol):
         ...
 
 
+TagValue = str | Sequence[str]
+
+
+def _collapse_whitespace(value: str) -> str:
+    return " ".join(value.split())
+
+
+def normalize_tag_set(tags: dict[str, TagValue]) -> dict[str, str]:
+    normalized: dict[str, str] = {}
+    for key, value in tags.items():
+        if value is None:
+            continue
+        if isinstance(value, (list, tuple)):
+            parts = [_collapse_whitespace(str(part)) for part in value if part]
+            joined = "; ".join(part for part in parts if part)
+            if joined:
+                normalized[key] = joined
+            continue
+        normalized[key] = _collapse_whitespace(str(value))
+    return normalized
+
+
+def _mp4_mapping() -> dict[str, str]:
+    return {
+        "title": "\xa9nam",
+        "artist": "\xa9ART",
+        "album": "\xa9alb",
+        "albumartist": "aART",
+        "tracknumber": "trkn",
+        "discnumber": "disk",
+        "musicbrainz_albumid": "----:com.apple.iTunes:MusicBrainz Album Id",
+        "musicbrainz_recordingid": "----:com.apple.iTunes:MusicBrainz Track Id",
+    }
+
+
+def format_tag_keys(ext: str) -> tuple[str, ...]:
+    ext = ext.lower().lstrip(".")
+    if ext == "mp3":
+        keys = set(MutagenTagWriter._MP3_KEYS.keys()) | set(MutagenTagWriter._MP3_MB_DESCS.keys())
+        return tuple(sorted(keys))
+    if ext in ("m4a", "mp4"):
+        return tuple(sorted(_mp4_mapping().keys()))
+    return ()
+
+
 def get_tag_writer(backend: str) -> TagWriter:
     if backend == "meta-json":
         return MetaJsonTagWriter()
@@ -81,11 +126,12 @@ class MetaJsonTagWriter:
     def apply_patch(
         self, path: Path, set_tags: dict[str, str], allow_overwrite: bool
     ) -> TagWriteResult:
+        normalized = normalize_tag_set(set_tags)
         existing = self.read_tags(path)
         tags_set: list[str] = []
         tags_skipped: list[str] = []
-        for key in sorted(set_tags.keys()):
-            value = set_tags[key]
+        for key in sorted(normalized.keys()):
+            value = normalized[key]
             if not allow_overwrite and existing.get(key):
                 tags_skipped.append(key)
                 continue
@@ -103,7 +149,8 @@ class MetaJsonTagWriter:
     def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None:
         meta_path = path.with_suffix(path.suffix + ".meta.json")
         meta_path.parent.mkdir(parents=True, exist_ok=True)
-        meta_path.write_text(json.dumps({"tags": dict(tags)}, indent=2, sort_keys=True))
+        normalized = normalize_tag_set(tags)
+        meta_path.write_text(json.dumps({"tags": dict(normalized)}, indent=2, sort_keys=True))
 
 
 class MutagenTagWriter:
@@ -154,17 +201,7 @@ class MutagenTagWriter:
             return {k.lower(): v[0] for k, v in audio.tags.items() if v}
         if ext in (".m4a", ".mp4") and isinstance(audio, MP4):
             tags: dict[str, str] = {}
-            mapping = {
-                "title": "\xa9nam",
-                "artist": "\xa9ART",
-                "album": "\xa9alb",
-                "albumartist": "aART",
-                "tracknumber": "trkn",
-                "discnumber": "disk",
-                "musicbrainz_albumid": "----:com.apple.iTunes:MusicBrainz Album Id",
-                "musicbrainz_recordingid": "----:com.apple.iTunes:MusicBrainz Track Id",
-            }
-            for key, mp4_key in mapping.items():
+            for key, mp4_key in _mp4_mapping().items():
                 if mp4_key in audio.tags:
                     value = audio.tags[mp4_key][0]
                     if isinstance(value, tuple):
@@ -179,11 +216,12 @@ class MutagenTagWriter:
         self, path: Path, set_tags: dict[str, str], allow_overwrite: bool
     ) -> TagWriteResult:
         self._require_mutagen()
+        normalized = normalize_tag_set(set_tags)
         existing = self.read_tags(path)
         tags_set: list[str] = []
         tags_skipped: list[str] = []
-        for key in sorted(set_tags.keys()):
-            value = set_tags[key]
+        for key in sorted(normalized.keys()):
+            value = normalized[key]
             if not allow_overwrite and existing.get(key):
                 tags_skipped.append(key)
                 continue
@@ -206,17 +244,7 @@ class MutagenTagWriter:
             audio.save()
         elif ext in (".m4a", ".mp4"):
             audio = MP4(path)
-            mapping = {
-                "title": "\xa9nam",
-                "artist": "\xa9ART",
-                "album": "\xa9alb",
-                "albumartist": "aART",
-                "tracknumber": "trkn",
-                "discnumber": "disk",
-                "musicbrainz_albumid": "----:com.apple.iTunes:MusicBrainz Album Id",
-                "musicbrainz_recordingid": "----:com.apple.iTunes:MusicBrainz Track Id",
-            }
-            for key, mp4_key in mapping.items():
+            for key, mp4_key in _mp4_mapping().items():
                 if key in existing:
                     audio.tags[mp4_key] = [existing[key]]
             audio.save()
@@ -272,15 +300,7 @@ class MutagenTagWriter:
         if ext in (".m4a", ".mp4"):
             audio = MP4(path)
             audio.tags.clear()
-            mapping = {
-                "title": "\xa9nam",
-                "artist": "\xa9ART",
-                "album": "\xa9alb",
-                "albumartist": "aART",
-                "tracknumber": "trkn",
-                "discnumber": "disk",
-            }
-            for key, mp4_key in mapping.items():
+            for key, mp4_key in _mp4_mapping().items():
                 if key in tags:
                     audio.tags[mp4_key] = [tags[key]]
             audio.save()

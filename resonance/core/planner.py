@@ -11,7 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-from resonance.core.identifier import ProviderRelease
+from resonance.core.identifier import ProviderRelease, ProviderTrack
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 
@@ -178,18 +178,21 @@ def _compute_destination_path(
     def sanitize(component: str) -> str:
         return sanitize_filename(component)
 
+    year_str = f"{release.year:04d}" if release.year is not None else "0000"
+    album_folder = sanitize(f"{year_str} - {release.title}")
+
     if is_compilation:
         # Compilation: Various Artists/Album
-        return Path(sanitize("Various Artists")) / sanitize(release.title)
+        return Path(sanitize("Various Artists")) / album_folder
 
     if is_classical:
         composer = _classical_composer(release)
         if composer:
-            return Path(sanitize(display(composer, "composer"))) / sanitize(release.title)
-        return Path(sanitize(display(release.artist, "performer"))) / sanitize(release.title)
+            return Path(sanitize(display(composer, "composer"))) / album_folder
+        return Path(sanitize(display(release.artist, "performer"))) / album_folder
 
     # Regular album: Artist/Album
-    return Path(sanitize(display(release.artist, "artist"))) / sanitize(release.title)
+    return Path(sanitize(display(release.artist, "artist"))) / album_folder
 
 
 def plan_directory(
@@ -249,6 +252,17 @@ def plan_directory(
                 "Source file count does not match release track count"
             )
 
+    max_disc = max((track.disc_number or 1) for track in ordered_tracks) if ordered_tracks else 1
+
+    def _track_filename(track: ProviderTrack, index: int) -> str:
+        prefix = (
+            f"{(track.disc_number or 1):02d}-{track.position:02d}"
+            if max_disc > 1
+            else f"{track.position:02d}"
+        )
+        suffix = ordered_sources[index].suffix if source_files is not None else ".flac"
+        return f"{prefix} - {sanitize_filename(track.title)}{suffix}"
+
     # Generate operations with deterministic ordering
     operations = tuple(
         TrackOperation(
@@ -258,8 +272,7 @@ def plan_directory(
                 if source_files is not None
                 else Path(f"placeholder_{track.position}.flac")
             ),
-            destination_path=destination_path
-            / f"{track.position:02d} - {sanitize_filename(track.title)}.flac",
+            destination_path=destination_path / _track_filename(track, index),
             track_title=track.title,
         )
         for index, track in enumerate(ordered_tracks)

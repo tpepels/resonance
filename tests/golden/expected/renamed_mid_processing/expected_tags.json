@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist F/Rename Album/01 - Track A.flac",
+      "path": "Artist F/2010 - Rename Album/01 - Track A.flac",
       "tags": {
         "album": "Rename Album",
         "albumartist": "Artist F",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist F/Rename Album/02 - Track B.flac",
+      "path": "Artist F/2010 - Rename Album/02 - Track B.flac",
       "tags": {
         "album": "Rename Album",
         "albumartist": "Artist F",

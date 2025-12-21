@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist G/Gapped Album/01 - Track 1.flac",
+      "path": "Artist G/2008 - Gapped Album/01 - Track 1.flac",
       "tags": {
         "album": "Gapped Album",
         "albumartist": "Artist G",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist G/Gapped Album/02 - Track 2.flac",
+      "path": "Artist G/2008 - Gapped Album/02 - Track 2.flac",
       "tags": {
         "album": "Gapped Album",
         "albumartist": "Artist G",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "path": "Artist G/Gapped Album/05 - Track 5.flac",
+      "path": "Artist G/2008 - Gapped Album/05 - Track 5.flac",
       "tags": {
         "album": "Gapped Album",
         "albumartist": "Artist G",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "path": "Artist G/Gapped Album/06 - Track 6.flac",
+      "path": "Artist G/2008 - Gapped Album/06 - Track 6.flac",
       "tags": {
         "album": "Gapped Album",
         "albumartist": "Artist G",

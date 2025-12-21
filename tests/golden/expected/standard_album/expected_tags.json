@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist A/Standard Album/01 - Track 1.flac",
+      "path": "Artist A/2020 - Standard Album/01 - Track 1.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/02 - Track 2.flac",
+      "path": "Artist A/2020 - Standard Album/02 - Track 2.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/03 - Track 3.flac",
+      "path": "Artist A/2020 - Standard Album/03 - Track 3.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/04 - Track 4.flac",
+      "path": "Artist A/2020 - Standard Album/04 - Track 4.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -65,7 +65,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/05 - Track 5.flac",
+      "path": "Artist A/2020 - Standard Album/05 - Track 5.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -81,7 +81,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/06 - Track 6.flac",
+      "path": "Artist A/2020 - Standard Album/06 - Track 6.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -97,7 +97,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/07 - Track 7.flac",
+      "path": "Artist A/2020 - Standard Album/07 - Track 7.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -113,7 +113,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/08 - Track 8.flac",
+      "path": "Artist A/2020 - Standard Album/08 - Track 8.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -129,7 +129,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/09 - Track 9.flac",
+      "path": "Artist A/2020 - Standard Album/09 - Track 9.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",
@@ -145,7 +145,7 @@
       }
     },
     {
-      "path": "Artist A/Standard Album/10 - Track 10.flac",
+      "path": "Artist A/2020 - Standard Album/10 - Track 10.flac",
       "tags": {
         "album": "Standard Album",
         "albumartist": "Artist A",

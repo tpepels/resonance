@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist M/Hidden Track Album/00 - Hidden Intro.flac",
+      "path": "Artist M/2003 - Hidden Track Album/00 - Hidden Intro.flac",
       "tags": {
         "album": "Hidden Track Album",
         "albumartist": "Artist M",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist M/Hidden Track Album/01 - Track 1.flac",
+      "path": "Artist M/2003 - Hidden Track Album/01 - Track 1.flac",
       "tags": {
         "album": "Hidden Track Album",
         "albumartist": "Artist M",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "path": "Artist M/Hidden Track Album/99 - Secret Track.flac",
+      "path": "Artist M/2003 - Hidden Track Album/99 - Secret Track.flac",
       "tags": {
         "album": "Hidden Track Album",
         "albumartist": "Artist M",

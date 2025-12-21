@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist E/Mixed Media Album/01 - Track One.flac",
+      "path": "Artist E/2017 - Mixed Media Album/01 - Track One.flac",
       "tags": {
         "album": "Mixed Media Album",
         "albumartist": "Artist E",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist E/Mixed Media Album/02 - Track Two.flac",
+      "path": "Artist E/2017 - Mixed Media Album/02 - Track Two.flac",
       "tags": {
         "album": "Mixed Media Album",
         "albumartist": "Artist E",

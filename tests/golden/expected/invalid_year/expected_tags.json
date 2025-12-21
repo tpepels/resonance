@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist O/Invalid Year Album/01 - Track 1.flac",
+      "path": "Artist O/0000 - Invalid Year Album/01 - Track 1.flac",
       "tags": {
         "album": "Invalid Year Album",
         "albumartist": "Artist O",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist O/Invalid Year Album/02 - Track 2.flac",
+      "path": "Artist O/0000 - Invalid Year Album/02 - Track 2.flac",
       "tags": {
         "album": "Invalid Year Album",
         "albumartist": "Artist O",

@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist N/Unicode Album/01 - Caf\u00e9.flac",
+      "path": "Artist N/2022 - Unicode Album/01 - Caf\u00e9.flac",
       "tags": {
         "album": "Unicode Album",
         "albumartist": "Artist N",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist N/Unicode Album/02 - Cafe\u0301.flac",
+      "path": "Artist N/2022 - Unicode Album/02 - Cafe\u0301.flac",
       "tags": {
         "album": "Unicode Album",
         "albumartist": "Artist N",

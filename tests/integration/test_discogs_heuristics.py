@@ -151,7 +151,7 @@ def test_discogs_singleton_match_plans_and_applies(tmp_path: Path) -> None:
         )
 
         assert report.status == ApplyStatus.APPLIED
-        moved = output_root / "Discogs Artist" / "Discogs Album" / "01 - Track A.flac"
+        moved = output_root / "Discogs Artist" / "2001 - Discogs Album" / "01 - Track A.flac"
         assert moved.exists()
         tags = MetaJsonTagWriter().read_tags(moved)
         assert tags.get("album") == "Discogs Album"
@@ -302,7 +302,7 @@ def test_discogs_compilation_applies_to_various_artists(tmp_path: Path) -> None:
         )
 
         assert report.status == ApplyStatus.APPLIED
-        moved = output_root / "Various Artists" / "Hits Vol. 1" / "01 - Track A.flac"
+        moved = output_root / "Various Artists" / "1999 - Hits Vol. 1" / "01 - Track A.flac"
         assert moved.exists()
     finally:
         store.close()

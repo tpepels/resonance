@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist I/Crash Album/01 - Track A.flac",
+      "path": "Artist I/2011 - Crash Album/01 - Track A.flac",
       "tags": {
         "album": "Crash Album",
         "albumartist": "Artist I",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist I/Crash Album/02 - Track B.flac",
+      "path": "Artist I/2011 - Crash Album/02 - Track B.flac",
       "tags": {
         "album": "Crash Album",
         "albumartist": "Artist I",

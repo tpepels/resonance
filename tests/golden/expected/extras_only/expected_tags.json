@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist C/Extras Album/01 - Track A.flac",
+      "path": "Artist C/2001 - Extras Album/01 - Track A.flac",
       "tags": {
         "album": "Extras Album",
         "albumartist": "Artist C",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist C/Extras Album/02 - Track B.flac",
+      "path": "Artist C/2001 - Extras Album/02 - Track B.flac",
       "tags": {
         "album": "Extras Album",
         "albumartist": "Artist C",

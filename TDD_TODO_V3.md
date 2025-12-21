@@ -270,8 +270,8 @@ This section is complete when:
 
 ### 4.4 Canonical tag model + mapping (Unit)
 
-- [ ] Unit tests: TagPatch → per-format mapping
-- [ ] Unit tests: normalization rules:
+- [x] Unit tests: TagPatch → per-format mapping
+- [x] Unit tests: normalization rules:
   - whitespace collapse
   - artist joining rules
   - diacritics retained in display strings (unless explicitly configured)
@@ -282,7 +282,7 @@ This section is complete when:
 
 ### 5.1 Destination layout rules (Integration)
 
-- [ ] Define V3 layout targets:
+- [x] Define V3 layout targets:
   - Artist/Year - Album/## - Title.ext
   - multi-disc strategy (Disc 1/01… or 1-01…)
   - classical mode (Composer/Work/…)
@@ -290,6 +290,7 @@ This section is complete when:
   - multi-disc box set
   - compilation
   - artist name variants (AC/DC, Björk)
+  - Status: multi-disc + compilation covered; artist variants pending
 
 ### 5.2 Extras handling (Feature)
 

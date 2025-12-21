@@ -221,6 +221,7 @@ def test_plan_path_regular_album(tmp_path: Path):
             title="Dark Side of the Moon",
             artist="Pink Floyd",
             tracks=(ProviderTrack(position=1, title="Speak to Me"),),
+            year=1973,
         )
 
         from resonance.core.planner import plan_directory
@@ -231,7 +232,7 @@ def test_plan_path_regular_album(tmp_path: Path):
         dest = plan.destination_path
         assert plan.is_compilation is False
         assert plan.compilation_reason is None
-        assert dest.parts[-2:] == ("Pink Floyd", "Dark Side of the Moon")
+        assert dest.parts[-2:] == ("Pink Floyd", "1973 - Dark Side of the Moon")
     finally:
         store.close()
 
@@ -258,6 +259,7 @@ def test_plan_path_compilation(tmp_path: Path):
                 ProviderTrack(position=1, title="Track 1"),
                 ProviderTrack(position=2, title="Track 2"),
             ),
+            year=2001,
         )
 
         from resonance.core.planner import plan_directory
@@ -268,7 +270,7 @@ def test_plan_path_compilation(tmp_path: Path):
         dest = plan.destination_path
         assert plan.is_compilation is True
         assert plan.compilation_reason == "artist_in_compilation_allowlist"
-        assert dest.parts[-2:] == ("Various Artists", "Now That's What I Call Music!")
+        assert dest.parts[-2:] == ("Various Artists", "2001 - Now That's What I Call Music!")
     finally:
         store.close()
 
@@ -294,6 +296,7 @@ def test_plan_path_classical_single_composer(tmp_path: Path):
                 ProviderTrack(position=1, title="Symphony No.1", composer="Mozart"),
                 ProviderTrack(position=2, title="Symphony No.2", composer="Mozart"),
             ),
+            year=1788,
         )
 
         from resonance.core.planner import plan_directory
@@ -301,7 +304,7 @@ def test_plan_path_classical_single_composer(tmp_path: Path):
         plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
         dest = plan.destination_path
         assert plan.is_classical is True
-        assert dest.parts[-2:] == ("Mozart", "Symphonies")
+        assert dest.parts[-2:] == ("Mozart", "1788 - Symphonies")
     finally:
         store.close()
 
@@ -327,6 +330,7 @@ def test_plan_path_classical_mixed_composer(tmp_path: Path):
                 ProviderTrack(position=1, title="Partita", composer="Bach"),
                 ProviderTrack(position=2, title="Sonata", composer="Mozart"),
             ),
+            year=1982,
         )
 
         from resonance.core.planner import plan_directory
@@ -334,7 +338,7 @@ def test_plan_path_classical_mixed_composer(tmp_path: Path):
         plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
         dest = plan.destination_path
         assert plan.is_classical is True
-        assert dest.parts[-2:] == ("Glenn Gould", "Piano Works")
+        assert dest.parts[-2:] == ("Glenn Gould", "1982 - Piano Works")
     finally:
         store.close()
 
@@ -357,6 +361,7 @@ def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Pat
             title="Abbey Road",
             artist="Beatles, The",
             tracks=(ProviderTrack(position=1, title="Come Together"),),
+            year=1969,
         )
 
         def canonicalize_display(value: str, category: str) -> str:
@@ -373,7 +378,7 @@ def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Pat
             canonicalize_display=canonicalize_display,
         )
 
-        assert plan.destination_path.parts[-2:] == ("The Beatles", "Abbey Road")
+        assert plan.destination_path.parts[-2:] == ("The Beatles", "1969 - Abbey Road")
         assert plan.release_artist == "Beatles, The"
     finally:
         store.close()
@@ -397,6 +402,7 @@ def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
             title="Summer Mix",
             artist="Various Artists & Friends",
             tracks=(ProviderTrack(position=1, title="Track 1"),),
+            year=2020,
         )
 
         from resonance.core.planner import plan_directory
@@ -406,7 +412,7 @@ def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
         dest = plan.destination_path
         assert plan.is_compilation is False
         assert plan.compilation_reason is None
-        assert dest.parts[-2:] == ("Various Artists & Friends", "Summer Mix")
+        assert dest.parts[-2:] == ("Various Artists & Friends", "2020 - Summer Mix")
     finally:
         store.close()
 

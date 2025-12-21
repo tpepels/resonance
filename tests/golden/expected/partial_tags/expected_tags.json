@@ -1,7 +1,7 @@
 {
   "tracks": [
     {
-      "path": "Artist J/Partial Tags Album/01 - Track 1.flac",
+      "path": "Artist J/2009 - Partial Tags Album/01 - Track 1.flac",
       "tags": {
         "album": "Partial Tags Album",
         "albumartist": "Artist J",
@@ -17,7 +17,7 @@
       }
     },
     {
-      "path": "Artist J/Partial Tags Album/02 - Track 2.flac",
+      "path": "Artist J/2009 - Partial Tags Album/02 - Track 2.flac",
       "tags": {
         "album": "Partial Tags Album",
         "albumartist": "Artist J",

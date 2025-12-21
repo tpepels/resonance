@@ -138,7 +138,7 @@ def test_musicbrainz_classical_match_plans_and_applies(tmp_path: Path) -> None:
         )
 
         assert report.status == ApplyStatus.APPLIED
-        moved = output_root / "Composer A" / "Work" / "01 - Mvt I.flac"
+        moved = output_root / "Composer A" / "1980 - Work" / "01 - Mvt I.flac"
         assert moved.exists()
     finally:
         store.close()
@@ -237,7 +237,7 @@ def test_musicbrainz_multi_disc_match_plans_and_applies(tmp_path: Path) -> None:
         )
 
         assert report.status == ApplyStatus.APPLIED
-        moved = output_root / "Artist MD" / "Multi Disc" / "01 - Track A.flac"
+        moved = output_root / "Artist MD" / "2005 - Multi Disc" / "01-01 - Track A.flac"
         assert moved.exists()
     finally:
         store.close()
