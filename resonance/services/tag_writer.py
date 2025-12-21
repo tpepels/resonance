@@ -265,7 +265,11 @@ class MutagenTagWriter:
             audio = MP4(path)
             for key, mp4_key in _mp4_mapping().items():
                 if key in existing:
-                    audio.tags[mp4_key] = [existing[key]]
+                    value = existing[key]
+                    if mp4_key.startswith("----:"):
+                        audio.tags[mp4_key] = [str(value).encode("utf-8")]
+                    else:
+                        audio.tags[mp4_key] = [value]
             audio.save()
         else:
             raise ValueError(f"Unsupported audio format: {ext}")
@@ -321,7 +325,11 @@ class MutagenTagWriter:
             audio.tags.clear()
             for key, mp4_key in _mp4_mapping().items():
                 if key in tags:
-                    audio.tags[mp4_key] = [tags[key]]
+                    value = tags[key]
+                    if mp4_key.startswith("----:"):
+                        audio.tags[mp4_key] = [str(value).encode("utf-8")]
+                    else:
+                        audio.tags[mp4_key] = [value]
             audio.save()
             return
         raise ValueError(f"Unsupported audio format: {ext}")
