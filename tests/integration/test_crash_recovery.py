@@ -339,3 +339,92 @@ def test_applier_fails_on_permission_denied(
         assert any("Permission denied" in err for err in report.errors)
     finally:
         store.close()
+
+
+def test_applier_applies_tags_after_move_only_crash(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    dest_root = tmp_path / "library"
+    dest_root.mkdir(parents=True, exist_ok=True)
+    for op in plan.operations:
+        dest = dest_root / op.destination_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(op.source_path), str(dest))
+        sidecar = op.source_path.with_suffix(op.source_path.suffix + ".meta.json")
+        if sidecar.exists():
+            shutil.move(
+                str(sidecar),
+                str(dest.with_suffix(dest.suffix + ".meta.json")),
+            )
+
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-123",
+        title="Album",
+        artist="Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track A"),
+            ProviderTrack(position=2, title="Track B"),
+        ),
+    )
+    tag_patch = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+
+    class _RecordingWriter:
+        def __init__(self) -> None:
+            self.calls: list[Path] = []
+
+        def read_tags(self, _path: Path) -> dict[str, str]:
+            return {}
+
+        def apply_patch(
+            self, path: Path, set_tags: dict[str, str], allow_overwrite: bool
+        ):
+            self.calls.append(path)
+            return TagWriteResult(
+                file_path=path,
+                tags_set=tuple(sorted(set_tags.keys())),
+                tags_skipped=(),
+            )
+
+        def write_tags_exact(self, _path: Path, tags: dict[str, str]) -> None:
+            return None
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    writer = _RecordingWriter()
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        report = apply_plan(
+            plan,
+            tag_patch=tag_patch,
+            store=store,
+            allowed_roots=(dest_root,),
+            dry_run=False,
+            tag_writer=writer,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        assert len(writer.calls) == 2
+        updated = store.get(plan.dir_id)
+        assert updated is not None
+        assert updated.state == DirectoryState.APPLIED
+    finally:
+        store.close()

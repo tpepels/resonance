@@ -210,6 +210,113 @@ def apply_plan(
         if record:
             store.record_apply_summary(plan.dir_id, status.value, report_errors)
 
+    def _run_tag_writes(
+        completed_moves: list[tuple[Path, Path]],
+        file_ops: list[FileOpResult],
+    ) -> tuple[ApplyReport | None, tuple[TagOpResult, ...]]:
+        tag_ops: list[TagOpResult] = []
+        if not (tag_patch and tag_patch.allowed):
+            return None, ()
+        tags_errors: list[str] = []
+        rollback_attempted = False
+        rollback_success = False
+        by_position = {op.track_position: op for op in ordered_ops}
+        album_tags = tag_patch.album_patch.set_tags if tag_patch.album_patch else {}
+        provenance_tags = tag_patch.provenance_tags
+        overwrite_fields = set(tag_patch.overwrite_fields or ())
+        for track_patch in tag_patch.track_patches:
+            operation: TrackOperation | None = by_position.get(track_patch.track_position)
+            if operation is None:
+                tags_errors.append(
+                    f"Missing track position in plan: {track_patch.track_position}"
+                )
+                continue
+            try:
+                dest = _resolve_destination_path(operation.destination_path, allowed_roots)
+                existing = tag_writer.read_tags(dest)
+                before_snapshot = tuple(sorted(existing.items()))
+                combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
+                planned_set: dict[str, str] = {}
+                planned_skipped: list[str] = []
+                overwritten: list[str] = []
+                for key, value in combined.items():
+                    existing_value = existing.get(key)
+                    is_provenance = key.startswith("resonance.prov.")
+                    has_value = (
+                        existing_value is not None
+                        and str(existing_value).strip() != ""
+                    )
+                    if has_value and not (
+                        is_provenance
+                        or tag_patch.allow_overwrite
+                        or key in overwrite_fields
+                    ):
+                        planned_skipped.append(key)
+                        continue
+                    if has_value and not is_provenance:
+                        overwritten.append(key)
+                    planned_set[key] = value
+                if overwritten:
+                    planned_set["resonance.prov.overwrote_keys"] = ",".join(
+                        sorted(set(overwritten))
+                    )
+                write_result = tag_writer.apply_patch(
+                    dest,
+                    planned_set,
+                    allow_overwrite=True,
+                )
+                tag_ops.append(
+                    TagOpResult(
+                        file_path=write_result.file_path,
+                        tags_set=tuple(sorted(planned_set.keys())),
+                        tags_skipped=tuple(sorted(planned_skipped)),
+                        before_tags=before_snapshot,
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - surface tag error
+                tags_errors.append(f"Tag write failed for {dest}: {exc}")
+                tag_ops.append(
+                    TagOpResult(
+                        file_path=dest,
+                        tags_set=(),
+                        tags_skipped=(),
+                        before_tags=(),
+                        error=str(exc),
+                    )
+                )
+        if tags_errors:
+            rollback_attempted = True
+            rollback_success = True
+            for moved_src, moved_dest in reversed(completed_moves):
+                try:
+                    moved_src.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(moved_dest), str(moved_src))
+                    _cleanup_empty_dest_parents(moved_dest, allowed_roots)
+                except Exception:
+                    rollback_success = False
+            store.set_state(
+                plan.dir_id,
+                DirectoryState.FAILED,
+                pinned_provider=plan.provider,
+                pinned_release_id=plan.release_id,
+            )
+            report = ApplyReport(
+                dir_id=plan.dir_id,
+                plan_version=plan.plan_version,
+                tagpatch_version=tag_patch.version,
+                status=ApplyStatus.FAILED,
+                dry_run=False,
+                file_ops=tuple(file_ops),
+                tag_ops=tuple(tag_ops),
+                errors=tuple(tags_errors),
+                warnings=(),
+                rollback_attempted=rollback_attempted,
+                rollback_success=rollback_success,
+            )
+            _record_apply(ApplyStatus.FAILED, tuple(tags_errors))
+            return report, tuple(tag_ops)
+        return None, tuple(tag_ops)
+
     def _fail(report_errors: list[str]) -> ApplyReport:
         if record:
             store.set_state(
@@ -319,6 +426,32 @@ def apply_plan(
         )
         return report
     if not analysis.not_started and analysis.completed:
+        if tag_patch and tag_patch.allowed:
+            failure_report, tag_ops = _run_tag_writes([], [])
+            if failure_report:
+                return failure_report
+            if record:
+                store.set_state(
+                    plan.dir_id,
+                    DirectoryState.APPLIED,
+                    pinned_provider=plan.provider,
+                    pinned_release_id=plan.release_id,
+                )
+            report = ApplyReport(
+                dir_id=plan.dir_id,
+                plan_version=plan.plan_version,
+                tagpatch_version=tag_patch.version if tag_patch else None,
+                status=ApplyStatus.APPLIED,
+                dry_run=dry_run,
+                file_ops=(),
+                tag_ops=tag_ops,
+                errors=(),
+                warnings=(),
+                rollback_attempted=False,
+                rollback_success=False,
+            )
+            _record_apply(ApplyStatus.APPLIED, ())
+            return report
         if record:
             store.set_state(
                 plan.dir_id,
@@ -520,106 +653,9 @@ def apply_plan(
         _record_apply(ApplyStatus.FAILED, tuple(errors))
         return report
 
-    tag_ops: list[TagOpResult] = []
-    if tag_patch and tag_patch.allowed:
-        tags_errors: list[str] = []
-        rollback_attempted = False
-        rollback_success = False
-        by_position = {op.track_position: op for op in ordered_ops}
-        album_tags = tag_patch.album_patch.set_tags if tag_patch.album_patch else {}
-        provenance_tags = tag_patch.provenance_tags
-        overwrite_fields = set(tag_patch.overwrite_fields or ())
-        for track_patch in tag_patch.track_patches:
-            operation: TrackOperation | None = by_position.get(track_patch.track_position)
-            if operation is None:
-                tags_errors.append(
-                    f"Missing track position in plan: {track_patch.track_position}"
-                )
-                continue
-            try:
-                dest = _resolve_destination_path(operation.destination_path, allowed_roots)
-                existing = tag_writer.read_tags(dest)
-                before_snapshot = tuple(sorted(existing.items()))
-                combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
-                planned_set: dict[str, str] = {}
-                planned_skipped: list[str] = []
-                overwritten: list[str] = []
-                for key, value in combined.items():
-                    existing_value = existing.get(key)
-                    is_provenance = key.startswith("resonance.prov.")
-                    has_value = (
-                        existing_value is not None
-                        and str(existing_value).strip() != ""
-                    )
-                    if has_value and not (
-                        is_provenance
-                        or tag_patch.allow_overwrite
-                        or key in overwrite_fields
-                    ):
-                        planned_skipped.append(key)
-                        continue
-                    if has_value and not is_provenance:
-                        overwritten.append(key)
-                    planned_set[key] = value
-                if overwritten:
-                    planned_set["resonance.prov.overwrote_keys"] = ",".join(
-                        sorted(set(overwritten))
-                    )
-                write_result = tag_writer.apply_patch(
-                    dest,
-                    planned_set,
-                    allow_overwrite=True,
-                )
-                tag_ops.append(
-                    TagOpResult(
-                        file_path=write_result.file_path,
-                        tags_set=tuple(sorted(planned_set.keys())),
-                        tags_skipped=tuple(sorted(planned_skipped)),
-                        before_tags=before_snapshot,
-                    )
-                )
-            except Exception as exc:  # noqa: BLE001 - surface tag error
-                tags_errors.append(f"Tag write failed for {dest}: {exc}")
-                tag_ops.append(
-                    TagOpResult(
-                        file_path=dest,
-                        tags_set=(),
-                        tags_skipped=(),
-                        before_tags=(),
-                        error=str(exc),
-                    )
-                )
-        if tags_errors:
-            rollback_attempted = True
-            rollback_success = True
-            for moved_src, moved_dest in reversed(completed_moves):
-                try:
-                    moved_src.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.move(str(moved_dest), str(moved_src))
-                    _cleanup_empty_dest_parents(moved_dest, allowed_roots)
-                except Exception:
-                    rollback_success = False
-            store.set_state(
-                plan.dir_id,
-                DirectoryState.FAILED,
-                pinned_provider=plan.provider,
-                pinned_release_id=plan.release_id,
-            )
-            report = ApplyReport(
-                dir_id=plan.dir_id,
-                plan_version=plan.plan_version,
-                tagpatch_version=tag_patch.version,
-                status=ApplyStatus.FAILED,
-                dry_run=False,
-                file_ops=tuple(file_ops),
-                tag_ops=tuple(tag_ops),
-                errors=tuple(tags_errors),
-                warnings=(),
-                rollback_attempted=rollback_attempted,
-                rollback_success=rollback_success,
-            )
-            _record_apply(ApplyStatus.FAILED, tuple(tags_errors))
-            return report
+    failure_report, tag_ops = _run_tag_writes(completed_moves, file_ops)
+    if failure_report:
+        return failure_report
 
     if plan.non_audio_policy == "DELETE":
         for entry in sorted(plan.source_path.iterdir(), key=lambda p: p.name):
@@ -647,7 +683,7 @@ def apply_plan(
         status=ApplyStatus.APPLIED,
         dry_run=False,
         file_ops=tuple(file_ops),
-        tag_ops=tuple(tag_ops),
+        tag_ops=tag_ops,
         errors=(),
         warnings=tuple(warnings),
         rollback_attempted=False,
