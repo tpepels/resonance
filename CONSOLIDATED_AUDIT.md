@@ -19,7 +19,7 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 
 **Critical Gaps:**
 - 🔴 **Dual Architecture:** V2 visitor pipeline coexists with V3, creating determinism bypass risk
-- 🔴 **Crash Recovery:** Minimal testing of partial states, rollback failures, WAL recovery
+- 🟡 **Crash Recovery:** Core crash cases covered; still missing DB/WAL, disk-full, and permission failures
 - 🔴 **Schema Versioning:** No downgrade protection, untested migrations
 - 🔴 **Service Construction:** No single composition root (violates stated architecture)
 
@@ -36,7 +36,7 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 | **Unit Tests** | ~180 | ✅ GREEN | Core logic, identity, signature, planner |
 | **Integration Tests** | ~280 | ✅ GREEN | Full pipeline, provider fusion, CLI |
 | **Golden Corpus** | 26 scenarios | ✅ GREEN | Snapshot-based regression tests |
-| **Crash Recovery** | 1 | 🔴 GAP | Only basic partial detection |
+| **Crash Recovery** | 3 | 🟡 IN PROGRESS | Covers move-before-commit, rollback failure, tag-write crash |
 | **Schema Versioning** | 2 | 🔴 GAP | No migration or downgrade tests |
 | **Security (Path Safety)** | 8 | ✅ GOOD | Path traversal, SafePath validation |
 
@@ -277,36 +277,26 @@ Per architecture: "No business logic in visitors."
 
 ### 3.1 Crash Recovery (STOP-SHIP GAP)
 
-**Coverage:** 🔴 **17%** (2/12 scenarios)
+**Coverage:** 🟡 **38%** (3/8 scenarios)
 
 | Scenario | Tested? | Risk | Priority |
 |----------|---------|------|----------|
-| Crash after all file moves, before DB commit | ❌ | **CRITICAL** | P0 |
-| Crash during rollback | ❌ | **HIGH** | P0 |
+| Crash after all file moves, before DB commit | ✅ | **CRITICAL** | P0 |
+| Crash during rollback | ✅ | **HIGH** | P0 |
 | Power loss during SQLite transaction | ❌ | **MEDIUM** | P1 |
 | Disk full during file move | ❌ | **MEDIUM** | P1 |
 | Crash after file moves, before tag writes | ❌ | **MEDIUM** | P1 |
-| Crash mid-tag write | ❌ | **LOW** | P2 |
+| Crash mid-tag write | ✅ | **LOW** | P2 |
 | Permission denied mid-apply | ❌ | **LOW** | P2 |
 | Multiple crashes (crash → recover → crash) | ❌ | **LOW** | P2 |
 
 **Most Common Failure:** Crash after heavy file I/O succeeds but before fast DB commit.
 
-**Current Behavior:** State DB shows PLANNED, all files moved → user re-applies → duplicate moves or errors.
+**Current Behavior:** If all moves completed before a crash, re-apply returns `NOOP_ALREADY_APPLIED`
+and updates state to `APPLIED` (verified by `test_applier_crash_after_file_moves_before_db_commit`).
 
-**Recommended Test:**
-```python
-def test_applier_crash_after_file_moves_before_db_commit(tmp_path):
-    """
-    Simulate crash after all file moves succeed but before DB state commits.
-    On recovery, applier must detect completed moves and update DB without re-executing.
-    """
-    # Setup: manually move all files (simulate completed apply)
-    # Act: call apply() again
-    # Assert: returns NOOP_ALREADY_APPLIED, DB state is APPLIED
-```
-
-**Status:** Added rollback-failure coverage (`test_applier_reports_rollback_failure`) and tag-write crash coverage (`test_applier_fails_on_tag_write_crash`).
+**Status:** Crash-after-move, rollback failure, and tag-write crash scenarios are covered. Remaining gaps
+include DB/WAL failure modes, disk full, and permission failures.
 
 ---
 
@@ -492,7 +482,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 - **Tests:** 483 (up from 234 in Dec 2020)
 - **Golden Corpus:** 26 scenarios (V3 target: complete)
 - **Determinism:** Excellent (no flaky tests, explicit ordering)
-- **Coverage:** Strong happy paths, gaps in crash recovery and schema versioning
+- **Coverage:** Strong happy paths, gaps in schema versioning and remaining crash modes
 
 ### Grade Progression
 
@@ -506,7 +496,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 
 | Risk Area | Current | Target | Priority |
 |-----------|---------|--------|----------|
-| **Crash Recovery** | 🔴 17% | 🟢 80% | P0 - STOP-SHIP |
+| **Crash Recovery** | 🟡 38% | 🟢 80% | P0 - STOP-SHIP |
 | **Schema Versioning** | 🔴 36% | 🟢 90% | P0 - STOP-SHIP |
 | **Tag Validation** | 🔴 0% | 🟢 80% | P1 - HIGH |
 | **Path Safety** | 🟢 75% | 🟢 90% | P2 - MEDIUM |
