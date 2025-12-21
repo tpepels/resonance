@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Optional
 
 from .core.identity import IdentityCanonicalizer
-from .core.visitor import VisitorPipeline
 from .infrastructure.cache import MetadataCache
 from .infrastructure.scanner import LibraryScanner
 from .providers.musicbrainz import MusicBrainzClient
@@ -15,7 +14,6 @@ from .providers.discogs import DiscogsClient
 from .services.file_service import FileService
 from .services.prompt_service import PromptService
 from .services.release_search import ReleaseSearchService
-import warnings
 
 
 class ResonanceApp:
@@ -39,9 +37,10 @@ class ResonanceApp:
             cache_path: Path to SQLite cache database
             acoustid_api_key: AcoustID API key for fingerprinting
             discogs_token: Discogs API token (optional)
-            interactive: If True, prompt user for uncertainmatches
+            interactive: If True, prompt user for uncertain matches
             dry_run: If True, don't actually move files
             delete_nonaudio: If True, delete non-audio files during cleanup
+            offline: If True, skip network requests
         """
         self.library_root = library_root
         self.cache_path = cache_path
@@ -91,65 +90,6 @@ class ResonanceApp:
                 musicbrainz=self.musicbrainz,
                 discogs=self.discogs,
             )
-
-    def create_pipeline(self, *, allow_legacy: bool = False) -> VisitorPipeline:
-        """Create the visitor pipeline.
-
-        Returns:
-            VisitorPipeline with all 5 visitors
-        """
-        if not allow_legacy:
-            raise ValueError(
-                "V2 visitor pipeline is deprecated; pass allow_legacy=True to use it."
-            )
-        warnings.warn(
-            "V2 visitor pipeline is deprecated; prefer V3 commands.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        from .visitors import (  # legacy-only import
-            IdentifyVisitor,
-            PromptVisitor,
-            EnrichVisitor,
-            OrganizeVisitor,
-            CleanupVisitor,
-        )
-        visitors = []
-
-        # 1. Identify (fingerprinting + canonical names)
-        if self.musicbrainz:
-            visitors.append(IdentifyVisitor(
-                musicbrainz=self.musicbrainz,
-                canonicalizer=self.canonicalizer,
-                cache=self.cache,
-                release_search=self.release_search,
-            ))
-
-        # 2. Prompt (user interaction)
-        visitors.append(PromptVisitor(
-            prompt_service=self.prompt_service,
-            cache=self.cache,
-        ))
-
-        # 3. Enrich (metadata from providers)
-        if self.musicbrainz:
-            visitors.append(EnrichVisitor(
-                musicbrainz=self.musicbrainz,
-                discogs=self.discogs,
-            ))
-
-        # 4. Organize (move files)
-        visitors.append(OrganizeVisitor(
-            file_service=self.file_service,
-        ))
-
-        # 5. Cleanup (delete empty dirs)
-        visitors.append(CleanupVisitor(
-            file_service=self.file_service,
-            delete_nonaudio=self.delete_nonaudio,
-        ))
-
-        return VisitorPipeline(visitors)
 
     def close(self) -> None:
         """Clean up resources."""

@@ -1,8 +1,8 @@
 ```
 ██████╗ ███████╗███████╗ ██████╗ ███╗   ██╗ █████╗ ███╗   ██╗ ██████╗███████╗
 ██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║██╔══██╗████╗  ██║██╔════╝██╔════╝
-██████╔╝█████╗  ███████╗██║   ██║██╔██╗ ██║███████║██╔██╗ ██║██║     █████╗  
-██╔══██╗██╔══╝  ╚════██║██║   ██║██║╚██╗██║██╔══██║██║╚██╗██║██║     ██╔══╝  
+██████╔╝█████╗  ███████╗██║   ██║██╔██╗ ██║███████║██╔██╗ ██║██║     █████╗
+██╔══██╗██╔══╝  ╚════██║██║   ██║██║╚██╗██║██╔══██║██║╚██╗██║██║     ██╔══╝
 ██║  ██║███████╗███████║╚██████╔╝██║ ╚████║██║  ██║██║ ╚████║╚██████╗███████╗
 ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
 ```
@@ -11,22 +11,21 @@ Clean, focused audio metadata organizer using fingerprinting and canonical artis
 
 ## What It Does
 
-Resonance organizes your music library by:
-1. **Fingerprinting** audio files to identify canonical artist/composer/album information
-2. **Prompting** you for uncertain matches (with preview and manual entry options)
-3. **Enriching** metadata from MusicBrainz and Discogs
-4. **Organizing** files into `Artist/Album/tracks` structure (or `Composer/Performer` for classical)
-5. **Cleaning up** source directories after successful moves
+Resonance organizes your music library using a deterministic, auditable pipeline:
+1. **Scan** directories to identify audio files and compute content signatures
+2. **Identify** releases using fingerprints and provider APIs (MusicBrainz, Discogs)
+3. **Resolve** uncertain matches with user input or automatic scoring
+4. **Plan** file moves and tag updates with full auditability
+5. **Apply** plans transactionally with rollback support
 
 ## Key Features
 
-- **Visitor Pattern Architecture**: Clean, simple processing pipeline
+- **Deterministic Pipeline**: Content-based identity, no re-matches on repeat runs
 - **Fingerprint-Based Identification**: Uses AcoustID + MusicBrainz
 - **Canonical Name Resolution**: Merges artist variants (e.g., "Bach, J.S." → "Johann Sebastian Bach")
-- **Interactive & Daemon Modes**: Process immediately or defer user prompts
-- **Smart Caching**: Remembers decisions across runs
 - **Transaction Support**: Rollback on errors or crashes
 - **Classical Music Support**: Special handling for composer/performer structures
+- **Plan-Based Execution**: Review changes before applying
 
 ## Installation
 
@@ -37,44 +36,65 @@ pip install -e .
 
 ## Usage
 
-### Interactive Scan
+### V3 Pipeline (Recommended)
+
+The V3 pipeline uses a deterministic state machine with explicit plan artifacts:
+
 ```bash
-resonance scan --legacy /path/to/music
+# 1. Identify a directory
+resonance identify /path/to/album --json > identification.json
+
+# 2. Create a plan (requires directory in state DB)
+resonance plan --dir-id <dir-id> --state-db ~/.local/share/resonance/state.db
+
+# 3. Apply the plan
+resonance apply --plan plan.json --state-db ~/.local/share/resonance/state.db
 ```
 
-### Daemon Mode
-```bash
-# Start watching a directory
-resonance daemon --legacy /path/to/music
+### Prescan (Build Canonical Mappings)
 
-# Later, answer deferred prompts
-resonance prompt --legacy
+```bash
+# Scan library to build canonical artist/composer mappings
+resonance prescan /path/to/library --cache ~/.cache/resonance/metadata.db
 ```
 
-### Other Commands
+### Commands
+
 ```bash
 # Show help
 resonance --help
 
-# Reprocess skipped directories
-resonance scan --legacy --unjail /path/to/music
+# Identify a directory
+resonance identify /path/to/album
+
+# Create a plan
+resonance plan --dir-id <dir-id> --state-db state.db
+
+# Apply a plan
+resonance apply --plan plan.json --state-db state.db
 ```
 
 ## Architecture
 
-Resonance uses the V3 pipeline by default (scan → identify → resolve → plan → apply).
-The V2 visitor pipeline is deprecated and only available via `--legacy` flags.
-
-Legacy V2 Visitor Pattern:
+Resonance uses a **V3 deterministic pipeline**:
 
 ```
-Directory → Process with Visitors:
-  1. IdentifyVisitor    - Fingerprint files, determine canonical artist/album
-  2. PromptVisitor      - Ask user for uncertain matches
-  3. EnrichVisitor      - Add metadata from MusicBrainz/Discogs
-  4. OrganizeVisitor    - Move files to Artist/Album structure
-  5. CleanupVisitor     - Delete empty source directories
+scan → identify → resolve → plan → apply
 ```
+
+Each phase is:
+- **Pure**: No side effects in scan, identify, and plan stages
+- **Auditable**: Full trace of decisions and changes
+- **Deterministic**: Same inputs always produce same outputs
+- **Transactional**: Apply operations can be rolled back
+
+See [Resonance_DESIGN_SPEC.md](Resonance_DESIGN_SPEC.md) for full architecture details.
+
+## State Management
+
+Resonance maintains state in two locations:
+- **DirectoryStateStore** (`~/.local/share/resonance/state.db`): Directory resolution state, plans
+- **MetadataCache** (`~/.cache/resonance/metadata.db`): Provider API responses, canonical name mappings
 
 ## Migrating from audio-meta
 

@@ -2,82 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from argparse import Namespace
 from pathlib import Path
 
-from ..app import ResonanceApp
-from ..core.models import AlbumInfo
 from ..core.identifier import identify
 from ..core.state import DirectoryState
 from ..infrastructure.scanner import LibraryScanner
-from ..infrastructure.cache import MetadataCache
-
-
-def run_prompt(args: Namespace) -> int:
-    """Run the prompt command.
-
-    Args:
-        args: Parsed command-line arguments
-
-    Returns:
-        Exit code (0 for success)
-    """
-    if not getattr(args, "legacy", False):
-        print(
-            "prompt uses deprecated V2 visitor pipeline; rerun with --legacy or use V3 commands."
-        )
-        return 2
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(levelname)s: %(message)s",
-    )
-
-    cache_path = Path(args.cache).expanduser()
-    cache = MetadataCache(cache_path)
-
-    deferred = cache.get_deferred_prompts_by_id()
-    if not deferred:
-        print("No deferred prompts found.")
-        cache.close()
-        return 0
-
-    print(f"Resonance prompt mode ({len(deferred)} pending)")
-    print(f"  Cache: {cache_path}")
-    print()
-
-    app = ResonanceApp.from_env(
-        library_root=Path.cwd(),
-        cache_path=cache_path,
-        interactive=True,
-        dry_run=False,
-    )
-
-    try:
-        pipeline = app.create_pipeline(allow_legacy=True)
-        for dir_id, directory, _reason in deferred:
-            if directory is None or not directory.exists():
-                if dir_id:
-                    cache.remove_deferred_prompt_by_id(dir_id)
-                elif directory:
-                    cache.remove_deferred_prompt(directory)
-                continue
-
-            if dir_id:
-                cache.remove_deferred_prompt_by_id(dir_id)
-            else:
-                cache.remove_deferred_prompt(directory)
-            album = AlbumInfo(directory=directory, dir_id=dir_id)
-            pipeline.process(album)
-    except KeyboardInterrupt:
-        print("\nPrompt processing interrupted by user")
-        return 130
-    finally:
-        app.close()
-        cache.close()
-
-    return 0
 
 
 def run_prompt_uncertain(
