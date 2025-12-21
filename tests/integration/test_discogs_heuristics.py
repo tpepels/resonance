@@ -120,9 +120,10 @@ def test_discogs_singleton_match_plans_and_applies(tmp_path: Path) -> None:
         assert outcome.state == DirectoryState.RESOLVED_AUTO
         assert outcome.pinned_provider == "discogs"
 
+        record = store.get("dir-discogs-1")
+        assert record is not None
         plan = plan_directory(
-            dir_id="dir-discogs-1",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )
@@ -271,9 +272,10 @@ def test_discogs_compilation_applies_to_various_artists(tmp_path: Path) -> None:
         )
         assert outcome.state == DirectoryState.RESOLVED_AUTO
 
+        record = store.get("dir-discogs-va")
+        assert record is not None
         plan = plan_directory(
-            dir_id="dir-discogs-va",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )

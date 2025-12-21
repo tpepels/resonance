@@ -37,7 +37,7 @@ def run_prompt(args: Namespace) -> int:
     cache_path = Path(args.cache).expanduser()
     cache = MetadataCache(cache_path)
 
-    deferred = cache.get_deferred_prompts()
+    deferred = cache.get_deferred_prompts_by_id()
     if not deferred:
         print("No deferred prompts found.")
         cache.close()
@@ -55,14 +55,20 @@ def run_prompt(args: Namespace) -> int:
     )
 
     try:
-    pipeline = app.create_pipeline(allow_legacy=True)
-        for directory, _reason in deferred:
-            if not directory.exists():
-                cache.remove_deferred_prompt(directory)
+        pipeline = app.create_pipeline(allow_legacy=True)
+        for dir_id, directory, _reason in deferred:
+            if directory is None or not directory.exists():
+                if dir_id:
+                    cache.remove_deferred_prompt_by_id(dir_id)
+                elif directory:
+                    cache.remove_deferred_prompt(directory)
                 continue
 
-            cache.remove_deferred_prompt(directory)
-            album = AlbumInfo(directory=directory)
+            if dir_id:
+                cache.remove_deferred_prompt_by_id(dir_id)
+            else:
+                cache.remove_deferred_prompt(directory)
+            album = AlbumInfo(directory=directory, dir_id=dir_id)
             pipeline.process(album)
     except KeyboardInterrupt:
         print("\nPrompt processing interrupted by user")

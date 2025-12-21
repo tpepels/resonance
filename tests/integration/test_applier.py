@@ -878,7 +878,7 @@ def test_applier_moves_extras_without_disc_collisions(tmp_path: Path) -> None:
     try:
         signature_hash = dir_signature(audio_files).signature_hash
         record = store.get_or_create("dir-extras-disc", source_dir, signature_hash)
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="discogs",
@@ -886,8 +886,7 @@ def test_applier_moves_extras_without_disc_collisions(tmp_path: Path) -> None:
         )
 
         plan = plan_directory(
-            dir_id=record.dir_id,
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )

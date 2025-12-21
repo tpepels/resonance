@@ -6,6 +6,8 @@ import logging
 
 from ..core.models import AlbumInfo, UserSkippedError, MatchSource
 from ..core.visitor import BaseVisitor
+from ..core.identity import dir_id as compute_dir_id
+from ..core.identity import dir_signature
 from ..infrastructure.cache import MetadataCache
 from ..services.prompt_service import PromptService
 
@@ -54,14 +56,26 @@ class PromptVisitor(BaseVisitor):
             return True
 
         logger.info(f"Prompting for: {album.directory}")
+        dir_key = album.dir_id
+        if dir_key is None and album.tracks:
+            signature = dir_signature([track.path for track in album.tracks])
+            dir_key = compute_dir_id(signature)
+            album.dir_id = dir_key
 
         # Defer if in non-interactive mode
         if not self.prompt_service.interactive:
             logger.info("  Deferring prompt (daemon mode)")
-            self.cache.add_deferred_prompt(
-                album.directory,
-                reason="uncertain_match"
-            )
+            if dir_key:
+                self.cache.add_deferred_prompt_by_id(
+                    dir_key,
+                    album.directory,
+                    reason="uncertain_match",
+                )
+            else:
+                self.cache.add_deferred_prompt(
+                    album.directory,
+                    reason="uncertain_match"
+                )
             return False
 
         # Prompt user
@@ -69,42 +83,92 @@ class PromptVisitor(BaseVisitor):
             result = self.prompt_service.prompt_for_release(album)
 
             if result:
-                provider, release_id = result
+                provider = None
+                release_id = None
+                confidence = 1.0
+                if isinstance(result, str):
+                    if ":" in result:
+                        provider, release_id = result.split(":", 1)
+                elif isinstance(result, tuple):
+                    if len(result) >= 2:
+                        provider = result[0]
+                        release_id = result[1]
+                    if len(result) >= 3 and isinstance(result[2], (int, float)):
+                        confidence = float(result[2])
+                if not provider or not release_id:
+                    logger.info("  Unable to parse prompt result; deferring")
+                    if dir_key:
+                        self.cache.add_deferred_prompt_by_id(
+                            dir_key,
+                            album.directory,
+                            reason="invalid_prompt_result",
+                        )
+                    else:
+                        self.cache.add_deferred_prompt(
+                            album.directory,
+                            reason="invalid_prompt_result"
+                        )
+                    return False
+                provider_key = provider
+
                 logger.info(f"  User provided: {provider}:{release_id}")
 
                 # Store in album
-                if provider == "musicbrainz":
+                if provider_key in ("musicbrainz", "mb"):
                     album.musicbrainz_release_id = release_id
-                elif provider == "discogs":
+                elif provider_key in ("discogs", "dg"):
                     album.discogs_release_id = release_id
 
                 album.match_source = MatchSource.USER_PROVIDED
                 album.is_uncertain = False
 
                 # Cache the decision
-                self.cache.set_directory_release(
-                    album.directory,
-                    provider,
-                    release_id,
-                    confidence=1.0
-                )
+                if dir_key:
+                    self.cache.set_directory_release_by_id(
+                        dir_key,
+                        album.directory,
+                        provider_key,
+                        release_id,
+                        confidence=confidence,
+                    )
+                else:
+                    self.cache.set_directory_release(
+                        album.directory,
+                        provider_key,
+                        release_id,
+                        confidence=confidence
+                    )
 
                 return True
             else:
                 # User pressed enter - defer for now
                 logger.info("  User deferred decision")
-                self.cache.add_deferred_prompt(
-                    album.directory,
-                    reason="user_deferred"
-                )
+                if dir_key:
+                    self.cache.add_deferred_prompt_by_id(
+                        dir_key,
+                        album.directory,
+                        reason="user_deferred",
+                    )
+                else:
+                    self.cache.add_deferred_prompt(
+                        album.directory,
+                        reason="user_deferred"
+                    )
                 return False
 
         except UserSkippedError as e:
             # User chose to skip (jail)
             logger.info(f"  User skipped: {e}")
             album.is_skipped = True
-            self.cache.add_skipped_directory(
-                album.directory,
-                reason=str(e)
-            )
+            if dir_key:
+                self.cache.add_skipped_directory_by_id(
+                    dir_key,
+                    album.directory,
+                    reason=str(e),
+                )
+            else:
+                self.cache.add_skipped_directory(
+                    album.directory,
+                    reason=str(e)
+                )
             return False

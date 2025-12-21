@@ -7,34 +7,52 @@ from unittest.mock import MagicMock
 import pytest
 
 from resonance.core.identity.canonicalizer import IdentityCanonicalizer
+from resonance.core.identity.signature import dir_id as compute_dir_id
+from resonance.core.identity.signature import dir_signature
 from resonance.core.models import AlbumInfo, TrackInfo, UserSkippedError
 from resonance.core.visitor import VisitorPipeline
+from resonance.services.release_search import ReleaseCandidate
 from resonance.visitors.identify import IdentifyVisitor
 from resonance.visitors.prompt import PromptVisitor
 
 
 @dataclass
 class FakeCache:
-    skipped: set[Path]
-    releases: dict[Path, tuple[str, str, float]]
-    deferred: dict[Path, str]
+    skipped: set[str]
+    releases: dict[str, tuple[str, str, float]]
+    deferred: dict[str, str]
+
+    def is_directory_skipped_by_id(self, dir_id: str) -> bool:
+        return dir_id in self.skipped
 
     def is_directory_skipped(self, directory: Path) -> bool:
-        return directory in self.skipped
+        return False
+
+    def get_directory_release_by_id(self, dir_id: str):
+        return self.releases.get(dir_id)
 
     def get_directory_release(self, directory: Path):
-        return self.releases.get(directory)
+        return None
 
-    def set_directory_release(
-        self, directory: Path, provider: str, release_id: str, confidence: float = 0.0
+    def set_directory_release_by_id(
+        self,
+        dir_id: str,
+        directory_path: Path | None,
+        provider: str,
+        release_id: str,
+        confidence: float = 0.0,
     ) -> None:
-        self.releases[directory] = (provider, release_id, confidence)
+        self.releases[dir_id] = (provider, release_id, confidence)
 
-    def add_deferred_prompt(self, directory: Path, reason: str) -> None:
-        self.deferred[directory] = reason
+    def add_deferred_prompt_by_id(
+        self, dir_id: str, directory_path: Path | None, reason: str
+    ) -> None:
+        self.deferred[dir_id] = reason
 
-    def add_skipped_directory(self, directory: Path, reason: str = "user_skipped") -> None:
-        self.skipped.add(directory)
+    def add_skipped_directory_by_id(
+        self, dir_id: str, directory_path: Path | None, reason: str = "user_skipped"
+    ) -> None:
+        self.skipped.add(dir_id)
 
 
 @dataclass
@@ -51,15 +69,20 @@ def make_album(tmp_path: Path) -> AlbumInfo:
     directory.mkdir()
     track_path = directory / "01 - Track.flac"
     track_path.write_bytes(b"fake-audio")
-    return AlbumInfo(directory=directory)
+    signature = dir_signature([track_path])
+    return AlbumInfo(directory=directory, dir_id=compute_dir_id(signature))
 
 
 def make_album_with_tracks(tmp_path: Path, names: list[str]) -> AlbumInfo:
     directory = tmp_path / "src_album"
     directory.mkdir()
+    paths: list[Path] = []
     for name in names:
-        (directory / name).write_bytes(b"fake-audio")
-    return AlbumInfo(directory=directory)
+        path = directory / name
+        path.write_bytes(b"fake-audio")
+        paths.append(path)
+    signature = dir_signature(paths)
+    return AlbumInfo(directory=directory, dir_id=compute_dir_id(signature))
 
 
 def test_pipeline_stops_when_visitor_returns_false(tmp_path: Path):
@@ -108,7 +131,7 @@ def test_identify_visitor_handles_missing_release_search(tmp_path: Path, monkeyp
 
 def test_identify_visitor_marks_skipped_when_cached(tmp_path: Path):
     album = make_album(tmp_path)
-    cache = FakeCache(skipped={album.directory}, releases={}, deferred={})
+    cache = FakeCache(skipped={album.dir_id}, releases={}, deferred={})
     canonicalizer = IdentityCanonicalizer(cache=FakeCanonicalCache())
     musicbrainz = MagicMock()
     musicbrainz.enrich.return_value = None
@@ -202,7 +225,7 @@ def test_prompt_visitor_jails_directory(tmp_path: Path):
 
     assert visitor.visit(album) is False
     assert album.is_skipped is True
-    assert album.directory in cache.skipped
+    assert album.dir_id in cache.skipped
 
 
 def test_prompt_visitor_defers_when_noninteractive(tmp_path: Path):
@@ -219,7 +242,7 @@ def test_prompt_visitor_defers_when_noninteractive(tmp_path: Path):
     visitor = PromptVisitor(prompt_service=FakePromptService(), cache=cache)
 
     assert visitor.visit(album) is False
-    assert cache.deferred.get(album.directory) == "uncertain_match"
+    assert cache.deferred.get(album.dir_id) == "uncertain_match"
 
 # --- additional visitor/pipeline tests (more coverage + edge cases) ---
 
@@ -253,7 +276,7 @@ def test_pipeline_propagates_exception_by_default(tmp_path: Path):
 
 def test_identify_visitor_sets_is_skipped_when_cached_skip(tmp_path: Path):
     album = make_album(tmp_path)
-    cache = FakeCache(skipped={album.directory}, releases={}, deferred={})
+    cache = FakeCache(skipped={album.dir_id}, releases={}, deferred={})
     canonicalizer = IdentityCanonicalizer(cache=FakeCanonicalCache())
     musicbrainz = MagicMock()
     musicbrainz.enrich.return_value = None
@@ -285,7 +308,7 @@ def test_identify_visitor_uses_cached_release_when_available(tmp_path: Path, mon
 
     cache = FakeCache(
         skipped=set(),
-        releases={album.directory: ("mb", "mbid-123", 0.99)},
+        releases={album.dir_id: ("mb", "mbid-123", 0.99)},
         deferred={},
     )
     canonicalizer = IdentityCanonicalizer(cache=FakeCanonicalCache())
@@ -319,7 +342,7 @@ def test_identify_visitor_cached_release_low_confidence_marks_uncertain(tmp_path
 
     cache = FakeCache(
         skipped=set(),
-        releases={album.directory: ("mb", "mbid-low", 0.10)},
+        releases={album.dir_id: ("mb", "mbid-low", 0.10)},
         deferred={},
     )
     canonicalizer = IdentityCanonicalizer(cache=FakeCanonicalCache())
@@ -358,11 +381,40 @@ def test_identify_visitor_selects_best_candidate_and_persists_release(tmp_path: 
     # Candidate shape depends on your release_search implementation.
     # Here we assume tuples: (provider, release_id, confidence)
     release_search = MagicMock()
-    release_search.search_releases.return_value = [
-        ("mb", "mbid-1", 0.80),
-        ("dg", "dgid-9", 0.95),
-        ("mb", "mbid-2", 0.60),
+    candidates = [
+        ReleaseCandidate(
+            provider="musicbrainz",
+            release_id="mbid-1",
+            title="Album X",
+            artist="Artist A",
+            year=2001,
+            track_count=2,
+            score=0.80,
+            coverage=1.0,
+        ),
+        ReleaseCandidate(
+            provider="discogs",
+            release_id="dgid-9",
+            title="Album X",
+            artist="Artist A",
+            year=2001,
+            track_count=2,
+            score=0.95,
+            coverage=1.0,
+        ),
+        ReleaseCandidate(
+            provider="musicbrainz",
+            release_id="mbid-2",
+            title="Album X",
+            artist="Artist A",
+            year=2001,
+            track_count=2,
+            score=0.60,
+            coverage=1.0,
+        ),
     ]
+    release_search.search_releases.return_value = candidates
+    release_search.auto_select_best.return_value = candidates[1]
 
     visitor = IdentifyVisitor(
         musicbrainz=musicbrainz,
@@ -373,7 +425,7 @@ def test_identify_visitor_selects_best_candidate_and_persists_release(tmp_path: 
 
     assert visitor.visit(album) is True
     # Best confidence candidate should be selected and stored
-    assert cache.get_directory_release(album.directory) == ("dg", "dgid-9", 0.95)
+    assert cache.get_directory_release_by_id(album.dir_id) == ("discogs", "dgid-9", 0.95)
     assert album.is_uncertain is False
 
 
@@ -484,7 +536,7 @@ def test_prompt_visitor_does_not_prompt_when_not_uncertain(tmp_path: Path):
 
     assert visitor.visit(album) is True
     assert cache.deferred == {}
-    assert album.directory not in cache.skipped
+    assert album.dir_id not in cache.skipped
 
 
 def test_prompt_visitor_interactive_sets_release_and_continues(tmp_path: Path):
@@ -502,7 +554,7 @@ def test_prompt_visitor_interactive_sets_release_and_continues(tmp_path: Path):
     visitor = PromptVisitor(prompt_service=FakePromptService(), cache=cache)
 
     assert visitor.visit(album) is True
-    assert cache.get_directory_release(album.directory) == ("mb", "mbid-xyz", 0.88)
+    assert cache.get_directory_release_by_id(album.dir_id) == ("mb", "mbid-xyz", 0.88)
     assert album.is_uncertain is False
 
 
@@ -525,7 +577,7 @@ def test_prompt_visitor_interactive_accepts_manual_mb_dg_strings(tmp_path: Path)
     # - it stores the parsed provider/id and continues (recommended), or
     # - it marks uncertain and defers because it cannot parse.
     assert out is True
-    rel = cache.get_directory_release(album.directory)
+    rel = cache.get_directory_release_by_id(album.dir_id)
     assert rel is not None
     assert rel[0] in ("mb", "musicbrainz")
     assert rel[1] == "mbid-12345"
@@ -545,11 +597,11 @@ def test_prompt_visitor_noninteractive_defers_only_once(tmp_path: Path):
     visitor = PromptVisitor(prompt_service=FakePromptService(), cache=cache)
 
     assert visitor.visit(album) is False
-    assert cache.deferred.get(album.directory) == "uncertain_match"
+    assert cache.deferred.get(album.dir_id) == "uncertain_match"
 
     # Run again; should still defer but not change outcome or create duplicates.
     assert visitor.visit(album) is False
-    assert cache.deferred.get(album.directory) == "uncertain_match"
+    assert cache.deferred.get(album.dir_id) == "uncertain_match"
 
 
 def test_prompt_visitor_skip_marks_album_skipped_and_does_not_set_release(tmp_path: Path):
@@ -567,5 +619,5 @@ def test_prompt_visitor_skip_marks_album_skipped_and_does_not_set_release(tmp_pa
 
     assert visitor.visit(album) is False
     assert album.is_skipped is True
-    assert album.directory in cache.skipped
-    assert cache.get_directory_release(album.directory) is None
+    assert album.dir_id in cache.skipped
+    assert cache.get_directory_release_by_id(album.dir_id) is None

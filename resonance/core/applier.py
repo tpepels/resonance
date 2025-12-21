@@ -22,7 +22,7 @@ from resonance.core.validation import (
     validate_signature_hash,
 )
 from resonance.infrastructure.directory_store import DirectoryStateStore
-from resonance.services.tag_writer import MetaJsonTagWriter, TagWriter
+from resonance.services.tag_writer import MetaJsonTagWriter, TagWriter, normalize_tag_set
 from resonance.infrastructure.scanner import LibraryScanner
 
 
@@ -217,6 +217,7 @@ def apply_plan(
         tag_ops: list[TagOpResult] = []
         if not (tag_patch and tag_patch.allowed):
             return None, ()
+
         tags_errors: list[str] = []
         rollback_attempted = False
         rollback_success = False
@@ -316,6 +317,40 @@ def apply_plan(
             _record_apply(ApplyStatus.FAILED, tuple(tags_errors))
             return report, tuple(tag_ops)
         return None, tuple(tag_ops)
+
+    def _tags_already_applied() -> bool:
+        if not (tag_patch and tag_patch.allowed):
+            return True
+        by_position = {op.track_position: op for op in ordered_ops}
+        album_tags = tag_patch.album_patch.set_tags if tag_patch.album_patch else {}
+        provenance_tags = tag_patch.provenance_tags
+        overwrite_fields = set(tag_patch.overwrite_fields or ())
+        for track_patch in tag_patch.track_patches:
+            operation = by_position.get(track_patch.track_position)
+            if operation is None:
+                return False
+            try:
+                dest = _resolve_destination_path(operation.destination_path, allowed_roots)
+                existing = tag_writer.read_tags(dest)
+            except Exception:  # noqa: BLE001 - fallback to tag writes
+                return False
+            combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
+            normalized = normalize_tag_set(combined)
+            for key, value in normalized.items():
+                existing_value = existing.get(key)
+                is_provenance = key.startswith("resonance.prov.")
+                has_value = existing_value is not None and str(existing_value).strip() != ""
+                if has_value and not (
+                    is_provenance
+                    or tag_patch.allow_overwrite
+                    or key in overwrite_fields
+                ):
+                    continue
+                if not has_value:
+                    return False
+                if str(existing_value) != value:
+                    return False
+        return True
 
     def _fail(report_errors: list[str]) -> ApplyReport:
         if record:
@@ -427,6 +462,29 @@ def apply_plan(
         return report
     if not analysis.not_started and analysis.completed:
         if tag_patch and tag_patch.allowed:
+            if _tags_already_applied():
+                if record:
+                    store.set_state(
+                        plan.dir_id,
+                        DirectoryState.APPLIED,
+                        pinned_provider=plan.provider,
+                        pinned_release_id=plan.release_id,
+                    )
+                report = ApplyReport(
+                    dir_id=plan.dir_id,
+                    plan_version=plan.plan_version,
+                    tagpatch_version=tag_patch.version if tag_patch else None,
+                    status=ApplyStatus.NOOP_ALREADY_APPLIED,
+                    dry_run=dry_run,
+                    file_ops=(),
+                    tag_ops=(),
+                    errors=(),
+                    warnings=(),
+                    rollback_attempted=False,
+                    rollback_success=False,
+                )
+                _record_apply(ApplyStatus.NOOP_ALREADY_APPLIED, ())
+                return report
             failure_report, tag_ops = _run_tag_writes([], [])
             if failure_report:
                 return failure_report

@@ -15,13 +15,7 @@ from .providers.discogs import DiscogsClient
 from .services.file_service import FileService
 from .services.prompt_service import PromptService
 from .services.release_search import ReleaseSearchService
-from .visitors import (
-    IdentifyVisitor,
-    PromptVisitor,
-    EnrichVisitor,
-    OrganizeVisitor,
-    CleanupVisitor,
-)
+import warnings
 
 
 class ResonanceApp:
@@ -108,6 +102,18 @@ class ResonanceApp:
             raise ValueError(
                 "V2 visitor pipeline is deprecated; pass allow_legacy=True to use it."
             )
+        warnings.warn(
+            "V2 visitor pipeline is deprecated; prefer V3 commands.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from .visitors import (  # legacy-only import
+            IdentifyVisitor,
+            PromptVisitor,
+            EnrichVisitor,
+            OrganizeVisitor,
+            CleanupVisitor,
+        )
         visitors = []
 
         # 1. Identify (fingerprinting + canonical names)

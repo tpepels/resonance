@@ -7,6 +7,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
+from resonance.core.layout import compute_destination_path
+
 
 class MatchSource(str, Enum):
     """Source of metadata match."""
@@ -86,6 +88,7 @@ class AlbumInfo:
     # Source directory
     directory: Path
     source_directory: Optional[Path] = None
+    dir_id: Optional[str] = None
 
     # Canonical identities
     canonical_artist: Optional[str] = None
@@ -159,52 +162,26 @@ class AlbumInfo:
         if self._cached_destination_path is not None:
             return self._cached_destination_path
 
-        # Normalize all components
-        composer = self._normalize_path_component(self.canonical_composer)
-        performer = self._normalize_path_component(self.canonical_performer)
-        artist = self._normalize_path_component(self.canonical_artist)
-        album = self._normalize_path_component(self.canonical_album)
+        def sanitize_component(value: str) -> str:
+            cleaned = self._normalize_path_component(value)
+            return cleaned or ""
 
-        if self.is_classical:
-            # Case 1: Single composer (most classical music)
-            if composer:
-                if album and performer:
-                    # Composer/Work/Performer (e.g., Bach/Goldberg Variations/Glenn Gould)
-                    self._cached_destination_path = Path(composer) / album / performer
-                    return self._cached_destination_path
-                elif album:
-                    # Composer/Work (no specific performer credited)
-                    self._cached_destination_path = Path(composer) / album
-                    return self._cached_destination_path
-                else:
-                    # Just composer root (no album means we can't organize further)
-                    self._cached_destination_path = Path(composer)
-                    return self._cached_destination_path
-
-            # Case 2: No single composer (compilations, multi-composer albums)
-            else:
-                if performer and album:
-                    # Performer/Album (e.g., Berlin Philharmonic/Greatest Symphonies)
-                    self._cached_destination_path = Path(performer) / album
-                    return self._cached_destination_path
-                elif performer:
-                    # Just performer (rare)
-                    self._cached_destination_path = Path(performer)
-                    return self._cached_destination_path
-                elif album:
-                    # Various Artists/Album (compilation)
-                    self._cached_destination_path = Path("Various Artists") / album
-                    return self._cached_destination_path
-                else:
-                    # Cannot organize
-                    return None
-        else:
-            # Regular music: Artist/Album
-            if artist and album:
-                self._cached_destination_path = Path(artist) / album
-                return self._cached_destination_path
-            else:
-                return None
+        destination = compute_destination_path(
+            album_title=self.canonical_album,
+            artist=self.canonical_artist,
+            composer=self.canonical_composer,
+            performer=self.canonical_performer,
+            is_classical=self.is_classical,
+            is_compilation=False,
+            include_year=False,
+            include_performer_subdir=True,
+            sanitize=sanitize_component,
+            canonicalize_display=None,
+        )
+        if destination is None:
+            return None
+        self._cached_destination_path = destination
+        return self._cached_destination_path
 
 
 @dataclass(slots=True)

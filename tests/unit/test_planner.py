@@ -59,8 +59,7 @@ def test_planner_refuses_new_state(tmp_path: Path):
         # Planner should refuse or return None/error
         with pytest.raises(ValueError, match="Cannot plan.*NEW"):
             plan_directory(
-                dir_id=record.dir_id,
-                store=store,
+                record=record,
                 pinned_release=None,  # No release pinned
             )
     finally:
@@ -72,14 +71,13 @@ def test_planner_refuses_queued_prompt(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
+        record = store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
         from resonance.core.planner import plan_directory
 
         with pytest.raises(ValueError, match="Cannot plan.*QUEUED_PROMPT"):
             plan_directory(
-                dir_id=record.dir_id,
-                store=store,
+                record=record,
                 pinned_release=None,
             )
     finally:
@@ -91,7 +89,7 @@ def test_planner_accepts_resolved_auto(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -111,8 +109,7 @@ def test_planner_accepts_resolved_auto(tmp_path: Path):
 
         # Should succeed (not raise)
         plan = plan_directory(
-            dir_id=record.dir_id,
-            store=store,
+            record=record,
             pinned_release=release,
         )
 
@@ -127,7 +124,7 @@ def test_planner_accepts_resolved_user(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_USER,
             pinned_provider="discogs",
@@ -145,8 +142,7 @@ def test_planner_accepts_resolved_user(tmp_path: Path):
         from resonance.core.planner import plan_directory
 
         plan = plan_directory(
-            dir_id=record.dir_id,
-            store=store,
+            record=record,
             pinned_release=release,
         )
 
@@ -166,7 +162,7 @@ def test_plan_is_byte_identical_for_same_inputs(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -187,8 +183,8 @@ def test_plan_is_byte_identical_for_same_inputs(tmp_path: Path):
         from resonance.core.planner import plan_directory
 
         # Generate plan twice
-        plan1 = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
-        plan2 = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan1 = plan_directory(record=record, pinned_release=release)
+        plan2 = plan_directory(record=record, pinned_release=release)
 
         # Plans must be byte-identical
         json1 = _stable_json_plan(plan1)
@@ -208,7 +204,7 @@ def test_plan_path_regular_album(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -226,7 +222,7 @@ def test_plan_path_regular_album(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
 
         # Destination should be exactly Artist/Album (as final two path components)
         dest = plan.destination_path
@@ -242,7 +238,7 @@ def test_plan_path_compilation(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -264,7 +260,7 @@ def test_plan_path_compilation(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
 
         # Compilation should be exactly Various Artists/Album (as final two path components)
         dest = plan.destination_path
@@ -280,7 +276,7 @@ def test_plan_path_classical_single_composer(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -301,7 +297,7 @@ def test_plan_path_classical_single_composer(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
         dest = plan.destination_path
         assert plan.is_classical is True
         assert dest.parts[-2:] == ("Mozart", "1788 - Symphonies")
@@ -314,7 +310,7 @@ def test_plan_path_classical_mixed_composer(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -335,7 +331,7 @@ def test_plan_path_classical_mixed_composer(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
         dest = plan.destination_path
         assert plan.is_classical is True
         assert dest.parts[-2:] == ("Glenn Gould", "1982 - Piano Works")
@@ -348,7 +344,7 @@ def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Pat
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -372,8 +368,7 @@ def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Pat
         from resonance.core.planner import plan_directory
 
         plan = plan_directory(
-            dir_id=record.dir_id,
-            store=store,
+            record=record,
             pinned_release=release,
             canonicalize_display=canonicalize_display,
         )
@@ -389,7 +384,7 @@ def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -407,7 +402,7 @@ def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
 
         dest = plan.destination_path
         assert plan.is_compilation is False
@@ -427,7 +422,7 @@ def test_plan_non_audio_policy_defaults_to_move_with_album(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -444,7 +439,7 @@ def test_plan_non_audio_policy_defaults_to_move_with_album(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
 
         # Non-audio policy should be explicitly encoded
         assert hasattr(plan, "non_audio_policy")
@@ -463,7 +458,7 @@ def test_plan_operations_have_stable_ordering(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -484,7 +479,7 @@ def test_plan_operations_have_stable_ordering(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
 
         assert hasattr(plan, "operations")
 
@@ -529,7 +524,7 @@ def test_plan_conflict_policy_default_is_fail(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        store.set_state(
+        record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
             pinned_provider="musicbrainz",
@@ -546,7 +541,7 @@ def test_plan_conflict_policy_default_is_fail(tmp_path: Path):
 
         from resonance.core.planner import plan_directory
 
-        plan = plan_directory(dir_id=record.dir_id, store=store, pinned_release=release)
+        plan = plan_directory(record=record, pinned_release=release)
         assert plan.conflict_policy == "FAIL"
     finally:
         store.close()

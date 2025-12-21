@@ -101,6 +101,18 @@ class MetadataCache:
             )
             """
         )
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS directory_releases_by_id (
+                dir_id TEXT PRIMARY KEY,
+                directory_path TEXT,
+                provider TEXT NOT NULL,
+                release_id TEXT NOT NULL,
+                match_confidence REAL,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
 
         # Canonical name mappings
         self._conn.execute(
@@ -123,12 +135,32 @@ class MetadataCache:
             )
             """
         )
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS deferred_prompts_by_id (
+                dir_id TEXT PRIMARY KEY,
+                directory_path TEXT,
+                reason TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
 
         # Skipped/jailed directories
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS skipped_directories (
                 directory_path TEXT PRIMARY KEY,
+                reason TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS skipped_directories_by_id (
+                dir_id TEXT PRIMARY KEY,
+                directory_path TEXT,
                 reason TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
@@ -154,9 +186,12 @@ class MetadataCache:
             "cache",
             "processed_files",
             "directory_releases",
+            "directory_releases_by_id",
             "canonical_names",
             "deferred_prompts",
+            "deferred_prompts_by_id",
             "skipped_directories",
+            "skipped_directories_by_id",
             "file_moves",
         )
         for table in tables:
@@ -368,6 +403,45 @@ class MetadataCache:
         self.set(key, data, namespace="discogs:release")
 
     # Directory release decisions
+    def get_directory_release_by_id(
+        self, dir_id: str
+    ) -> Optional[tuple[str, str, float]]:
+        """Get remembered release for a directory id."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT provider, release_id, match_confidence "
+                "FROM directory_releases_by_id WHERE dir_id = ?",
+                (dir_id,),
+            ).fetchone()
+            if row:
+                return (row[0], row[1], row[2] if row[2] is not None else 0.0)
+            return None
+
+    def set_directory_release_by_id(
+        self,
+        dir_id: str,
+        directory_path: Optional[Path],
+        provider: str,
+        release_id: str,
+        confidence: float = 0.0,
+    ) -> None:
+        """Remember release choice keyed by directory id."""
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO directory_releases_by_id "
+                "(dir_id, directory_path, provider, release_id, match_confidence, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    dir_id,
+                    str(directory_path) if directory_path is not None else None,
+                    provider,
+                    release_id,
+                    confidence,
+                    self._now_iso(),
+                ),
+            )
+            self._conn.commit()
+
     def get_directory_release(self, directory: Path) -> Optional[tuple[str, str, float]]:
         """Get remembered release for a directory.
 
@@ -427,6 +501,49 @@ class MetadataCache:
             self._conn.commit()
 
     # Deferred prompts
+    def add_deferred_prompt_by_id(
+        self, dir_id: str, directory_path: Optional[Path], reason: str
+    ) -> None:
+        """Mark directory as needing user prompt keyed by directory id."""
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO deferred_prompts_by_id "
+                "(dir_id, directory_path, reason, created_at) VALUES (?, ?, ?, ?)",
+                (
+                    dir_id,
+                    str(directory_path) if directory_path is not None else None,
+                    reason,
+                    self._now_iso(),
+                ),
+            )
+            self._conn.commit()
+
+    def get_deferred_prompts_by_id(self) -> list[tuple[str, Optional[Path], str]]:
+        """Get all directories needing prompts keyed by id."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT dir_id, directory_path, reason FROM deferred_prompts_by_id "
+                "ORDER BY created_at"
+            ).fetchall()
+            if rows:
+                return [
+                    (row[0], Path(row[1]) if row[1] else None, row[2]) for row in rows
+                ]
+            legacy_rows = self._conn.execute(
+                "SELECT directory_path, reason FROM deferred_prompts ORDER BY created_at"
+            ).fetchall()
+            return [
+                ("", Path(row[0]), row[1]) for row in legacy_rows
+            ]
+
+    def remove_deferred_prompt_by_id(self, dir_id: str) -> None:
+        """Remove directory from deferred prompts keyed by id."""
+        with self._lock:
+            self._conn.execute(
+                "DELETE FROM deferred_prompts_by_id WHERE dir_id = ?", (dir_id,)
+            )
+            self._conn.commit()
+
     def add_deferred_prompt(self, directory: Path, reason: str) -> None:
         """Mark directory as needing user prompt."""
         with self._lock:
@@ -459,6 +576,32 @@ class MetadataCache:
             self._conn.commit()
 
     # Skipped directories
+    def add_skipped_directory_by_id(
+        self, dir_id: str, directory_path: Optional[Path], reason: str = "user_skipped"
+    ) -> None:
+        """Mark directory as skipped (jailed) keyed by directory id."""
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO skipped_directories_by_id "
+                "(dir_id, directory_path, reason, created_at) VALUES (?, ?, ?, ?)",
+                (
+                    dir_id,
+                    str(directory_path) if directory_path is not None else None,
+                    reason,
+                    self._now_iso(),
+                ),
+            )
+            self._conn.commit()
+
+    def is_directory_skipped_by_id(self, dir_id: str) -> bool:
+        """Check if directory id is skipped."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT 1 FROM skipped_directories_by_id WHERE dir_id = ?",
+                (dir_id,),
+            ).fetchone()
+            return row is not None
+
     def add_skipped_directory(self, directory: Path, reason: str = "user_skipped") -> None:
         """Mark directory as skipped (jailed)."""
         with self._lock:

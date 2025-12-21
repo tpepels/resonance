@@ -179,9 +179,10 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
             )
             assert outcome.state == DirectoryState.RESOLVED_AUTO
 
+            record = store.get(batch.dir_id)
+            assert record is not None
             plan = plan_directory(
-                dir_id=batch.dir_id,
-                store=store,
+                record=record,
                 pinned_release=release,
                 source_files=batch.files,
             )

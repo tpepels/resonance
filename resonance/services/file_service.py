@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+from resonance.core.validation import sanitize_filename
+
 from ..infrastructure.transaction import Transaction
 
 
@@ -138,29 +140,4 @@ class FileService:
         Returns:
             Sanitized string safe for filenames
         """
-        # Replace problematic characters
-        replacements = {
-            '/': '-',
-            '\\': '-',
-            ':': ' -',
-            '*': '',
-            '?': '',
-            '"': "'",
-            '<': '',
-            '>': '',
-            '|': '-',
-            '\x00': '',
-        }
-
-        result = name
-        for old, new in replacements.items():
-            result = result.replace(old, new)
-
-        # Remove leading/trailing dots and spaces
-        result = result.strip('. ')
-
-        # Limit length
-        if len(result) > 200:
-            result = result[:200].strip()
-
-        return result or "Unknown"
+        return sanitize_filename(name)

@@ -5,23 +5,25 @@ from pathlib import Path
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.identifier import ProviderRelease, ProviderTrack
 from resonance.core.planner import plan_directory
-from resonance.core.state import DirectoryState
+from resonance.core.state import DirectoryRecord, DirectoryState
 from resonance.core.identity.signature import dir_signature
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.services.tag_writer import MetaJsonTagWriter
 from tests.helpers.fs import AudioStubSpec, create_audio_stub
 
 
-def _init_store(tmp_path: Path, source_dir: Path, signature_hash: str) -> DirectoryStateStore:
+def _init_store(
+    tmp_path: Path, source_dir: Path, signature_hash: str
+) -> tuple[DirectoryStateStore, DirectoryRecord]:
     store = DirectoryStateStore(tmp_path / "state.db")
     record = store.get_or_create("dir-layout", source_dir, signature_hash)
-    store.set_state(
+    record = store.set_state(
         record.dir_id,
         DirectoryState.RESOLVED_AUTO,
         pinned_provider="discogs",
         pinned_release_id="dg-layout",
     )
-    return store
+    return store, record
 
 
 def test_layout_rules_standard_album(tmp_path: Path) -> None:
@@ -47,11 +49,10 @@ def test_layout_rules_standard_album(tmp_path: Path) -> None:
         year=1998,
     )
 
-    store = _init_store(tmp_path, source_dir, signature_hash)
+    store, record = _init_store(tmp_path, source_dir, signature_hash)
     try:
         plan = plan_directory(
-            dir_id="dir-layout",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )
@@ -111,11 +112,10 @@ def test_layout_rules_multi_disc_prefix(tmp_path: Path) -> None:
         year=2005,
     )
 
-    store = _init_store(tmp_path, source_dir, signature_hash)
+    store, record = _init_store(tmp_path, source_dir, signature_hash)
     try:
         plan = plan_directory(
-            dir_id="dir-layout",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )
@@ -168,11 +168,10 @@ def test_layout_rules_classical_uses_composer_root(tmp_path: Path) -> None:
         year=1788,
     )
 
-    store = _init_store(tmp_path, source_dir, signature_hash)
+    store, record = _init_store(tmp_path, source_dir, signature_hash)
     try:
         plan = plan_directory(
-            dir_id="dir-layout",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )

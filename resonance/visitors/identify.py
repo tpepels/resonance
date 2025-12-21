@@ -9,6 +9,8 @@ from typing import Optional
 from ..core.models import AlbumInfo, MatchSource
 from ..core.visitor import BaseVisitor
 from ..core.identity import IdentityCanonicalizer
+from ..core.identity import dir_id as compute_dir_id
+from ..core.identity import dir_signature
 from ..core.identity.matching import strip_featuring
 from ..infrastructure.cache import MetadataCache
 from ..providers.musicbrainz import MusicBrainzClient
@@ -54,14 +56,33 @@ class IdentifyVisitor(BaseVisitor):
         """
         logger.info(f"Identifying: {album.directory}")
 
+        audio_files = self._get_audio_files(album.directory)
+        if not audio_files:
+            logger.warning(f"  No audio files found in: {album.directory}")
+            return False
+
+        signature = dir_signature(audio_files)
+        album.dir_id = compute_dir_id(signature)
+
         # Check if directory is skipped
-        if self.cache.is_directory_skipped(album.directory):
+        if self.cache.is_directory_skipped_by_id(album.dir_id) or self.cache.is_directory_skipped(album.directory):
             logger.info(f"  Skipped (jailed): {album.directory}")
             album.is_skipped = True
             return False
 
         # Check cache for existing release decision
-        cached = self.cache.get_directory_release(album.directory)
+        cached = self.cache.get_directory_release_by_id(album.dir_id)
+        if not cached:
+            cached = self.cache.get_directory_release(album.directory)
+            if cached:
+                provider, release_id, confidence = cached
+                self.cache.set_directory_release_by_id(
+                    album.dir_id,
+                    album.directory,
+                    provider,
+                    release_id,
+                    confidence=confidence,
+                )
         if cached:
             provider, release_id, confidence = cached
             logger.info(f"  Cached decision: {provider}:{release_id} ({confidence:.2f})")
@@ -73,15 +94,13 @@ class IdentifyVisitor(BaseVisitor):
 
             album.match_confidence = confidence
             album.match_source = MatchSource.EXISTING
+            if confidence < 0.5:
+                album.is_uncertain = True
 
         # Read metadata from all files
-        for file_path in self._get_audio_files(album.directory):
+        for file_path in audio_files:
             track = MetadataReader.read_track(file_path)
             album.tracks.append(track)
-
-        if not album.tracks:
-            logger.warning(f"  No audio files found in: {album.directory}")
-            return False
 
         album.total_tracks = len(album.tracks)
         logger.info(f"  Found {album.total_tracks} tracks")
@@ -110,7 +129,12 @@ class IdentifyVisitor(BaseVisitor):
             and not album.discogs_release_id
             and self.release_search
         ):
-            candidates = self.release_search.search_releases(album)
+            try:
+                candidates = self.release_search.search_releases(album)
+            except Exception as exc:  # noqa: BLE001 - provider failures are non-fatal
+                logger.warning(f"  Release search failed: {exc}")
+                album.is_uncertain = True
+                candidates = []
 
             if candidates:
                 logger.info(f"  Found {len(candidates)} release candidates")
@@ -125,6 +149,13 @@ class IdentifyVisitor(BaseVisitor):
                         album.discogs_release_id = best.release_id
                     album.match_confidence = best.score
                     album.match_source = MatchSource.FINGERPRINT
+                    self.cache.set_directory_release_by_id(
+                        album.dir_id,
+                        album.directory,
+                        best.provider,
+                        best.release_id,
+                        confidence=best.score,
+                    )
                 else:
                     # Store candidates for prompt visitor
                     album.extra["release_candidates"] = candidates

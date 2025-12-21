@@ -12,8 +12,9 @@ from pathlib import Path
 from typing import Optional
 
 from resonance.core.identifier import ProviderRelease, ProviderTrack
-from resonance.core.state import DirectoryState
-from resonance.infrastructure.directory_store import DirectoryStateStore
+from resonance.core.layout import compute_destination_path
+from resonance.core.state import DirectoryRecord, DirectoryState
+from resonance.core.validation import sanitize_filename
 
 
 class NonAudioPolicy(str, Enum):
@@ -77,50 +78,6 @@ class Plan:
         return load_plan(path, allowed_roots=allowed_roots)
 
 
-def sanitize_filename(name: str) -> str:
-    """Deterministically sanitize a filename for cross-platform safety."""
-    forbidden = '<>:"/\\|?*'
-    cleaned = []
-    for ch in name:
-        if ch in forbidden:
-            cleaned.append(" ")
-        else:
-            cleaned.append(ch)
-    collapsed = " ".join("".join(cleaned).split())
-    if not collapsed:
-        collapsed = "_"
-    if len(collapsed) > 200:
-        collapsed = collapsed[:200].rstrip()
-        if not collapsed:
-            collapsed = "_"
-    reserved = {
-        "CON",
-        "PRN",
-        "AUX",
-        "NUL",
-        "COM1",
-        "COM2",
-        "COM3",
-        "COM4",
-        "COM5",
-        "COM6",
-        "COM7",
-        "COM8",
-        "COM9",
-        "LPT1",
-        "LPT2",
-        "LPT3",
-        "LPT4",
-        "LPT5",
-        "LPT6",
-        "LPT7",
-        "LPT8",
-        "LPT9",
-    }
-    if collapsed.upper() in reserved:
-        return f"_{collapsed}"
-    return collapsed
-
 
 _COMPILATION_TOKENS = frozenset(
     {
@@ -172,32 +129,27 @@ def _compute_destination_path(
     canonicalize_display,
 ) -> Path:
     """Compute destination path based on release type."""
-    def display(value: str, category: str) -> str:
-        return canonicalize_display(value, category)
-
-    def sanitize(component: str) -> str:
-        return sanitize_filename(component)
-
-    year_str = f"{release.year:04d}" if release.year is not None else "0000"
-    album_folder = sanitize(f"{year_str} - {release.title}")
-
-    if is_compilation:
-        # Compilation: Various Artists/Album
-        return Path(sanitize("Various Artists")) / album_folder
-
-    if is_classical:
-        composer = _classical_composer(release)
-        if composer:
-            return Path(sanitize(display(composer, "composer"))) / album_folder
-        return Path(sanitize(display(release.artist, "performer"))) / album_folder
-
-    # Regular album: Artist/Album
-    return Path(sanitize(display(release.artist, "artist"))) / album_folder
+    composer = _classical_composer(release) if is_classical else None
+    destination = compute_destination_path(
+        album_title=release.title,
+        artist=release.artist,
+        composer=composer,
+        performer=release.artist,
+        is_classical=is_classical,
+        is_compilation=is_compilation,
+        year=release.year,
+        include_year=True,
+        include_performer_subdir=False,
+        sanitize=sanitize_filename,
+        canonicalize_display=canonicalize_display,
+    )
+    if destination is None:
+        raise ValueError("Unable to compute destination path for release")
+    return destination
 
 
 def plan_directory(
-    dir_id: str,
-    store: DirectoryStateStore,
+    record: DirectoryRecord,
     pinned_release: ProviderRelease,
     non_audio_policy: str = "MOVE_WITH_ALBUM",
     canonicalize_display=None,
@@ -207,8 +159,7 @@ def plan_directory(
     """Generate a deterministic plan for a resolved directory.
 
     Args:
-        dir_id: Directory identifier
-        store: Directory state store
+        record: Directory record
         pinned_release: Pinned provider release
         non_audio_policy: Policy for non-audio files
 
@@ -218,11 +169,6 @@ def plan_directory(
     Raises:
         ValueError: If directory is not in a plannable state (RESOLVED_*)
     """
-    # Get directory record
-    record = store.get(dir_id)
-    if not record:
-        raise ValueError(f"Directory {dir_id} not found in store")
-
     # Verify state is plannable
     if record.state not in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
         raise ValueError(
@@ -279,7 +225,7 @@ def plan_directory(
     )
 
     return Plan(
-        dir_id=dir_id,
+        dir_id=record.dir_id,
         source_path=record.last_seen_path,
         signature_hash=record.signature_hash,
         provider=pinned_release.provider,

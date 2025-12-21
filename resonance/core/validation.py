@@ -15,6 +15,50 @@ DIR_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 SIGNATURE_HASH_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 RELEASE_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._:-]{1,128}$")
 
+def sanitize_filename(name: str) -> str:
+    """Deterministically sanitize a filename for cross-platform safety."""
+    forbidden = '<>:"/\\|?*'
+    cleaned = []
+    for ch in name:
+        if ch in forbidden:
+            cleaned.append(" ")
+        else:
+            cleaned.append(ch)
+    collapsed = " ".join("".join(cleaned).split())
+    if not collapsed:
+        collapsed = "_"
+    if len(collapsed) > 200:
+        collapsed = collapsed[:200].rstrip()
+        if not collapsed:
+            collapsed = "_"
+    reserved = {
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "COM5",
+        "COM6",
+        "COM7",
+        "COM8",
+        "COM9",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "LPT4",
+        "LPT5",
+        "LPT6",
+        "LPT7",
+        "LPT8",
+        "LPT9",
+    }
+    if collapsed.upper() in reserved:
+        return f"_{collapsed}"
+    return collapsed
+
 
 def validate_dir_id(dir_id: str) -> None:
     if not DIR_ID_PATTERN.match(dir_id):

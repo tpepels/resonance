@@ -40,9 +40,11 @@ def run_plan(
         raise ValidationError("pinned_release is required")
 
     try:
+        record = store.get(args.dir_id)
+        if not record:
+            raise ValidationError(f"Directory {args.dir_id} not found in store")
         plan = plan_directory(
-            dir_id=args.dir_id,
-            store=store,
+            record=record,
             pinned_release=pinned_release,
             canonicalize_display=canonicalize_display,
         )

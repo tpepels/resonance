@@ -107,9 +107,10 @@ def test_musicbrainz_classical_match_plans_and_applies(tmp_path: Path) -> None:
         )
         assert outcome.state == DirectoryState.RESOLVED_AUTO
 
+        record = store.get("dir-mb-1")
+        assert record is not None
         plan = plan_directory(
-            dir_id="dir-mb-1",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )
@@ -206,9 +207,10 @@ def test_musicbrainz_multi_disc_match_plans_and_applies(tmp_path: Path) -> None:
         )
         assert outcome.state == DirectoryState.RESOLVED_AUTO
 
+        record = store.get("dir-mb-md")
+        assert record is not None
         plan = plan_directory(
-            dir_id="dir-mb-md",
-            store=store,
+            record=record,
             pinned_release=release,
             source_files=audio_files,
         )

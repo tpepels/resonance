@@ -1,4 +1,4 @@
-"""Visitor implementations for the processing pipeline."""
+"""Legacy visitor implementations for the V2 processing pipeline."""
 
 from .identify import IdentifyVisitor
 from .prompt import PromptVisitor

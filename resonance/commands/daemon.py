@@ -66,18 +66,18 @@ def run_daemon(args: Namespace) -> int:
 
 def _process_cycle(app: ResonanceApp, cache_path: Path) -> None:
     cache = MetadataCache(cache_path)
-    deferred = {path for path, _ in cache.get_deferred_prompts()}
+    deferred = {dir_id for dir_id, _path, _reason in cache.get_deferred_prompts_by_id()}
     pipeline = app.create_pipeline(allow_legacy=True)
 
     for batch in app.scanner.iter_directories():
-        if cache.is_directory_skipped(batch.directory):
+        if cache.is_directory_skipped_by_id(batch.dir_id):
             continue
-        if cache.get_directory_release(batch.directory):
+        if cache.get_directory_release_by_id(batch.dir_id):
             continue
-        if batch.directory in deferred:
+        if batch.dir_id in deferred:
             continue
 
-        album = AlbumInfo(directory=batch.directory)
+        album = AlbumInfo(directory=batch.directory, dir_id=batch.dir_id)
         pipeline.process(album)
 
     cache.close()
