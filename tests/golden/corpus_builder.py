@@ -140,6 +140,99 @@ def scenarios() -> list[CorpusScenario]:
             non_audio_files=[],
         ),
         CorpusScenario(
+            name="featured_artist",
+            description="Featured artist variants in tags.",
+            audio_specs=[
+                _spec(
+                    "01 - Track A.flac",
+                    "fp-feat-01",
+                    190,
+                    {
+                        "title": "Track A",
+                        "artist": "Artist ft. Guest",
+                        "album": "Featured Album",
+                        "album_artist": "Artist ft. Guest",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "02 - Track B.flac",
+                    "fp-feat-02",
+                    191,
+                    {
+                        "title": "Track B",
+                        "artist": "Artist featuring Guest",
+                        "album": "Featured Album",
+                        "album_artist": "Artist featuring Guest",
+                        "track_number": 2,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="work_nickname",
+            description="Work nickname variants in album titles.",
+            audio_specs=[
+                _spec(
+                    "01 - Allegro con brio.flac",
+                    "fp-eroica-01",
+                    400,
+                    {
+                        "title": "Allegro con brio",
+                        "artist": "Composer A",
+                        "album": "Eroica",
+                        "album_artist": "Composer A",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "02 - Marcia funebre.flac",
+                    "fp-eroica-02",
+                    390,
+                    {
+                        "title": "Marcia funebre",
+                        "artist": "Composer A",
+                        "album": "Eroica",
+                        "album_artist": "Composer A",
+                        "track_number": 2,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
+            name="ensemble_variants",
+            description="Ensemble abbreviation variants in artist tags.",
+            audio_specs=[
+                _spec(
+                    "01 - Overture.flac",
+                    "fp-ens-01",
+                    210,
+                    {
+                        "title": "Overture",
+                        "artist": "LSO",
+                        "album": "Ensemble Variants",
+                        "album_artist": "LSO",
+                        "track_number": 1,
+                    },
+                ),
+                _spec(
+                    "02 - Finale.flac",
+                    "fp-ens-02",
+                    208,
+                    {
+                        "title": "Finale",
+                        "artist": "LSO",
+                        "album": "Ensemble Variants",
+                        "album_artist": "LSO",
+                        "track_number": 2,
+                    },
+                ),
+            ],
+            non_audio_files=[],
+        ),
+        CorpusScenario(
             name="classical",
             description="Classical work with composer and movement titles.",
             audio_specs=[

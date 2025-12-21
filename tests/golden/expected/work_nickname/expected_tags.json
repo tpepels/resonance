@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Composer A/1805 - Symphony No. 3 (Eroica)/01 - Allegro con brio.flac",
+      "tags": {
+        "album": "Eroica",
+        "albumartist": "Composer A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "bbe038fe43d7934552bc9ce7c791747a661800373bc8557601dedde30b4cfcbe",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-eroica-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Allegro con brio",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Composer A/1805 - Symphony No. 3 (Eroica)/02 - Marcia funebre.flac",
+      "tags": {
+        "album": "Eroica",
+        "albumartist": "Composer A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "bbe038fe43d7934552bc9ce7c791747a661800373bc8557601dedde30b4cfcbe",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-eroica-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Marcia funebre",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import errno
 from pathlib import Path
 import shutil
+import sqlite3
 
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
@@ -172,6 +173,52 @@ def test_applier_reports_rollback_failure(tmp_path: Path, monkeypatch: pytest.Mo
         store.close()
 
 
+def test_applier_reports_db_commit_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        def fail_set_state(*_args, **_kwargs):
+            raise sqlite3.OperationalError("simulated WAL failure")
+
+        monkeypatch.setattr(store, "set_state", fail_set_state)
+
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert any("State DB write failed" in err for err in report.errors)
+    finally:
+        store.close()
+
+
 def test_applier_fails_on_tag_write_crash(tmp_path: Path) -> None:
     fixture = build_album_dir(
         tmp_path / "source",
@@ -237,6 +284,84 @@ def test_applier_fails_on_tag_write_crash(tmp_path: Path) -> None:
             tag_patch=tag_patch,
             store=store,
             allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+            tag_writer=_FailingWriter(),
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert report.rollback_attempted is True
+        assert any("Tag write failed" in err for err in report.errors)
+    finally:
+        store.close()
+
+
+def test_applier_crash_recover_then_crash_on_tag_write(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    dest_root = tmp_path / "library"
+    dest_root.mkdir(parents=True, exist_ok=True)
+    for op in plan.operations:
+        dest = dest_root / op.destination_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(op.source_path), str(dest))
+        sidecar = op.source_path.with_suffix(op.source_path.suffix + ".meta.json")
+        if sidecar.exists():
+            shutil.move(
+                str(sidecar),
+                str(dest.with_suffix(dest.suffix + ".meta.json")),
+            )
+
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-123",
+        title="Album",
+        artist="Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track A"),
+            ProviderTrack(position=2, title="Track B"),
+        ),
+    )
+    tag_patch = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+
+    class _FailingWriter:
+        def read_tags(self, _path: Path) -> dict[str, str]:
+            return {}
+
+        def apply_patch(
+            self, _path: Path, set_tags: dict[str, str], allow_overwrite: bool
+        ):
+            raise RuntimeError("tag write crash")
+
+        def write_tags_exact(self, _path: Path, tags: dict[str, str]) -> None:
+            return None
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        report = apply_plan(
+            plan,
+            tag_patch=tag_patch,
+            store=store,
+            allowed_roots=(dest_root,),
             dry_run=False,
             tag_writer=_FailingWriter(),
         )

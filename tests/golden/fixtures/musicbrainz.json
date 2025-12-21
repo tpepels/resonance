@@ -70,6 +70,42 @@
       ]
     }
   ],
+  "featured_artist": [
+    {
+      "release_id": "mb-feat-1",
+      "title": "Featured Album",
+      "artist": "Artist feat. Guest",
+      "year": 2021,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 190, "fingerprint_id": "fp-feat-01"},
+        {"position": 2, "title": "Track B", "duration_seconds": 191, "fingerprint_id": "fp-feat-02"}
+      ]
+    }
+  ],
+  "work_nickname": [
+    {
+      "release_id": "mb-eroica-1",
+      "title": "Symphony No. 3 (Eroica)",
+      "artist": "Composer A",
+      "year": 1805,
+      "tracks": [
+        {"position": 1, "title": "Allegro con brio", "duration_seconds": 400, "fingerprint_id": "fp-eroica-01"},
+        {"position": 2, "title": "Marcia funebre", "duration_seconds": 390, "fingerprint_id": "fp-eroica-02"}
+      ]
+    }
+  ],
+  "ensemble_variants": [
+    {
+      "release_id": "mb-ens-1",
+      "title": "Ensemble Variants",
+      "artist": "London Symphony Orchestra",
+      "year": 2003,
+      "tracks": [
+        {"position": 1, "title": "Overture", "duration_seconds": 210, "fingerprint_id": "fp-ens-01"},
+        {"position": 2, "title": "Finale", "duration_seconds": 208, "fingerprint_id": "fp-ens-02"}
+      ]
+    }
+  ],
   "classical": [
     {
       "release_id": "mb-classical-1",

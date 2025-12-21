@@ -9,6 +9,7 @@ import re
 import errno
 import os
 import shutil
+import sqlite3
 from typing import Optional
 
 from resonance.core.enricher import TagPatch
@@ -205,10 +206,44 @@ def apply_plan(
     warnings: list[str] = []
     record = store.get(plan.dir_id)
     tag_writer = tag_writer or MetaJsonTagWriter()
+    provenance_version = None
+    if tag_patch:
+        provenance_version = tag_patch.provenance_tags.get("resonance.prov.version")
+
+    def _warn_provenance_mismatch(path: Path, existing_tags: dict[str, str]) -> None:
+        if provenance_version is None:
+            return
+        existing_version = existing_tags.get("resonance.prov.version")
+        if existing_version and existing_version != provenance_version:
+            warnings.append(
+                "Provenance version mismatch for "
+                f"{path}: existing {existing_version} != expected {provenance_version}"
+            )
 
     def _record_apply(status: ApplyStatus, report_errors: tuple[str, ...]) -> None:
         if record:
-            store.record_apply_summary(plan.dir_id, status.value, report_errors)
+            try:
+                store.record_apply_summary(plan.dir_id, status.value, report_errors)
+            except sqlite3.Error as exc:
+                warnings.append(f"State DB write failed (apply summary): {exc}")
+
+    def _safe_set_state(
+        state: DirectoryState,
+        report_errors: list[str],
+    ) -> bool:
+        if not record:
+            return True
+        try:
+            store.set_state(
+                plan.dir_id,
+                state,
+                pinned_provider=plan.provider,
+                pinned_release_id=plan.release_id,
+            )
+            return True
+        except sqlite3.Error as exc:
+            report_errors.append(f"State DB write failed: {exc}")
+            return False
 
     def _run_tag_writes(
         completed_moves: list[tuple[Path, Path]],
@@ -235,6 +270,7 @@ def apply_plan(
             try:
                 dest = _resolve_destination_path(operation.destination_path, allowed_roots)
                 existing = tag_writer.read_tags(dest)
+                _warn_provenance_mismatch(dest, existing)
                 before_snapshot = tuple(sorted(existing.items()))
                 combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
                 planned_set: dict[str, str] = {}
@@ -295,12 +331,7 @@ def apply_plan(
                     _cleanup_empty_dest_parents(moved_dest, allowed_roots)
                 except Exception:
                     rollback_success = False
-            store.set_state(
-                plan.dir_id,
-                DirectoryState.FAILED,
-                pinned_provider=plan.provider,
-                pinned_release_id=plan.release_id,
-            )
+            _safe_set_state(DirectoryState.FAILED, tags_errors)
             report = ApplyReport(
                 dir_id=plan.dir_id,
                 plan_version=plan.plan_version,
@@ -332,6 +363,7 @@ def apply_plan(
             try:
                 dest = _resolve_destination_path(operation.destination_path, allowed_roots)
                 existing = tag_writer.read_tags(dest)
+                _warn_provenance_mismatch(dest, existing)
             except Exception:  # noqa: BLE001 - fallback to tag writes
                 return False
             combined: dict[str, TagValue] = {}
@@ -356,13 +388,7 @@ def apply_plan(
         return True
 
     def _fail(report_errors: list[str]) -> ApplyReport:
-        if record:
-            store.set_state(
-                plan.dir_id,
-                DirectoryState.FAILED,
-                pinned_provider=plan.provider,
-                pinned_release_id=plan.release_id,
-            )
+        _safe_set_state(DirectoryState.FAILED, report_errors)
         report = ApplyReport(
             dir_id=plan.dir_id,
             plan_version=plan.plan_version,
@@ -438,13 +464,7 @@ def apply_plan(
 
     analysis = _analyze_completion(file_moves)
     if analysis.partial or (analysis.completed and analysis.not_started):
-        if record:
-            store.set_state(
-                plan.dir_id,
-                DirectoryState.FAILED,
-                pinned_provider=plan.provider,
-                pinned_release_id=plan.release_id,
-            )
+        _safe_set_state(DirectoryState.FAILED, errors)
         report = ApplyReport(
             dir_id=plan.dir_id,
             plan_version=plan.plan_version,
@@ -468,12 +488,19 @@ def apply_plan(
     if not analysis.not_started and analysis.completed:
         if tag_patch and tag_patch.allowed:
             if _tags_already_applied():
-                if record:
-                    store.set_state(
-                        plan.dir_id,
-                        DirectoryState.APPLIED,
-                        pinned_provider=plan.provider,
-                        pinned_release_id=plan.release_id,
+                if not _safe_set_state(DirectoryState.APPLIED, errors):
+                    return ApplyReport(
+                        dir_id=plan.dir_id,
+                        plan_version=plan.plan_version,
+                        tagpatch_version=tag_patch.version if tag_patch else None,
+                        status=ApplyStatus.FAILED,
+                        dry_run=dry_run,
+                        file_ops=(),
+                        tag_ops=(),
+                        errors=tuple(errors),
+                        warnings=tuple(warnings),
+                        rollback_attempted=False,
+                        rollback_success=False,
                     )
                 report = ApplyReport(
                     dir_id=plan.dir_id,
@@ -493,12 +520,19 @@ def apply_plan(
             failure_report, tag_ops = _run_tag_writes([], [])
             if failure_report:
                 return failure_report
-            if record:
-                store.set_state(
-                    plan.dir_id,
-                    DirectoryState.APPLIED,
-                    pinned_provider=plan.provider,
-                    pinned_release_id=plan.release_id,
+            if not _safe_set_state(DirectoryState.APPLIED, errors):
+                return ApplyReport(
+                    dir_id=plan.dir_id,
+                    plan_version=plan.plan_version,
+                    tagpatch_version=tag_patch.version if tag_patch else None,
+                    status=ApplyStatus.FAILED,
+                    dry_run=dry_run,
+                    file_ops=(),
+                    tag_ops=tag_ops,
+                    errors=tuple(errors),
+                    warnings=tuple(warnings),
+                    rollback_attempted=False,
+                    rollback_success=False,
                 )
             report = ApplyReport(
                 dir_id=plan.dir_id,
@@ -515,12 +549,19 @@ def apply_plan(
             )
             _record_apply(ApplyStatus.APPLIED, ())
             return report
-        if record:
-            store.set_state(
-                plan.dir_id,
-                DirectoryState.APPLIED,
-                pinned_provider=plan.provider,
-                pinned_release_id=plan.release_id,
+        if not _safe_set_state(DirectoryState.APPLIED, errors):
+            return ApplyReport(
+                dir_id=plan.dir_id,
+                plan_version=plan.plan_version,
+                tagpatch_version=tag_patch.version if tag_patch else None,
+                status=ApplyStatus.FAILED,
+                dry_run=dry_run,
+                file_ops=(),
+                tag_ops=(),
+                errors=tuple(errors),
+                warnings=tuple(warnings),
+                rollback_attempted=False,
+                rollback_success=False,
             )
         report = ApplyReport(
             dir_id=plan.dir_id,
@@ -694,12 +735,7 @@ def apply_plan(
             except Exception:
                 rollback_success = False
         errors.append(f"Move failed: {exc}")
-        store.set_state(
-            plan.dir_id,
-            DirectoryState.FAILED,
-            pinned_provider=plan.provider,
-            pinned_release_id=plan.release_id,
-        )
+        _safe_set_state(DirectoryState.FAILED, errors)
         report = ApplyReport(
             dir_id=plan.dir_id,
             plan_version=plan.plan_version,
@@ -733,12 +769,20 @@ def apply_plan(
     if not any(plan.source_path.iterdir()):
         plan.source_path.rmdir()
 
-    store.set_state(
-        plan.dir_id,
-        DirectoryState.APPLIED,
-        pinned_provider=plan.provider,
-        pinned_release_id=plan.release_id,
-    )
+    if not _safe_set_state(DirectoryState.APPLIED, errors):
+        return ApplyReport(
+            dir_id=plan.dir_id,
+            plan_version=plan.plan_version,
+            tagpatch_version=tag_patch.version if tag_patch else None,
+            status=ApplyStatus.FAILED,
+            dry_run=False,
+            file_ops=tuple(file_ops),
+            tag_ops=tag_ops,
+            errors=tuple(errors),
+            warnings=tuple(warnings),
+            rollback_attempted=False,
+            rollback_success=False,
+        )
     report = ApplyReport(
         dir_id=plan.dir_id,
         plan_version=plan.plan_version,

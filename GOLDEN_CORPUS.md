@@ -19,7 +19,7 @@ All invariants from [TDD_TODO_V3.md](TDD_TODO_V3.md) Phase A are validated here.
 
 **File:** [`tests/integration/test_golden_corpus.py`](tests/integration/test_golden_corpus.py)
 
-The test runs a full end-to-end pipeline for 26 comprehensive scenarios:
+The test runs a full end-to-end pipeline for 29 comprehensive scenarios:
 
 ### Standard Scenarios
 - `standard_album` - Basic 10-track album
@@ -29,6 +29,9 @@ The test runs a full end-to-end pipeline for 26 comprehensive scenarios:
 
 ### Identity & Canonicalization
 - `name_variants` - AC/DC, Björk, Alt-J (punctuation/diacritics)
+- `featured_artist` - "feat./ft./featuring" variants
+- `work_nickname` - Nickname vs formal work titles
+- `ensemble_variants` - Abbreviations vs full ensemble names
 - `unicode_normalization` - NFC vs NFD normalization
 - `case_only_rename` - Case-only path changes
 

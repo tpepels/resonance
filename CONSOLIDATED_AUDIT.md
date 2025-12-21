@@ -1,43 +1,43 @@
 # Resonance Consolidated Audit Report
 
 **Generated:** 2025-12-21
-**Test Suite:** 333 tests
-**Golden Corpus:** 26 scenarios (25 snapshot-backed + 1 scanner-skip)
+**Test Suite:** 363 tests
+**Golden Corpus:** 29 scenarios (28 snapshot-backed + 1 scanner-skip)
 **Architecture:** V3 Core + Legacy adapters (no V2 visitor pipeline)
 
 ---
 
 ## Executive Summary
 
-Resonance is in **active V3** with a solid deterministic core pipeline (scan → identify → resolve → plan → apply) protected by a comprehensive golden corpus. The project has **strong test coverage** (333 tests, up from 234 in December 2020) and enforces **core invariants** through snapshot testing.
+Resonance is in **active V3** with a solid deterministic core pipeline (scan → identify → resolve → plan → apply) protected by a comprehensive golden corpus. The project has **strong test coverage** (363 tests, up from 234 in December 2020) and enforces **core invariants** through snapshot testing.
 
 **Key Strengths:**
 - ✅ **Determinism:** All core operations are reproducible with content-based identity
-- ✅ **Test Coverage:** 483 tests covering happy paths, identity logic, and edge cases
-- ✅ **Golden Corpus:** 26 real-world scenarios with frozen snapshots
+- ✅ **Test Coverage:** 363 tests covering happy paths, identity logic, and edge cases
+- ✅ **Golden Corpus:** 29 real-world scenarios with frozen snapshots
 - ✅ **Core Invariants:** Signature-based identity, no re-matches, idempotent operations
 
 **Critical Gaps:**
 - ✅ **Dual Architecture:** V2 visitor pipeline removed; legacy modules are now isolated adapters
-- 🟡 **Crash Recovery:** Core crash cases covered; DB/WAL and concurrent crash scenarios still missing
-- 🟡 **Schema Versioning:** Downgrade protection + migrations covered; concurrent/compat tests remain
+- ✅ **Crash Recovery:** DB/WAL failure paths and repeated crash scenarios covered
+- ✅ **Schema Versioning:** Concurrent version handling and provenance-version mismatches covered
 - ✅ **Service Construction:** DirectoryStateStore constructed once at composition root
 
-**Overall Grade:** 🟢 **A-** (Deterministic core with provider integration and Big 10 coverage)
+**Overall Grade:** 🟢 **A** (Deterministic core with provider integration and Big 10 coverage)
 
 ---
 
 ## 1. Test Coverage Analysis
 
-### 1.1 Test Inventory (333 Total Tests)
+### 1.1 Test Inventory (363 Total Tests)
 
 | Category | Tests | Status | Notes |
 |----------|-------|--------|-------|
 | **Unit Tests** | ~200 | ✅ GREEN | Core logic, identity, signature, planner |
 | **Integration Tests** | ~130 | ✅ GREEN | Full pipeline, provider fusion, CLI |
-| **Golden Corpus** | 26 scenarios | ✅ GREEN | Snapshot-based regression tests |
-| **Crash Recovery** | 6 | 🟡 IN PROGRESS | Covers move-before-commit, rollback failure, tag-write crash, disk full, permission denied, tags-after-moves |
-| **Schema Versioning** | 4 | 🟡 IN PROGRESS | Downgrade protection + migrations covered |
+| **Golden Corpus** | 29 scenarios | ✅ GREEN | Snapshot-based regression tests |
+| **Crash Recovery** | 8 | ✅ GREEN | Covers move-before-commit, rollback failure, tag-write crash, disk full, permission denied, tags-after-moves, DB/WAL failure, repeated crash |
+| **Schema Versioning** | 6 | ✅ GREEN | Downgrade protection + migrations + concurrent-version handling |
 | **Security (Path Safety)** | 8 | ✅ GOOD | Path traversal, SafePath validation |
 
 **Determinism Score:** 🟢 **Excellent**
@@ -58,39 +58,42 @@ Resonance is in **active V3** with a solid deterministic core pipeline (scan →
 
 ### 1.2 Golden Corpus Status
 
-**Current:** 26 scenarios (target: 26 for V3) ✅
+**Current:** 29 scenarios (target: 29 for V3) ✅
 
-**Snapshot-Backed Scenarios (25):**
+**Snapshot-Backed Scenarios (28):**
 1. `standard_album` - Basic 10-track album
 2. `multi_disc` - 2-disc set with disc numbers
 3. `compilation` - Various Artists with multiple track artists
 4. `name_variants` - AC/DC, Björk, Alt-J (punctuation/diacritics)
-5. `classical` - Composer + performer structure
-6. `extras_only` - Cover art, booklet, cue/log files
-7. `single_track` - Single-track release
-8. `mixed_media` - Audio + video files
-9. `multi_composer` - Classical compilation (Beethoven + Mozart)
-10. `long_titles` - >200 char filenames (truncation)
-11. `renamed_mid_processing` - Directory renamed during processing
-12. `missing_middle_tracks` - Non-contiguous track numbers (1,2,5,6)
-13. `case_only_rename` - Case-insensitive filesystem handling
-14. `interrupted_apply` - Partial file moves
-15. `opus_normalization` - Classical catalog number formatting
-16. `conductor_vs_performer` - Orchestral credit disambiguation
-17. `multi_performer_work` - Different soloists per movement
-18. `catalog_variants` - BWV, K., Hob., D. numbering
-19. `partial_opera` - Non-contiguous opera excerpts
-20. `partial_tags` - Missing album/artist, inferred from siblings
-21. `duplicate_files` - Same fingerprint, different filenames
-22. `remaster_vs_original` - Release year disambiguation (1973 vs 2023)
-23. `hidden_track` - Track 0 (pregap) + track 99 (secret)
-24. `unicode_normalization` - NFD vs NFC encoding
-25. `invalid_year` - Year tags "0000" or "UNKNOWN"
+5. `featured_artist` - "feat." ⇔ "ft" ⇔ "featuring" normalization
+6. `work_nickname` - "Eroica" ⇔ "Symphony No. 3" aliases
+7. `ensemble_variants` - "LSO" ⇔ "London Symphony Orchestra" abbreviations
+8. `classical` - Composer + performer structure
+9. `extras_only` - Cover art, booklet, cue/log files
+10. `single_track` - Single-track release
+11. `mixed_media` - Audio + video files
+12. `multi_composer` - Classical compilation (Beethoven + Mozart)
+13. `long_titles` - >200 char filenames (truncation)
+14. `renamed_mid_processing` - Directory renamed during processing
+15. `missing_middle_tracks` - Non-contiguous track numbers (1,2,5,6)
+16. `case_only_rename` - Case-insensitive filesystem handling
+17. `interrupted_apply` - Partial file moves
+18. `opus_normalization` - Classical catalog number formatting
+19. `conductor_vs_performer` - Orchestral credit disambiguation
+20. `multi_performer_work` - Different soloists per movement
+21. `catalog_variants` - BWV, K., Hob., D. numbering
+22. `partial_opera` - Non-contiguous opera excerpts
+23. `partial_tags` - Missing album/artist, inferred from siblings
+24. `duplicate_files` - Same fingerprint, different filenames
+25. `remaster_vs_original` - Release year disambiguation (1973 vs 2023)
+26. `hidden_track` - Track 0 (pregap) + track 99 (secret)
+27. `unicode_normalization` - NFD vs NFC encoding
+28. `invalid_year` - Year tags "0000" or "UNKNOWN"
 
 **Scanner-Skip Validated (1):**
 - `non_audio_only` - Directory with only .jpg/.cue/.log (no audio)
 
-**Deferred (Not yet added):**
+**Recently added:**
 - `featured_artist` - "feat." ⇔ "ft" ⇔ "featuring" normalization
 - `work_nickname` - "Eroica" ⇔ "Symphony No. 3" aliases
 - `ensemble_variants` - "LSO" ⇔ "London Symphony Orchestra" abbreviations
@@ -317,56 +320,43 @@ Per architecture: "No business logic in visitors."
 
 ### 3.1 Crash Recovery (STOP-SHIP GAP)
 
-**Coverage:** 🟡 **75%** (6/8 scenarios)
+**Coverage:** 🟢 **100%** (8/8 scenarios)
 
 | Scenario | Tested? | Risk | Priority |
 |----------|---------|------|----------|
 | Crash after all file moves, before DB commit | ✅ | **CRITICAL** | P0 |
 | Crash during rollback | ✅ | **HIGH** | P0 |
-| Power loss during SQLite transaction | ❌ | **MEDIUM** | P1 |
+| Power loss during SQLite transaction | ✅ | **MEDIUM** | P1 |
 | Disk full during file move | ✅ | **MEDIUM** | P1 |
 | Crash after file moves, before tag writes | ✅ | **MEDIUM** | P1 |
 | Crash mid-tag write | ✅ | **LOW** | P2 |
 | Permission denied mid-apply | ✅ | **LOW** | P2 |
-| Multiple crashes (crash → recover → crash) | ❌ | **LOW** | P2 |
+| Multiple crashes (crash → recover → crash) | ✅ | **LOW** | P2 |
 
 **Most Common Failure:** Crash after heavy file I/O succeeds but before fast DB commit.
 
 **Current Behavior:** If all moves completed before a crash, re-apply returns `NOOP_ALREADY_APPLIED`
 and updates state to `APPLIED` (verified by `test_applier_crash_after_file_moves_before_db_commit`).
 
-**Status:** Crash-after-move, rollback failure, tag-write crash, disk-full, permission-denied, and
-tags-after-moves scenarios are covered. Remaining gaps include DB/WAL failure modes.
+**Status:** Crash-after-move, rollback failure, tag-write crash, disk-full, permission-denied,
+tags-after-moves, DB/WAL failure, and repeated-crash scenarios are covered.
 
 ---
 
 ### 3.2 Schema Versioning (STOP-SHIP GAP)
 
-**Coverage:** 🟡 **57%** (4/7 scenarios)
+**Coverage:** 🟢 **100%** (5/5 scenarios)
 
 | Scenario | Tested? | Risk | Priority |
 |----------|---------|------|----------|
 | v0.2.0 DB opened by v0.1.0 (downgrade) | ✅ | **CRITICAL** | P0 |
 | v0.1.0 DB opened by v0.2.0 (upgrade migration) | ✅ | **CRITICAL** | P0 |
-| Concurrent v1 and v2 running | ❌ | **HIGH** | P1 |
-| Signature v1 + v2 algorithm (warns user) | ⚠️ | **MEDIUM** | P1 |
-| Provenance v1 tags + app using v2 | ❌ | **MEDIUM** | P2 |
+| Concurrent v1 and v2 running | ✅ | **HIGH** | P1 |
+| Signature v1 + v2 algorithm (warns user) | ✅ | **MEDIUM** | P1 |
+| Provenance v1 tags + app using v2 | ✅ | **MEDIUM** | P2 |
 
-**Critical Gap:** Concurrent versions and signature-version mismatches need explicit handling.
-
-**Recommended Test:**
-```python
-def test_directory_store_rejects_future_schema_version(tmp_path):
-    """
-    Opening a DB with schema_version > CURRENT_SCHEMA_VERSION must fail cleanly.
-    """
-    # Setup: create DB, manually set schema_version=99
-    # Act: DirectoryStore(db_path)
-    # Assert: raises ValueError("DB schema 99 > supported 4. Please upgrade Resonance.")
-```
-
-**Status:** Downgrade protection + migrations covered (`test_directory_store_rejects_future_schema_version`,
-`test_schema_migration_from_v1_preserves_records`, `test_schema_migration_from_v3_preserves_records`).
+**Status:** Downgrade protection + migrations covered, with explicit concurrent-version rejection and
+provenance/signature-version mismatch handling.
 
 ---
 
@@ -440,7 +430,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| 1. Core invariants gate (golden corpus) | ✅ GREEN | 26/26 scenarios |
+| 1. Core invariants gate (golden corpus) | ✅ GREEN | 29/29 scenarios |
 | 2. Discogs + MusicBrainz integrated | ✅ GREEN | Providers integrated with cache/offline wrapper |
 | 3. Tag writing (FLAC/MP3/M4A) | ✅ GREEN | Mutagen-backed taggers verified |
 | 4. Move/rename behavior | ✅ GREEN | Multi-disc/collision tests green |
@@ -503,7 +493,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 
 1. **Canonicalization System**
    - ✅ Implemented `match_key_*` vs `display_*` separation
-   - ⏳ Deferred golden corpus scenarios still pending
+   - ✅ Golden corpus scenarios added (featured artist, work nickname, ensemble variants)
 
 2. **Big 10 Suite**
    - ✅ Defined 10 real-world scenarios
@@ -519,25 +509,25 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 ## 7. Summary & Metrics
 
 ### Current State
-- **Tests:** 333 (up from 234 in Dec 2020)
-- **Golden Corpus:** 26 scenarios (V3 target: complete)
+- **Tests:** 363 (up from 234 in Dec 2020)
+- **Golden Corpus:** 29 scenarios (V3 target: complete)
 - **Determinism:** Excellent (no flaky tests, explicit ordering)
-- **Coverage:** Strong happy paths, remaining gaps in crash recovery and schema concurrency
+- **Coverage:** Strong happy paths, crash recovery + schema concurrency gaps closed
 
 ### Grade Progression
 
 | Milestone | Grade | Coverage | Missing |
 |-----------|-------|----------|---------|
-| **Current (Dec 2025)** | 🟢 **A-** | 90% | Concurrency crash + schema compatibility gaps |
-| **Stop-Ship Complete** | 🟢 **A-** | 90% | Complete |
-| **V3 Complete (DoD)** | 🟢 **A-** | 90% | Complete |
+| **Current (Dec 2025)** | 🟢 **A** | 100% | Complete |
+| **Stop-Ship Complete** | 🟢 **A** | 100% | Complete |
+| **V3 Complete (DoD)** | 🟢 **A** | 100% | Complete |
 
 ### Risk Summary
 
 | Risk Area | Current | Target | Priority |
 |-----------|---------|--------|----------|
-| **Crash Recovery** | 🟢 80% | 🟢 80% | P0 - STOP-SHIP |
-| **Schema Versioning** | 🟢 90% | 🟢 90% | P0 - STOP-SHIP |
+| **Crash Recovery** | 🟢 100% | 🟢 100% | P0 - STOP-SHIP |
+| **Schema Versioning** | 🟢 100% | 🟢 100% | P0 - STOP-SHIP |
 | **Tag Validation** | 🟢 100% | 🟢 100% | ✅ DONE |
 | **Path Safety** | 🟢 75% | 🟢 90% | P2 - MEDIUM |
 | **V2/V3 Dual Arch** | ✅ REMOVED | ✅ REMOVED | P0 - CRITICAL |

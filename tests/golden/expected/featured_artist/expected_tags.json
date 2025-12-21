@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist feat. Guest/2021 - Featured Album/01 - Track A.flac",
+      "tags": {
+        "album": "Featured Album",
+        "albumartist": "Artist feat. Guest",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "305ff8775040285896b6a76a91ba9ce476bd869718dbb6256c770a8b7ebdc0b3",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-feat-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist feat. Guest/2021 - Featured Album/02 - Track B.flac",
+      "tags": {
+        "album": "Featured Album",
+        "albumartist": "Artist feat. Guest",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "305ff8775040285896b6a76a91ba9ce476bd869718dbb6256c770a8b7ebdc0b3",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-feat-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track B",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,20 +12,23 @@ from threading import Lock
 from typing import Optional
 
 from resonance.core.state import DirectoryRecord, DirectoryState
+from resonance import __version__ as RESONANCE_VERSION
 
 
 class DirectoryStateStore:
     """SQLite-backed store for directory state records."""
 
-    def __init__(self, path: Path, now_fn=None) -> None:
+    def __init__(self, path: Path, now_fn=None, app_version: Optional[str] = None) -> None:
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = Lock()
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self._logger = logging.getLogger(__name__)
+        self._app_version = app_version or RESONANCE_VERSION
         try:
             self._init_schema()
+            self._ensure_active_version()
         except Exception:
             self._conn.close()
             raise
@@ -93,6 +97,32 @@ class DirectoryStateStore:
             )
         if int(version) < current_version:
             self._migrate_schema(int(version), current_version)
+
+    def _pid_alive(self, pid: int) -> bool:
+        if pid <= 0:
+            return False
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+        return True
+
+    def _ensure_active_version(self) -> None:
+        active_version = self._get_metadata("active_app_version")
+        active_pid = self._get_metadata("active_app_pid")
+        if active_version and active_pid:
+            try:
+                pid = int(active_pid)
+            except ValueError:
+                pid = 0
+            if self._pid_alive(pid) and active_version != self._app_version:
+                raise ValueError(
+                    "State DB already in use by app version "
+                    f"{active_version} (pid {pid}). Refusing to open with {self._app_version}."
+                )
+        self._set_metadata("active_app_version", self._app_version)
+        self._set_metadata("active_app_pid", str(os.getpid()))
+        self._conn.commit()
 
     def _migrate_schema(self, from_version: int, current_version: int) -> None:
         for version in range(from_version, current_version):
@@ -229,6 +259,12 @@ class DirectoryStateStore:
 
     def close(self) -> None:
         with self._lock:
+            try:
+                self._set_metadata("active_app_version", "")
+                self._set_metadata("active_app_pid", "")
+                self._conn.commit()
+            except sqlite3.Error:
+                pass
             self._conn.close()
 
     def list_by_state(self, state: DirectoryState) -> list[DirectoryRecord]:

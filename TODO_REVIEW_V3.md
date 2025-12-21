@@ -22,10 +22,11 @@ The V3 core is sound. The V2 legacy must be either fully deprecated or harmonize
 - `sanitize_filename` duplicated between `FileService` and `planner`
 
 **Status note (2025-12-21):**
-The critical C-items below remain open because the V2 visitor pipeline is still present,
-composition root is not unified, and planner purity/layout logic are still split between
-V2 and V3 paths. These are architectural cleanups, not functional regressions, so they
-are tracked as V3 closeout work.
+Stop-ship gaps in crash recovery, schema versioning, and golden corpus coverage are now
+closed in tests. The critical C-items below remain open because the V2 visitor pipeline
+is still present, composition root is not unified, and planner purity/layout logic are
+still split between V2 and V3 paths. These are architectural cleanups, not functional
+regressions, so they are tracked as V3 closeout work.
 
 ---
 

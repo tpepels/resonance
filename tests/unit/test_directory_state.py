@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+import logging
+import os
 import sqlite3
 import pytest
 
@@ -316,6 +318,63 @@ def test_signature_version_change_resets_state(tmp_path: Path) -> None:
         assert updated.signature_version == 2
     finally:
         store.close()
+
+
+def test_signature_version_change_warns(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(
+            "dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", signature_version=1
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-1",
+        )
+
+        with caplog.at_level(logging.WARNING):
+            store.get_or_create(
+                "dir-1",
+                Path("/music/a"),
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                signature_version=2,
+            )
+        assert "Signature algorithm changed" in caplog.text
+    finally:
+        store.close()
+
+
+def test_directory_store_rejects_concurrent_version(tmp_path: Path) -> None:
+    db = tmp_path / "state.db"
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE schema_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("schema_version", "4"),
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("active_app_version", "0.1.0"),
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("active_app_pid", str(os.getpid())),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    with pytest.raises(ValueError, match="already in use"):
+        DirectoryStateStore(db, app_version="0.2.0").close()
 
 
 def test_directory_store_rejects_future_schema_version(tmp_path: Path) -> None:

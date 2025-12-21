@@ -120,6 +120,47 @@ def test_applier_dry_run_does_not_move_files(tmp_path: Path) -> None:
         store.close()
 
 
+def test_applier_warns_on_provenance_version_mismatch(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(
+                filename="01 - Track A.flac",
+                fingerprint_id="fp-a",
+                tags={"resonance.prov.version": "1"},
+            ),
+            AudioStubSpec(
+                filename="02 - Track B.flac",
+                fingerprint_id="fp-b",
+                tags={"resonance.prov.version": "1"},
+            ),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    release = _make_release()
+    tag_patch = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+    tag_patch = replace(
+        tag_patch,
+        provenance_tags={**tag_patch.provenance_tags, "resonance.prov.version": "2"},
+    )
+    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=tag_patch,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        assert any(
+            "Provenance version mismatch" in warning for warning in report.warnings
+        )
+    finally:
+        store.close()
+
+
 def test_applier_moves_and_tags(tmp_path: Path) -> None:
     fixture = build_album_dir(
         tmp_path / "source",
