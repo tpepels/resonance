@@ -30,6 +30,7 @@ class DirectorySignature:
     """Stable directory signature computed from audio files."""
     audio_files: tuple[AudioFileSignature, ...]
     signature_hash: str
+    signature_version: int = 1
     non_audio_files: tuple[str, ...] = ()
 
 
@@ -60,6 +61,7 @@ def dir_signature(
     return DirectorySignature(
         audio_files=tuple(signatures),
         signature_hash=signature_hash,
+        signature_version=1,
         non_audio_files=non_audio_entries,
     )
 

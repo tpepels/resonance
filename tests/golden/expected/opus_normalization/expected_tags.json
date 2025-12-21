@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Ludwig van Beethoven/Beethoven Piano Sonatas/01 - Piano Sonata No. 14 in C-sharp Minor, Op. 27 No. 2 'Moonlight' I. Adagio sostenuto.flac",
+      "tags": {
+        "album": "Beethoven Piano Sonatas",
+        "albumartist": "Wilhelm Kempff",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d39e3f499ecc0d6031ed729baf49bbaa2ad5594647e924b23940724d608a8a52",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-op-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Sonata No. 14 in C-sharp Minor, Op. 27 No. 2 'Moonlight': I. Adagio sostenuto",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Ludwig van Beethoven/Beethoven Piano Sonatas/02 - Piano Sonata in C-sharp Minor, op.27, no.2 II. Allegretto.flac",
+      "tags": {
+        "album": "Beethoven Piano Sonatas",
+        "albumartist": "Wilhelm Kempff",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d39e3f499ecc0d6031ed729baf49bbaa2ad5594647e924b23940724d608a8a52",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-op-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Sonata in C-sharp Minor, op.27, no.2: II. Allegretto",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

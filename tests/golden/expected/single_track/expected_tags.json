@@ -1,0 +1,20 @@
+{
+  "tracks": [
+    {
+      "path": "Artist D/Standalone Single/01 - Single Track.flac",
+      "tags": {
+        "album": "Standalone Single",
+        "albumartist": "Artist D",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "82de600a026e1d45f699bddaec0f65aa6395780a2cf7bce42cecf1ee704e3b83",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-single-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Single Track",
+        "tracknumber": "1"
+      }
+    }
+  ]
+}

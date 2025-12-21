@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist I/Crash Album/01 - Track A.flac",
+      "tags": {
+        "album": "Crash Album",
+        "albumartist": "Artist I",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "ef8a6be99d837b193282753d39231577fac2c4dfce2242a7a0b1487ec13248d2",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-crash-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist I/Crash Album/02 - Track B.flac",
+      "tags": {
+        "album": "Crash Album",
+        "albumartist": "Artist I",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "ef8a6be99d837b193282753d39231577fac2c4dfce2242a7a0b1487ec13248d2",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-crash-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track B",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

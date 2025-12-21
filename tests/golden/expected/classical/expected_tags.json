@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "J.S. Bach/Classical Work/01 - Movement I.flac",
+      "tags": {
+        "album": "Classical Work",
+        "albumartist": "Performer A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "0128c432de40be1a7aa17765415fb15b3a591ec7244376aaf556b17c67d0a779",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-classical-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Movement I",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "J.S. Bach/Classical Work/02 - Movement II.flac",
+      "tags": {
+        "album": "Classical Work",
+        "albumartist": "Performer A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "0128c432de40be1a7aa17765415fb15b3a591ec7244376aaf556b17c67d0a779",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-classical-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Movement II",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

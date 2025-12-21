@@ -11,6 +11,7 @@ from resonance.core.applier import ApplyStatus, apply_plan
 from dataclasses import replace
 
 from resonance.core.enricher import build_tag_patch
+from resonance.core.identity.signature import dir_signature
 from resonance.core.identifier import ProviderRelease, ProviderTrack
 from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
@@ -19,7 +20,13 @@ from resonance.services.tag_writer import MetaJsonTagWriter, MutagenTagWriter, T
 from tests.helpers.fs import AudioStubSpec, build_album_dir
 
 
+def _signature_hash(source_dir: Path) -> str:
+    audio_files = sorted(source_dir.glob("*.flac"))
+    return dir_signature(audio_files).signature_hash
+
+
 def _make_plan(source_dir: Path) -> Plan:
+    signature_hash = _signature_hash(source_dir)
     operations = (
         TrackOperation(
             track_position=1,
@@ -31,7 +38,7 @@ def _make_plan(source_dir: Path) -> Plan:
     return Plan(
         dir_id="dir-1",
         source_path=source_dir,
-        signature_hash="sig-1",
+        signature_hash=signature_hash,
         provider="musicbrainz",
         release_id="mb-123",
         release_title="Album",
@@ -72,7 +79,7 @@ def test_metajson_tag_writer_apply_and_read(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create(plan.dir_id, fixture.path, "sig-1")
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,
@@ -165,7 +172,7 @@ def test_tag_writer_failure_rolls_back_moves(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create(plan.dir_id, fixture.path, "sig-1")
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,
@@ -184,6 +191,7 @@ def test_tag_writer_failure_rolls_back_moves(tmp_path: Path) -> None:
         assert report.rollback_attempted is True
         assert (fixture.path / "01 - Track A.flac").exists()
         assert not (tmp_path / "library/Artist/Album/01 - Track A.flac").exists()
+        assert not (tmp_path / "library/Artist/Album").exists()
     finally:
         store.close()
 
@@ -200,7 +208,7 @@ def test_apply_does_not_overwrite_existing_tags(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create(plan.dir_id, fixture.path, "sig-1")
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,
@@ -240,7 +248,7 @@ def test_apply_overwrite_records_provenance(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create(plan.dir_id, fixture.path, "sig-1")
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,
@@ -283,7 +291,7 @@ def test_apply_per_field_overwrite_policy(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create(plan.dir_id, fixture.path, "sig-1")
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,

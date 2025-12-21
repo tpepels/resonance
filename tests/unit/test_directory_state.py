@@ -5,20 +5,26 @@ These are contract tests for determinism across runs.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
+import sqlite3
 import pytest
 
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 
 
+def _sig(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def test_get_or_create_sets_defaults(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         assert record.dir_id == "dir-1"
         assert record.last_seen_path == Path("/music/a")
-        assert record.signature_hash == "sig-1"
+        assert record.signature_hash == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         assert record.state == DirectoryState.NEW
 
         assert record.pinned_provider is None
@@ -34,7 +40,7 @@ def test_get_or_create_sets_defaults(tmp_path: Path) -> None:
 def test_path_change_updates_last_seen_path_only(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         record = store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -44,9 +50,9 @@ def test_path_change_updates_last_seen_path_only(tmp_path: Path) -> None:
         )
         prev_updated_at = record.updated_at
 
-        updated = store.get_or_create("dir-1", Path("/music/b"), "sig-1")
+        updated = store.get_or_create("dir-1", Path("/music/b"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         assert updated.dir_id == record.dir_id
-        assert updated.signature_hash == "sig-1"
+        assert updated.signature_hash == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         assert updated.state == DirectoryState.RESOLVED_USER
 
         # Pin unchanged
@@ -66,7 +72,7 @@ def test_path_change_updates_last_seen_path_only(tmp_path: Path) -> None:
 def test_signature_change_resets_state_and_clears_pinned(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -75,8 +81,8 @@ def test_signature_change_resets_state_and_clears_pinned(tmp_path: Path) -> None
             pinned_confidence=0.8,
         )
 
-        updated = store.get_or_create("dir-1", Path("/music/a"), "sig-2")
-        assert updated.signature_hash == "sig-2"
+        updated = store.get_or_create("dir-1", Path("/music/a"), "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+        assert updated.signature_hash == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         assert updated.state == DirectoryState.NEW
 
         # Pin cleared completely (not just release_id)
@@ -90,7 +96,7 @@ def test_signature_change_resets_state_and_clears_pinned(tmp_path: Path) -> None
 def test_unjail_resets_state_to_new_and_clears_pinned(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.JAILED,
@@ -111,7 +117,7 @@ def test_unjail_resets_state_to_new_and_clears_pinned(tmp_path: Path) -> None:
 def test_pinned_release_reused_when_signature_unchanged(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -120,7 +126,7 @@ def test_pinned_release_reused_when_signature_unchanged(tmp_path: Path) -> None:
             pinned_confidence=0.9,
         )
 
-        unchanged = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        unchanged = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         assert unchanged.state == DirectoryState.RESOLVED_USER
         assert unchanged.pinned_provider == "musicbrainz"
         assert unchanged.pinned_release_id == "mb-1"
@@ -134,7 +140,7 @@ def test_state_is_persisted_across_store_instances(tmp_path: Path) -> None:
 
     store1 = DirectoryStateStore(db)
     try:
-        r = store1.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        r = store1.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store1.set_state(
             r.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -147,12 +153,46 @@ def test_state_is_persisted_across_store_instances(tmp_path: Path) -> None:
 
     store2 = DirectoryStateStore(db)
     try:
-        r2 = store2.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        r2 = store2.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         assert r2.state == DirectoryState.RESOLVED_USER
         assert r2.pinned_provider == "musicbrainz"
         assert r2.pinned_release_id == "mb-1"
     finally:
         store2.close()
+
+
+def test_directory_store_orders_list_by_state(tmp_path: Path) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        for dir_id in ["c", "a", "b"]:
+            record = store.get_or_create(
+                dir_id, Path(f"/music/{dir_id}"), _sig(dir_id)
+            )
+            store.set_state(
+                record.dir_id,
+                DirectoryState.RESOLVED_AUTO,
+                pinned_provider="musicbrainz",
+                pinned_release_id=f"mb-{dir_id}",
+            )
+
+        records = store.list_by_state(DirectoryState.RESOLVED_AUTO)
+        again = store.list_by_state(DirectoryState.RESOLVED_AUTO)
+        assert [record.dir_id for record in records] == ["a", "b", "c"]
+        assert [record.dir_id for record in again] == ["a", "b", "c"]
+    finally:
+        store.close()
+
+
+def test_directory_store_orders_list_all(tmp_path: Path) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        for dir_id in ["c", "a", "b"]:
+            store.get_or_create(dir_id, Path(f"/music/{dir_id}"), _sig(dir_id))
+
+        records = store.list_all()
+        assert [record.dir_id for record in records] == ["a", "b", "c"]
+    finally:
+        store.close()
 
 
 def test_path_change_across_reopen_preserves_pin_and_state(tmp_path: Path) -> None:
@@ -161,7 +201,7 @@ def test_path_change_across_reopen_preserves_pin_and_state(tmp_path: Path) -> No
 
     store1 = DirectoryStateStore(db)
     try:
-        r = store1.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        r = store1.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store1.set_state(
             r.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -175,7 +215,7 @@ def test_path_change_across_reopen_preserves_pin_and_state(tmp_path: Path) -> No
     # Reopen and call get_or_create with new path but same signature
     store2 = DirectoryStateStore(db)
     try:
-        r2 = store2.get_or_create("dir-1", Path("/music/b"), "sig-1")
+        r2 = store2.get_or_create("dir-1", Path("/music/b"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         # Must preserve state and pin
         assert r2.state == DirectoryState.RESOLVED_USER
@@ -192,7 +232,7 @@ def test_path_change_across_reopen_preserves_pin_and_state(tmp_path: Path) -> No
 def test_resolved_state_requires_provider_and_release_id(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         with pytest.raises(ValueError):
             store.set_state(record.dir_id, DirectoryState.RESOLVED_USER)
@@ -202,5 +242,159 @@ def test_resolved_state_requires_provider_and_release_id(tmp_path: Path) -> None
 
         with pytest.raises(ValueError):
             store.set_state(record.dir_id, DirectoryState.RESOLVED_AUTO, pinned_release_id="mb-1")
+    finally:
+        store.close()
+
+
+def test_schema_metadata_initialized(tmp_path: Path) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        conn = sqlite3.connect(store.path)
+        try:
+            version = conn.execute(
+                "SELECT value FROM schema_metadata WHERE key = ?",
+                ("schema_version",),
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        assert version == "4"
+    finally:
+        store.close()
+
+
+def test_schema_missing_metadata_with_existing_rows_raises(tmp_path: Path) -> None:
+    db = tmp_path / "state.db"
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE directories (
+                dir_id TEXT PRIMARY KEY,
+                last_seen_path TEXT NOT NULL,
+                signature_hash TEXT NOT NULL,
+                state TEXT NOT NULL,
+                pinned_provider TEXT,
+                pinned_release_id TEXT,
+                pinned_confidence REAL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO directories (dir_id, last_seen_path, signature_hash, state, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            ("dir-1", "/music/a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "NEW", "now", "now"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    with pytest.raises(ValueError, match="missing schema_version"):
+        DirectoryStateStore(db).close()
+
+
+def test_signature_version_change_resets_state(tmp_path: Path) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(
+            "dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", signature_version=1
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id="mb-1",
+        )
+
+        updated = store.get_or_create(
+            "dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", signature_version=2
+        )
+        assert updated.state == DirectoryState.NEW
+        assert updated.pinned_provider is None
+        assert updated.pinned_release_id is None
+        assert updated.signature_version == 2
+    finally:
+        store.close()
+
+
+def test_directory_store_rejects_future_schema_version(tmp_path: Path) -> None:
+    db = tmp_path / "state.db"
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE schema_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("schema_version", "99"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    with pytest.raises(ValueError, match=r"DB schema 99 > supported 4"):
+        DirectoryStateStore(db).close()
+
+
+def test_schema_migration_from_v1_preserves_records(tmp_path: Path) -> None:
+    db = tmp_path / "state.db"
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE schema_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("schema_version", "1"),
+        )
+        conn.execute(
+            """
+            CREATE TABLE directories (
+                dir_id TEXT PRIMARY KEY,
+                last_seen_path TEXT NOT NULL,
+                signature_hash TEXT NOT NULL,
+                state TEXT NOT NULL,
+                pinned_provider TEXT,
+                pinned_release_id TEXT,
+                pinned_confidence REAL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO directories (dir_id, last_seen_path, signature_hash, state, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            ("dir-1", "/music/a", "a" * 64, "NEW", "now", "now"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    store = DirectoryStateStore(db)
+    try:
+        record = store.get("dir-1")
+        assert record is not None
+        assert record.signature_version == 1
+        conn = sqlite3.connect(db)
+        try:
+            version = conn.execute(
+                "SELECT value FROM schema_metadata WHERE key = ?",
+                ("schema_version",),
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        assert version == "4"
     finally:
         store.close()

@@ -6,12 +6,15 @@ and handling of multiple performers of the same work.
 
 from dataclasses import dataclass
 from pathlib import Path
+
+from tests.helpers.paths import sanitized_dir
 from typing import Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from resonance.app import ResonanceApp
+from resonance.providers.musicbrainz import MusicBrainzClient
 from resonance.core.models import AlbumInfo
 
 
@@ -84,8 +87,7 @@ class TestClassicalMusic:
         - Tracks load with composer metadata
         - Canonicalization only unifies when mappings exist
         """
-        input_dir = test_library / "bach_goldberg"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "bach_goldberg")
 
         tracks = [
             {
@@ -148,7 +150,7 @@ class TestClassicalMusic:
             with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                 from resonance.visitors import IdentifyVisitor
 
-                mock_mb = MagicMock()
+                mock_mb = MagicMock(spec_set=MusicBrainzClient)
                 identify_visitor = IdentifyVisitor(
                     musicbrainz=mock_mb,
                     canonicalizer=app.canonicalizer,
@@ -195,8 +197,7 @@ class TestClassicalMusic:
         Expected:
         - Tracks load with composer/conductor/performer metadata
         """
-        input_dir = test_library / "beethoven_9th"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "beethoven_9th")
 
         tracks = [
             {
@@ -254,7 +255,7 @@ class TestClassicalMusic:
             with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                 from resonance.visitors import IdentifyVisitor
 
-                mock_mb = MagicMock()
+                mock_mb = MagicMock(spec_set=MusicBrainzClient)
                 identify_visitor = IdentifyVisitor(
                     musicbrainz=mock_mb,
                     canonicalizer=app.canonicalizer,
@@ -298,8 +299,7 @@ class TestClassicalMusic:
         dirs = []
 
         # Glenn Gould 1955
-        dir_1955 = test_library / "bach_goldberg_gould_1955"
-        dir_1955.mkdir()
+        dir_1955 = sanitized_dir(test_library, "bach_goldberg_gould_1955")
         dirs.append(("1955", dir_1955, "Glenn Gould", "1955"))
 
         create_test_audio_file(
@@ -312,8 +312,7 @@ class TestClassicalMusic:
         )
 
         # Glenn Gould 1981
-        dir_1981 = test_library / "bach_goldberg_gould_1981"
-        dir_1981.mkdir()
+        dir_1981 = sanitized_dir(test_library, "bach_goldberg_gould_1981")
         dirs.append(("1981", dir_1981, "Glenn Gould", "1981"))
 
         create_test_audio_file(
@@ -326,8 +325,7 @@ class TestClassicalMusic:
         )
 
         # András Schiff
-        dir_schiff = test_library / "bach_goldberg_schiff"
-        dir_schiff.mkdir()
+        dir_schiff = sanitized_dir(test_library, "bach_goldberg_schiff")
         dirs.append(("schiff", dir_schiff, "András Schiff", None))
 
         create_test_audio_file(
@@ -367,7 +365,7 @@ class TestClassicalMusic:
                 with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                     from resonance.visitors import IdentifyVisitor
 
-                    mock_mb = MagicMock()
+                    mock_mb = MagicMock(spec_set=MusicBrainzClient)
                     identify_visitor = IdentifyVisitor(
                         musicbrainz=mock_mb,
                         canonicalizer=app.canonicalizer,
@@ -414,8 +412,7 @@ class TestClassicalMusic:
         - Conductor and orchestra fields preserved
         - Performer/artist may be soloist (violinist)
         """
-        input_dir = test_library / "vivaldi_four_seasons"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "vivaldi_four_seasons")
 
         specs = [
             TrackSpec(
@@ -469,7 +466,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -500,8 +497,7 @@ class TestClassicalMusic:
         - Performer may include choir/orchestra; artist may be conductor or album artist in the wild
         - No crash if multiple contributor-like fields exist
         """
-        input_dir = test_library / "mahler_2_resurrection"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "mahler_2_resurrection")
 
         specs = [
             TrackSpec(
@@ -552,7 +548,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -582,8 +578,7 @@ class TestClassicalMusic:
         - canonical_composer likely None (or not set as single composer)
         - canonical performer used if present; otherwise 'Various Artists' later in planner
         """
-        input_dir = test_library / "best_of_baroque"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "best_of_baroque")
 
         specs = [
             TrackSpec(
@@ -634,7 +629,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -668,8 +663,7 @@ class TestClassicalMusic:
         - Composer preserved
         - Performer/conductor preserved when present
         """
-        input_dir = test_library / "mozart_don_giovanni"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "mozart_don_giovanni")
 
         specs = [
             TrackSpec(
@@ -720,7 +714,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -751,8 +745,7 @@ class TestClassicalMusic:
         - No crashes; composer strings loaded
         - Later canonicalizer mapping can unify variants (this test verifies the raw presence)
         """
-        input_dir = test_library / "name_variants_diacritics"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "name_variants_diacritics")
 
         specs = [
             TrackSpec(
@@ -803,7 +796,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -833,8 +826,7 @@ class TestClassicalMusic:
         - disc_number and track_number preserved if supported by TrackInfo
         - IdentifyVisitor doesn't crash if disc_number exists
         """
-        input_dir = test_library / "box_set_multi_disc"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "box_set_multi_disc")
 
         specs = [
             TrackSpec(
@@ -885,7 +877,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -916,8 +908,7 @@ class TestClassicalMusic:
         - IdentifyVisitor loads tracks but should not 'invent' composer.
         - album may remain non-classical (depending on your is_classical rule).
         """
-        input_dir = test_library / "missing_composer_tag"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "missing_composer_tag")
 
         specs = [
             TrackSpec(
@@ -957,7 +948,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,
@@ -990,8 +981,10 @@ class TestClassicalMusic:
         This does not enforce canonical output (that’s a mapping/policy concern),
         but it prevents regressions in parsing/handling.
         """
-        input_dir = test_library / f"composer_variant_{composer_variant.replace(' ', '_').replace('.', '')}"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(
+            test_library,
+            f"composer_variant_{composer_variant.replace(' ', '_').replace('.', '')}",
+        )
 
         specs = [
             TrackSpec(
@@ -1030,7 +1023,7 @@ class TestClassicalMusic:
                 from resonance.visitors import IdentifyVisitor
 
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=app.release_search,

@@ -180,15 +180,15 @@ Each section: **tests first**, then minimal implementation.
 
 ### 18.2 Prompt CLI ergonomics (Integration)
 
-* [ ] Test: prompt shows track list with durations (stable formatting)
-* [ ] Test: candidate list includes scores + reasons (stable ordering)
-* [ ] Test: supports “jail” decision explicitly
-* [ ] Implement: prompt flows + validation (1-based indexing, manual IDs)
+* [x] Test: prompt shows track list with durations (stable formatting)
+* [x] Test: candidate list includes scores + reasons (stable ordering)
+* [x] Test: supports “jail” decision explicitly
+* [x] Implement: prompt flows + validation (1-based indexing, manual IDs)
 
 ### 18.3 Exit codes + error taxonomy (Unit/Integration)
 
-* [ ] Test: consistent exit codes per failure class (validation vs runtime vs IO)
-* [ ] Implement: central `ResonanceError` hierarchy + mapping to exit codes
+* [x] Test: consistent exit codes per failure class (validation vs runtime vs IO)
+* [x] Implement: central `ResonanceError` hierarchy + mapping to exit codes
 
 ---
 
@@ -198,14 +198,14 @@ Each section: **tests first**, then minimal implementation.
 
 ### 19.1 settings_hash composition (Unit)
 
-* [ ] Test: only relevant settings affect `settings_hash` for identify/plan stages
-* [ ] Test: irrelevant settings changes do not cause re-identification
-* [ ] Implement: explicit “relevance sets” per stage
+* [x] Test: only relevant settings affect `settings_hash` for identify/plan stages
+* [x] Test: irrelevant settings changes do not cause re-identification
+* [x] Implement: explicit “relevance sets” per stage
 
 ### 19.2 Migration/backward compatibility (Unit)
 
-* [ ] Test: older state DB can be migrated forward deterministically
-* [ ] Implement: SQLite migrations with explicit version table
+* [x] Test: older state DB can be migrated forward deterministically
+* [x] Implement: SQLite migrations with explicit version table
 
 ---
 
@@ -215,19 +215,19 @@ Each section: **tests first**, then minimal implementation.
 
 ### 20.1 Symlinks and special files (Integration)
 
-* [ ] Test: symlinks either skipped or handled per policy deterministically
-* [ ] Test: device files / weird permissions produce stable failures
-* [ ] Implement: scanner policy for special files
+* [x] Test: symlinks either skipped or handled per policy deterministically
+* [x] Test: device files / weird permissions produce stable failures
+* [x] Implement: scanner policy for special files
 
 ### 20.2 Case-insensitive collisions (Integration)
 
-* [ ] Test: `Track.flac` vs `track.flac` collision detected on case-insensitive target
-* [ ] Implement: preflight collision detection normalizes case where configured
+* [x] Test: `Track.flac` vs `track.flac` collision detected on case-insensitive target
+* [x] Implement: preflight collision detection normalizes case where configured
 
 ### 20.3 Cross-device moves (Integration)
 
-* [ ] Test: apply works across filesystem boundaries (copy+fsync+rename strategy) OR fails with stable message
-* [ ] Implement: robust move strategy with deterministic cleanup
+* [x] Test: apply works across filesystem boundaries (copy+fsync+rename strategy) OR fails with stable message
+* [x] Implement: robust move strategy with deterministic cleanup
 
 ---
 
@@ -237,13 +237,13 @@ Each section: **tests first**, then minimal implementation.
 
 ### 21.1 Audit includes last plan + last apply (Integration)
 
-* [ ] Test: audit reports plan hash/version and last apply status/summary
-* [ ] Implement: audit assembles data from store artifacts only
+* [x] Test: audit reports plan hash/version and last apply status/summary
+* [x] Implement: audit assembles data from store artifacts only
 
 ### 21.2 Determinism/stability report (Integration)
 
-* [ ] Test: “stability report” compares two runs and shows no differences
-* [ ] Implement: report generator consuming stored artifacts (no recomputation)
+* [x] Test: “stability report” compares two runs and shows no differences
+* [x] Implement: report generator consuming stored artifacts (no recomputation)
 
 ---
 
@@ -251,11 +251,15 @@ Each section: **tests first**, then minimal implementation.
 
 **Goal:** ensure Resonance is installable, runnable, and safe in real environments.
 
-* [ ] Test: CLI entrypoints work in isolated venv (smoke)
-* [ ] Test: default config location discovery is deterministic
-* [ ] Implement: `resonance doctor` includes environment sanity checks
+* [x] Test: CLI entrypoints work in isolated venv (smoke)
+* [x] Test: default config location discovery is deterministic
+* [x] Implement: `resonance doctor` includes environment sanity checks
 
 ---
+
+Loose item:
+
+* [x] Thread warnings into apply.py output so CLI users see them directly.
 
 ## Definition of Done (v2)
 

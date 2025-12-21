@@ -274,6 +274,13 @@ class ReleaseSearchService:
         if not candidates:
             return None
 
+        for candidate in candidates:
+            if not isinstance(candidate.score, (int, float)):
+                raise TypeError("Candidate score must be numeric")
+            if not isinstance(candidate.coverage, (int, float)):
+                raise TypeError("Candidate coverage must be numeric")
+
+        candidates = sorted(candidates, key=lambda c: c.score, reverse=True)
         best = candidates[0]
 
         # Check if best candidate meets thresholds

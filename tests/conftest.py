@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -13,6 +14,30 @@ import pytest
 
 from tests.helpers.scenarios import build_golden_scenario, GoldenScenario
 from tests.helpers.fs import AudioStubSpec, build_album_dir, AlbumFixture
+
+
+_PIPELINE_V1_PATHS = (
+    "tests/test_visitors/",
+    "tests/test_services/",
+    "tests/integration/test_classical.py",
+    "tests/integration/test_multi_artist.py",
+    "tests/integration/test_name_variants.py",
+)
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    run_network = os.getenv("RUN_REQUIRES_NETWORK", "").lower() in {"1", "true", "yes"}
+    run_slow = os.getenv("RUN_SLOW", "").lower() in {"1", "true", "yes"}
+    for item in items:
+        path = str(item.fspath).replace("\\", "/")
+        if any(token in path for token in _PIPELINE_V1_PATHS):
+            item.add_marker(pytest.mark.pipeline_v1)
+        else:
+            item.add_marker(pytest.mark.pipeline_v2)
+        if "requires_network" in item.keywords and not run_network:
+            item.add_marker(pytest.mark.skip(reason="requires network access"))
+        if "slow" in item.keywords and not run_slow:
+            item.add_marker(pytest.mark.skip(reason="slow test"))
 
 @pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
@@ -150,6 +175,7 @@ def create_test_audio_file(temp_dir: Path):
         artist: str | None = None,
         album: str | None = None,
         track_number: int | None = None,
+        disc_number: int | None = None,
         duration: int = 180,  # seconds
         composer: str | None = None,
         conductor: str | None = None,
@@ -181,6 +207,7 @@ def create_test_audio_file(temp_dir: Path):
             "artist": artist,
             "album": album,
             "track_number": track_number,
+            "disc_number": disc_number,
             "duration": duration,
             "composer": composer,
             "conductor": conductor,

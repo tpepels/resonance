@@ -113,7 +113,7 @@ def test_resolved_auto_directory_skips_identify(tmp_path: Path, monkeypatch: pyt
     """RESOLVED_AUTO directories must skip identify() entirely."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -132,7 +132,7 @@ def test_resolved_auto_directory_skips_identify(tmp_path: Path, monkeypatch: pyt
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=DirectoryEvidence(tracks=(), track_count=0, total_duration_seconds=0),
             store=store,
             provider_client=provider,
@@ -154,7 +154,7 @@ def test_resolved_user_directory_skips_identify(tmp_path: Path, monkeypatch: pyt
     """RESOLVED_USER directories must skip identify() entirely."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -172,7 +172,7 @@ def test_resolved_user_directory_skips_identify(tmp_path: Path, monkeypatch: pyt
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=DirectoryEvidence(tracks=(), track_count=0, total_duration_seconds=0),
             store=store,
             provider_client=provider,
@@ -194,7 +194,7 @@ def test_path_change_does_not_trigger_identify(tmp_path: Path, monkeypatch: pyte
     """Path change with same signature must not trigger identify()."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/a"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/a"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -211,7 +211,7 @@ def test_path_change_does_not_trigger_identify(tmp_path: Path, monkeypatch: pyte
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/b"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=DirectoryEvidence(tracks=(), track_count=0, total_duration_seconds=0),
             store=store,
             provider_client=provider,
@@ -233,7 +233,7 @@ def test_signature_change_triggers_identify(tmp_path: Path, monkeypatch: pytest.
     """Signature change must trigger identify() (at least once)."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -241,7 +241,7 @@ def test_signature_change_triggers_identify(tmp_path: Path, monkeypatch: pytest.
             pinned_release_id="mb-old",
         )
 
-        updated = store.get_or_create("dir-1", Path("/music/album"), "sig-2")
+        updated = store.get_or_create("dir-1", Path("/music/album"), "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
         assert updated.state == DirectoryState.NEW
         assert updated.pinned_release_id is None
 
@@ -255,7 +255,7 @@ def test_signature_change_triggers_identify(tmp_path: Path, monkeypatch: pytest.
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-2",
+            signature_hash="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
             evidence=DirectoryEvidence(
                 tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
                 track_count=1,
@@ -280,7 +280,7 @@ def test_certain_tier_autopins_to_resolved_auto(tmp_path: Path):
     """CERTAIN confidence must auto-pin to RESOLVED_AUTO."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         release = ProviderRelease(
             provider="musicbrainz",
@@ -308,7 +308,7 @@ def test_certain_tier_autopins_to_resolved_auto(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,
@@ -331,7 +331,7 @@ def test_certain_autopin_persists_scoring_version_in_outcome(tmp_path: Path):
     """CERTAIN autopin must include scoring_version in outcome for audit."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         release = ProviderRelease(
             provider="musicbrainz",
@@ -353,7 +353,7 @@ def test_certain_autopin_persists_scoring_version_in_outcome(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,
@@ -369,7 +369,7 @@ def test_certain_does_not_prompt(tmp_path: Path):
     """CERTAIN must not require user prompting."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         release = ProviderRelease(
             provider="musicbrainz",
@@ -391,7 +391,7 @@ def test_certain_does_not_prompt(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,
@@ -414,7 +414,7 @@ def test_probable_tier_queues_for_prompt(tmp_path: Path):
     """PROBABLE confidence must queue for user resolution."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         release = ProviderRelease(
             provider="musicbrainz",
@@ -442,7 +442,7 @@ def test_probable_tier_queues_for_prompt(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,
@@ -462,7 +462,7 @@ def test_unsure_tier_queues_for_prompt(tmp_path: Path):
     """UNSURE confidence must queue for user resolution."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         release = ProviderRelease(
             provider="musicbrainz",
@@ -484,7 +484,7 @@ def test_unsure_tier_queues_for_prompt(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,
@@ -503,7 +503,7 @@ def test_queued_prompt_not_reprocessed(tmp_path: Path, monkeypatch: pytest.Monke
     """Already queued directories should not be reprocessed (no identify, no provider)."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
         provider = StubProviderClient([])
@@ -515,7 +515,7 @@ def test_queued_prompt_not_reprocessed(tmp_path: Path, monkeypatch: pytest.Monke
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=DirectoryEvidence(
                 tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
                 track_count=1,
@@ -546,7 +546,7 @@ def test_jailed_directory_skips_processing(tmp_path: Path, monkeypatch: pytest.M
     """JAILED directories must be skipped entirely (no identify, no provider)."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.JAILED)
 
         provider = StubProviderClient([])
@@ -558,7 +558,7 @@ def test_jailed_directory_skips_processing(tmp_path: Path, monkeypatch: pytest.M
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=DirectoryEvidence(
                 tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
                 track_count=1,
@@ -582,7 +582,7 @@ def test_unjail_resets_to_new(tmp_path: Path):
     """Unjailing must reset state to NEW for reprocessing."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.JAILED)
 
         # Simulate unjail (state transition)
@@ -608,7 +608,7 @@ def test_unjail_resets_to_new(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-1",
+            signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             evidence=evidence,
             store=store,
             provider_client=provider,

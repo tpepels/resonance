@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from argparse import Namespace
+import hashlib
 
 from resonance.commands.output import emit_output
+from resonance.errors import ValidationError
 from resonance.core.identifier import ProviderRelease
+from resonance.core.artifacts import serialize_plan
 from resonance.core.planner import plan_directory
 from resonance.infrastructure.directory_store import DirectoryStateStore
 
@@ -34,11 +37,11 @@ def run_plan(
     close_store = False
     if store is None:
         if not args.state_db:
-            raise ValueError("state_db is required")
+            raise ValidationError("state_db is required")
         store = DirectoryStateStore(args.state_db)
         close_store = True
     if pinned_release is None:
-        raise ValueError("pinned_release is required")
+        raise ValidationError("pinned_release is required")
 
     try:
         plan = plan_directory(
@@ -47,6 +50,8 @@ def run_plan(
             pinned_release=pinned_release,
             canonicalize_display=canonicalize_display,
         )
+        plan_hash = hashlib.sha256(serialize_plan(plan).encode("utf-8")).hexdigest()
+        store.record_plan_summary(plan.dir_id, plan_hash, plan.plan_version)
     finally:
         if close_store:
             store.close()

@@ -1,0 +1,108 @@
+"""Integration tests for crash recovery behavior."""
+
+from __future__ import annotations
+
+from pathlib import Path
+import shutil
+
+from resonance.core.applier import ApplyStatus, apply_plan
+from resonance.core.identity.signature import dir_signature
+from resonance.core.planner import Plan, TrackOperation
+from resonance.core.state import DirectoryState
+from resonance.infrastructure.directory_store import DirectoryStateStore
+from tests.helpers.fs import AudioStubSpec, build_album_dir
+
+
+def _signature_hash(source_dir: Path) -> str:
+    audio_files = sorted(source_dir.glob("*.flac"))
+    return dir_signature(audio_files).signature_hash
+
+
+def _make_plan(source_dir: Path) -> Plan:
+    signature_hash = _signature_hash(source_dir)
+    operations = (
+        TrackOperation(
+            track_position=1,
+            source_path=source_dir / "01 - Track A.flac",
+            destination_path=Path("Artist/Album/01 - Track A.flac"),
+            track_title="Track A",
+        ),
+        TrackOperation(
+            track_position=2,
+            source_path=source_dir / "02 - Track B.flac",
+            destination_path=Path("Artist/Album/02 - Track B.flac"),
+            track_title="Track B",
+        ),
+    )
+    return Plan(
+        dir_id="dir-1",
+        source_path=source_dir,
+        signature_hash=signature_hash,
+        provider="musicbrainz",
+        release_id="mb-123",
+        release_title="Album",
+        release_artist="Artist",
+        destination_path=Path("Artist/Album"),
+        operations=operations,
+        non_audio_policy="MOVE_WITH_ALBUM",
+        plan_version="v1",
+        is_compilation=False,
+        compilation_reason=None,
+        is_classical=False,
+        conflict_policy="FAIL",
+    )
+
+
+def test_applier_crash_after_file_moves_before_db_commit(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    dest_root = tmp_path / "library"
+    dest_root.mkdir(parents=True, exist_ok=True)
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        for op in plan.operations:
+            dest = dest_root / op.destination_path
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(op.source_path), str(dest))
+            sidecar = op.source_path.with_suffix(op.source_path.suffix + ".meta.json")
+            if sidecar.exists():
+                shutil.move(
+                    str(sidecar),
+                    str(dest.with_suffix(dest.suffix + ".meta.json")),
+                )
+
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(dest_root,),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.NOOP_ALREADY_APPLIED
+        updated = store.get(plan.dir_id)
+        assert updated is not None
+        assert updated.state == DirectoryState.APPLIED
+    finally:
+        store.close()

@@ -68,6 +68,13 @@ class Plan:
     compilation_reason: Optional[str] = None
     is_classical: bool = False
     conflict_policy: str = "FAIL"
+    settings_hash: Optional[str] = None
+
+    @classmethod
+    def from_json(cls, path: Path, *, allowed_roots: tuple[Path, ...]) -> "Plan":
+        from resonance.core.artifacts import load_plan
+
+        return load_plan(path, allowed_roots=allowed_roots)
 
 
 def sanitize_filename(name: str) -> str:
@@ -82,6 +89,10 @@ def sanitize_filename(name: str) -> str:
     collapsed = " ".join("".join(cleaned).split())
     if not collapsed:
         collapsed = "_"
+    if len(collapsed) > 200:
+        collapsed = collapsed[:200].rstrip()
+        if not collapsed:
+            collapsed = "_"
     reserved = {
         "CON",
         "PRN",
@@ -164,18 +175,21 @@ def _compute_destination_path(
     def display(value: str, category: str) -> str:
         return canonicalize_display(value, category)
 
+    def sanitize(component: str) -> str:
+        return sanitize_filename(component)
+
     if is_compilation:
         # Compilation: Various Artists/Album
-        return Path("Various Artists") / release.title
+        return Path(sanitize("Various Artists")) / sanitize(release.title)
 
     if is_classical:
         composer = _classical_composer(release)
         if composer:
-            return Path(display(composer, "composer")) / release.title
-        return Path(display(release.artist, "performer")) / release.title
+            return Path(sanitize(display(composer, "composer"))) / sanitize(release.title)
+        return Path(sanitize(display(release.artist, "performer"))) / sanitize(release.title)
 
     # Regular album: Artist/Album
-    return Path(display(release.artist, "artist")) / release.title
+    return Path(sanitize(display(release.artist, "artist"))) / sanitize(release.title)
 
 
 def plan_directory(
@@ -184,6 +198,8 @@ def plan_directory(
     pinned_release: ProviderRelease,
     non_audio_policy: str = "MOVE_WITH_ALBUM",
     canonicalize_display=None,
+    settings_hash: Optional[str] = None,
+    source_files: Optional[list[Path]] = None,
 ) -> Plan:
     """Generate a deterministic plan for a resolved directory.
 
@@ -224,17 +240,29 @@ def plan_directory(
         pinned_release, is_compilation, is_classical, canonicalize_display
     )
 
-    # Generate operations (placeholder - would need actual source file paths)
-    # For now, just create deterministic ordering based on track positions
+    ordered_tracks = sorted(pinned_release.tracks, key=lambda t: t.position)
+    ordered_sources: list[Path] = []
+    if source_files is not None:
+        ordered_sources = sorted(source_files)
+        if len(ordered_sources) != len(ordered_tracks):
+            raise ValueError(
+                "Source file count does not match release track count"
+            )
+
+    # Generate operations with deterministic ordering
     operations = tuple(
         TrackOperation(
             track_position=track.position,
-            source_path=Path(f"placeholder_{track.position}.flac"),
+            source_path=(
+                ordered_sources[index]
+                if source_files is not None
+                else Path(f"placeholder_{track.position}.flac")
+            ),
             destination_path=destination_path
             / f"{track.position:02d} - {sanitize_filename(track.title)}.flac",
             track_title=track.title,
         )
-        for track in sorted(pinned_release.tracks, key=lambda t: t.position)
+        for index, track in enumerate(ordered_tracks)
     )
 
     return Plan(
@@ -252,4 +280,5 @@ def plan_directory(
         compilation_reason=compilation_reason,
         is_classical=is_classical,
         conflict_policy="FAIL",
+        settings_hash=settings_hash,
     )

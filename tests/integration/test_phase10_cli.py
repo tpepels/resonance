@@ -446,7 +446,7 @@ def test_prompt_accepts_manual_id(tmp_path: Path) -> None:
 def test_unjail_resets_to_new(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", tmp_path / "album", "sig-1")
+        record = store.get_or_create("dir-1", tmp_path / "album", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.JAILED)
 
         unjail_cmd = importlib.import_module("resonance.commands.unjail")

@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist C/Extras Album/01 - Track A.flac",
+      "tags": {
+        "album": "Extras Album",
+        "albumartist": "Artist C",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "82530fb160565ff28c57c4c723d3648042fdef612278aa5ee14f7c17fdaffbf3",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-extra-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist C/Extras Album/02 - Track B.flac",
+      "tags": {
+        "album": "Extras Album",
+        "albumartist": "Artist C",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "82530fb160565ff28c57c4c723d3648042fdef612278aa5ee14f7c17fdaffbf3",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-extra-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track B",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

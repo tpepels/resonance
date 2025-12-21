@@ -51,7 +51,7 @@ def test_planner_refuses_new_state(tmp_path: Path):
     """Planner must refuse to generate plan for NEW directories."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         assert record.state == DirectoryState.NEW
 
         from resonance.core.planner import plan_directory
@@ -71,7 +71,7 @@ def test_planner_refuses_queued_prompt(tmp_path: Path):
     """Planner must refuse to generate plan for QUEUED_PROMPT directories."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
         from resonance.core.planner import plan_directory
@@ -90,7 +90,7 @@ def test_planner_accepts_resolved_auto(tmp_path: Path):
     """Planner must accept RESOLVED_AUTO directories with pinned release."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -126,7 +126,7 @@ def test_planner_accepts_resolved_user(tmp_path: Path):
     """Planner must accept RESOLVED_USER directories with pinned release."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_USER,
@@ -165,7 +165,7 @@ def test_plan_is_byte_identical_for_same_inputs(tmp_path: Path):
     """Plan must be byte-identical when inputs are identical."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -207,7 +207,7 @@ def test_plan_path_regular_album(tmp_path: Path):
     """Regular album should use Artist/Album path."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -240,7 +240,7 @@ def test_plan_path_compilation(tmp_path: Path):
     """Compilation should use Various Artists/Album path."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -277,7 +277,7 @@ def test_plan_path_classical_single_composer(tmp_path: Path):
     """Classical single-composer release should use Composer/Album path."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -310,7 +310,7 @@ def test_plan_path_classical_mixed_composer(tmp_path: Path):
     """Classical mixed-composer release should use PerformerOrAlbumArtist/Album path."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -343,7 +343,7 @@ def test_plan_path_canonicalization_applies_to_folder_display_only(tmp_path: Pat
     """Planner should canonicalize folder display names without changing pinned metadata."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -383,7 +383,7 @@ def test_plan_path_not_compilation_for_non_allowlist_artist(tmp_path: Path):
     """Non-allowlist artist should not be treated as compilation."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -420,7 +420,7 @@ def test_plan_non_audio_policy_defaults_to_move_with_album(tmp_path: Path):
     """Plan should default non-audio policy to MOVE_WITH_ALBUM."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -456,7 +456,7 @@ def test_plan_operations_have_stable_ordering(tmp_path: Path):
     """Plan operations should be in stable, deterministic order."""
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -522,7 +522,7 @@ def test_sanitize_filename_handles_reserved_names() -> None:
 def test_plan_conflict_policy_default_is_fail(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,

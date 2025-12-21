@@ -40,7 +40,7 @@ def test_prompt_outputs_tracks_and_candidates_with_scores(tmp_path: Path) -> Non
         _write_audio(album_dir / "01 - Track A.flac")
         _write_audio(album_dir / "02 - Track B.flac")
 
-        record = store.get_or_create("dir-1", album_dir, "sig-1")
+        record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
         release = ProviderRelease(
@@ -93,7 +93,7 @@ def test_prompt_supports_jail_decision(tmp_path: Path) -> None:
     try:
         album_dir = tmp_path / "album"
         _write_audio(album_dir / "01 - Track A.flac")
-        record = store.get_or_create("dir-1", album_dir, "sig-1")
+        record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
         provider = StubProviderClient([])
@@ -125,5 +125,82 @@ def test_prompt_supports_jail_decision(tmp_path: Path) -> None:
         assert updated is not None
         assert updated.state == DirectoryState.JAILED
         assert any("Jail this directory" in line for line in output)
+    finally:
+        store.close()
+
+
+def test_prompt_orders_candidates_and_options_stably(tmp_path: Path) -> None:
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        album_dir = tmp_path / "album"
+        _write_audio(album_dir / "02 - Track B.flac")
+        _write_audio(album_dir / "01 - Track A.flac")
+
+        record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
+
+        releases = [
+            ProviderRelease(
+                provider="musicbrainz",
+                release_id="mb-2",
+                title="Album",
+                artist="Artist",
+                tracks=(
+                    ProviderTrack(position=1, title="Track A", duration_seconds=100),
+                    ProviderTrack(position=2, title="Track B", duration_seconds=100),
+                ),
+            ),
+            ProviderRelease(
+                provider="discogs",
+                release_id="dg-1",
+                title="Album",
+                artist="Artist",
+                tracks=(
+                    ProviderTrack(position=1, title="Track A", duration_seconds=100),
+                    ProviderTrack(position=2, title="Track B", duration_seconds=100),
+                ),
+            ),
+        ]
+        provider = StubProviderClient(releases)
+
+        def evidence_builder(_files: list[Path]) -> DirectoryEvidence:
+            tracks = (
+                TrackEvidence(fingerprint_id=None, duration_seconds=100, existing_tags={}),
+                TrackEvidence(fingerprint_id=None, duration_seconds=100, existing_tags={}),
+            )
+            return DirectoryEvidence(
+                tracks=tracks,
+                track_count=2,
+                total_duration_seconds=200,
+            )
+
+        output: list[str] = []
+
+        def sink(line: str) -> None:
+            output.append(line)
+
+        run_prompt_uncertain(
+            store=store,
+            provider_client=provider,
+            input_provider=lambda _prompt: "",
+            output_sink=sink,
+            evidence_builder=evidence_builder,
+        )
+
+        candidate_lines = [line for line in output if line.startswith("[")]
+        assert candidate_lines == [
+            "[1] discogs:dg-1 Artist - Album score=0.40 coverage=0.00",
+            "[2] musicbrainz:mb-2 Artist - Album score=0.40 coverage=0.00",
+        ]
+
+        options_block = output[output.index("Options:") :]
+        assert options_block[:6] == [
+            "Options:",
+            "  [1..N] Select a release from the list",
+            "  [mb:ID] Provide MusicBrainz release ID",
+            "  [dg:ID] Provide Discogs release ID",
+            "  [s] Jail this directory",
+            "  [enter] Skip for now",
+        ]
     finally:
         store.close()

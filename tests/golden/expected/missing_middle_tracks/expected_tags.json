@@ -1,0 +1,68 @@
+{
+  "tracks": [
+    {
+      "path": "Artist G/Gapped Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Gapped Album",
+        "albumartist": "Artist G",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "fec8565d4cd5b7246be84bf90052dcafd47fcf3f4c7bf61f932f404c1f684b83",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-gap-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist G/Gapped Album/02 - Track 2.flac",
+      "tags": {
+        "album": "Gapped Album",
+        "albumartist": "Artist G",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "fec8565d4cd5b7246be84bf90052dcafd47fcf3f4c7bf61f932f404c1f684b83",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-gap-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    },
+    {
+      "path": "Artist G/Gapped Album/05 - Track 5.flac",
+      "tags": {
+        "album": "Gapped Album",
+        "albumartist": "Artist G",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "fec8565d4cd5b7246be84bf90052dcafd47fcf3f4c7bf61f932f404c1f684b83",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-gap-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 5",
+        "tracknumber": "5"
+      }
+    },
+    {
+      "path": "Artist G/Gapped Album/06 - Track 6.flac",
+      "tags": {
+        "album": "Gapped Album",
+        "albumartist": "Artist G",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "fec8565d4cd5b7246be84bf90052dcafd47fcf3f4c7bf61f932f404c1f684b83",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-gap-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 6",
+        "tracknumber": "6"
+      }
+    }
+  ]
+}

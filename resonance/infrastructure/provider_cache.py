@@ -12,7 +12,7 @@ def canonical_json(payload: Any) -> str:
         if isinstance(value, dict):
             return {k: normalize(value[k]) for k in sorted(value)}
         if isinstance(value, list):
-            return [normalize(item) for item in sorted(value)]
+            return [normalize(item) for item in value]
         return value
 
     normalized = normalize(payload)

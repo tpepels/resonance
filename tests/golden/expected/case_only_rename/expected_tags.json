@@ -1,0 +1,20 @@
+{
+  "tracks": [
+    {
+      "path": "Artist H/Case Album/01 - Track A.flac",
+      "tags": {
+        "album": "Case Album",
+        "albumartist": "Artist H",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "c1fe501dd8aa684f337b31dbad0cd21edd2ba7ca9f2b4bf1c1e782ecd4f78f06",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-case-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track A",
+        "tracknumber": "1"
+      }
+    }
+  ]
+}

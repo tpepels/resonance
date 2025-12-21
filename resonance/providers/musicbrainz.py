@@ -37,6 +37,9 @@ except ModuleNotFoundError:
 from ..core.heuristics import PathGuess, guess_metadata_from_path
 from ..core.models import TrackInfo
 from ..infrastructure.cache import MetadataCache
+from .. import __version__ as RESONANCE_VERSION
+
+_CACHE_VERSION = "v1"
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +216,7 @@ class MusicBrainzClient:
         cache: Optional[MetadataCache] = None,
         network_retries: int = 1,
         retry_backoff: float = 0.5,
+        offline: bool = False,
     ) -> None:
         """Initialize the client.
 
@@ -227,6 +231,7 @@ class MusicBrainzClient:
         self.cache = cache
         self.network_retries = network_retries
         self.retry_backoff = retry_backoff
+        self.offline = offline
         self.release_tracker = ReleaseTracker()
         self._network_disabled_until: float = 0.0
         self._last_network_warning: float = 0.0
@@ -536,7 +541,11 @@ class MusicBrainzClient:
             return None
 
         if self.cache:
-            cached = self.cache.get_mb_recording(recording_id)
+            cached = self.cache.get_mb_recording(
+                recording_id,
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
             if cached:
                 return cached
 
@@ -548,7 +557,12 @@ class MusicBrainzClient:
             path,
         )
         if recording and self.cache:
-            self.cache.set_mb_recording(recording_id, recording)
+            self.cache.set_mb_recording(
+                recording_id,
+                recording,
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
         return recording
 
     def _fetch_release_tracks(self, release_id: str) -> Optional[ReleaseData]:
@@ -557,7 +571,11 @@ class MusicBrainzClient:
             return None
 
         if self.cache:
-            cached = self.cache.get_mb_release(release_id)
+            cached = self.cache.get_mb_release(
+                release_id,
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
             if cached:
                 return self._build_release_data(cached)
 
@@ -572,7 +590,12 @@ class MusicBrainzClient:
             return None
 
         if self.cache:
-            self.cache.set_mb_release(release_id, release)
+            self.cache.set_mb_release(
+                release_id,
+                release,
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
         return self._build_release_data(release)
 
     def _build_release_data(self, release: dict) -> ReleaseData:
@@ -681,6 +704,8 @@ class MusicBrainzClient:
 
     def _run_with_retries(self, fn, label: str, path: Path):
         """Run function with retry logic."""
+        if self.offline:
+            return None
         last_exc = None
         for attempt in range(max(1, 1 + self.network_retries)):
             try:

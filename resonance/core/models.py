@@ -116,6 +116,11 @@ class AlbumInfo:
     # Extra data for processing (e.g., release candidates)
     extra: dict[str, Any] = field(default_factory=dict)
 
+    # Cached destination path (computed once)
+    _cached_destination_path: Optional[Path] = field(
+        default=None, init=False, repr=False
+    )
+
     @property
     def is_classical(self) -> bool:
         """Check if this album appears to be classical music."""
@@ -133,7 +138,11 @@ class AlbumInfo:
         """Normalize a path component by stripping whitespace."""
         if not value:
             return None
-        return value.strip() if value.strip() else None
+        cleaned = value.strip()
+        if not cleaned:
+            return None
+        cleaned = cleaned.replace("/", "-").replace("\\", "-")
+        return cleaned
 
     @property
     def destination_path(self) -> Optional[Path]:
@@ -147,6 +156,9 @@ class AlbumInfo:
         - Classical compilation: Various Artists/Album
         - Regular music: Artist/Album
         """
+        if self._cached_destination_path is not None:
+            return self._cached_destination_path
+
         # Normalize all components
         composer = self._normalize_path_component(self.canonical_composer)
         performer = self._normalize_path_component(self.canonical_performer)
@@ -158,32 +170,39 @@ class AlbumInfo:
             if composer:
                 if album and performer:
                     # Composer/Work/Performer (e.g., Bach/Goldberg Variations/Glenn Gould)
-                    return Path(composer) / album / performer
+                    self._cached_destination_path = Path(composer) / album / performer
+                    return self._cached_destination_path
                 elif album:
                     # Composer/Work (no specific performer credited)
-                    return Path(composer) / album
+                    self._cached_destination_path = Path(composer) / album
+                    return self._cached_destination_path
                 else:
                     # Just composer root (no album means we can't organize further)
-                    return Path(composer)
+                    self._cached_destination_path = Path(composer)
+                    return self._cached_destination_path
 
             # Case 2: No single composer (compilations, multi-composer albums)
             else:
                 if performer and album:
                     # Performer/Album (e.g., Berlin Philharmonic/Greatest Symphonies)
-                    return Path(performer) / album
+                    self._cached_destination_path = Path(performer) / album
+                    return self._cached_destination_path
                 elif performer:
                     # Just performer (rare)
-                    return Path(performer)
+                    self._cached_destination_path = Path(performer)
+                    return self._cached_destination_path
                 elif album:
                     # Various Artists/Album (compilation)
-                    return Path("Various Artists") / album
+                    self._cached_destination_path = Path("Various Artists") / album
+                    return self._cached_destination_path
                 else:
                     # Cannot organize
                     return None
         else:
             # Regular music: Artist/Album
             if artist and album:
-                return Path(artist) / album
+                self._cached_destination_path = Path(artist) / album
+                return self._cached_destination_path
             else:
                 return None
 

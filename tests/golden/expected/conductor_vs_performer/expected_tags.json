@@ -1,0 +1,20 @@
+{
+  "tracks": [
+    {
+      "path": "Wolfgang Amadeus Mozart/Mozart Piano Concertos/01 - Piano Concerto No. 21 in C Major, K. 467 I. Allegro maestoso.flac",
+      "tags": {
+        "album": "Mozart Piano Concertos",
+        "albumartist": "English Chamber Orchestra",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "dcdfe4d66ac17bf994fb353c29daef24c60dd4897f0b62418e5bc4f439bc5879",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-cvp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Concerto No. 21 in C Major, K. 467: I. Allegro maestoso",
+        "tracknumber": "1"
+      }
+    }
+  ]
+}

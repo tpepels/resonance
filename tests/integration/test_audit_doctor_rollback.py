@@ -17,7 +17,7 @@ def _make_store(tmp_path: Path) -> DirectoryStateStore:
 def test_audit_reports_core_fields(tmp_path: Path) -> None:
     store = _make_store(tmp_path)
     try:
-        record = store.get_or_create("dir-1", tmp_path / "album", "sig-1")
+        record = store.get_or_create("dir-1", tmp_path / "album", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -30,7 +30,7 @@ def test_audit_reports_core_fields(tmp_path: Path) -> None:
         report = run_audit(store=store, dir_id=record.dir_id)
         assert report["dir_id"] == "dir-1"
         assert report["state"] == DirectoryState.RESOLVED_AUTO.value
-        assert report["signature_hash"] == "sig-1"
+        assert report["signature_hash"] == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         assert report["pinned_release_id"] == "mb-123"
     finally:
         store.close()
@@ -39,7 +39,7 @@ def test_audit_reports_core_fields(tmp_path: Path) -> None:
 def test_doctor_detects_missing_dir(tmp_path: Path) -> None:
     store = _make_store(tmp_path)
     try:
-        record = store.get_or_create("dir-1", tmp_path / "album", "sig-1")
+        record = store.get_or_create("dir-1", tmp_path / "album", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.PLANNED,
@@ -52,6 +52,19 @@ def test_doctor_detects_missing_dir(tmp_path: Path) -> None:
         result = run_doctor(store=store)
         issues = result["issues"]
         assert any(issue["dir_id"] == "dir-1" for issue in issues)
+    finally:
+        store.close()
+
+
+def test_doctor_reports_missing_config(tmp_path: Path) -> None:
+    store = _make_store(tmp_path)
+    try:
+        from resonance.commands.doctor import run_doctor
+
+        config_path = tmp_path / "settings.json"
+        result = run_doctor(store=store, config_path=config_path)
+        issues = result["issues"]
+        assert any(issue["issue"] == "missing_config" for issue in issues)
     finally:
         store.close()
 
@@ -85,6 +98,7 @@ def test_rollback_reverts_applied_move(tmp_path: Path) -> None:
             ),
             tag_ops=(),
             errors=(),
+            warnings=(),
             rollback_attempted=False,
             rollback_success=False,
         )
@@ -106,7 +120,7 @@ def test_rollback_reverts_applied_move(tmp_path: Path) -> None:
 def test_audit_includes_tag_errors(tmp_path: Path) -> None:
     store = _make_store(tmp_path)
     try:
-        record = store.get_or_create("dir-1", tmp_path / "album", "sig-1")
+        record = store.get_or_create("dir-1", tmp_path / "album", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.FAILED,
@@ -122,6 +136,7 @@ def test_audit_includes_tag_errors(tmp_path: Path) -> None:
             file_ops=(),
             tag_ops=(),
             errors=("Tag write failed for /tmp/file.flac: boom",),
+            warnings=(),
             rollback_attempted=False,
             rollback_success=False,
         )
@@ -174,6 +189,7 @@ def test_rollback_restores_tag_snapshot(tmp_path: Path) -> None:
                 ),
             ),
             errors=(),
+            warnings=(),
             rollback_attempted=True,
             rollback_success=False,
         )

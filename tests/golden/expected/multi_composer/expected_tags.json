@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Orchestra A/Classical Mix/01 - Symphony Movement.flac",
+      "tags": {
+        "album": "Classical Mix",
+        "albumartist": "Orchestra A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "4f52ae6e29dd9f7d2994d1ace26eb0bb89f860e278ccedf265224f92a790d49d",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-mc-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Symphony Movement",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Orchestra A/Classical Mix/02 - Concerto Movement.flac",
+      "tags": {
+        "album": "Classical Mix",
+        "albumartist": "Orchestra A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "4f52ae6e29dd9f7d2994d1ace26eb0bb89f860e278ccedf265224f92a790d49d",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-mc-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Concerto Movement",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

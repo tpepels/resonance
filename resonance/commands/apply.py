@@ -7,6 +7,7 @@ from argparse import Namespace
 from pathlib import Path
 
 from resonance.commands.output import emit_output
+from resonance.errors import ValidationError
 from resonance.core.applier import ApplyReport, ApplyStatus, apply_plan
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.services.tag_writer import get_tag_writer
@@ -47,7 +48,7 @@ def run_apply(
             output_sink=output_sink,
             human_lines=("apply: missing --plan",),
         )
-        return 2
+        raise ValidationError("apply requires --plan")
     if not args.state_db:
         emit_output(
             command="apply",
@@ -56,7 +57,7 @@ def run_apply(
             output_sink=output_sink,
             human_lines=("apply: missing --state-db",),
         )
-        return 2
+        raise ValidationError("apply requires --state-db")
     if not json_output:
         output_sink(f"Using tag writer backend: {backend}")
     result = apply_fn(tag_writer=writer, backend=backend)
@@ -72,6 +73,7 @@ def run_apply(
                     "plan_version": result.plan_version,
                     "tagpatch_version": result.tagpatch_version,
                     "errors": list(result.errors),
+                    "warnings": list(result.warnings),
                 }
             )
         emit_output(

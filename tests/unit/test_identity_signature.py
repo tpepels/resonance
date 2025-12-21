@@ -29,6 +29,7 @@ def test_dir_signature_order_independent(album_dir_factory):
     sig2 = dir_signature(list(reversed(album.audio_files)))
 
     assert sig1.signature_hash == sig2.signature_hash
+    assert sig1.signature_version == 1
 
 
 def test_dir_signature_ignores_mtime(album_dir_factory):
@@ -230,7 +231,7 @@ def test_dir_id_changes_when_audio_set_changes_even_if_dir_signature_object_same
 def test_signature_change_triggers_identify(tmp_path: Path):
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", Path("/music/album"), "sig-1")
+        record = store.get_or_create("dir-1", Path("/music/album"), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -238,7 +239,7 @@ def test_signature_change_triggers_identify(tmp_path: Path):
             pinned_release_id="mb-old",
         )
 
-        updated = store.get_or_create("dir-1", Path("/music/album"), "sig-2")
+        updated = store.get_or_create("dir-1", Path("/music/album"), "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
         assert updated.state == DirectoryState.NEW
         assert updated.pinned_release_id is None
 
@@ -257,7 +258,7 @@ def test_signature_change_triggers_identify(tmp_path: Path):
         outcome = resolve_directory(
             dir_id="dir-1",
             path=Path("/music/album"),
-            signature_hash="sig-2",
+            signature_hash="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
             evidence=DirectoryEvidence(
                 tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
                 track_count=1,

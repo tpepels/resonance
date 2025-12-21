@@ -11,9 +11,15 @@ import pytest
 
 from resonance.app import ResonanceApp
 from resonance.core.models import AlbumInfo
+from resonance.core.models import TrackInfo
 from resonance.core.identity.matching import normalize_token
+from resonance.providers.musicbrainz import MusicBrainzClient
+from resonance.services.file_service import FileService
+from resonance.visitors.organize import OrganizeVisitor
 from dataclasses import dataclass
 from pathlib import Path
+
+from tests.helpers.paths import sanitized_dir
 
 
 @dataclass
@@ -70,8 +76,7 @@ class TestArtistNameVariants:
         - Normalization produces deterministic keys
         - Canonicalization only unifies when mappings exist
         """
-        input_dir = test_library / "bjork_homogenic"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "bjork_homogenic")
 
         tracks = [
             {
@@ -118,11 +123,56 @@ class TestArtistNameVariants:
             tokens = {normalize_token(v) for v in variants}
 
             assert "bjork" in tokens
-            assert "bjorkgudmundsdottir" in tokens
+            assert "bjorkgumundsdottir" in tokens
             assert len(tokens) == 2
 
         finally:
             app.close()
+
+    def test_artist_variant_paths_are_sanitized_on_organize(
+        self,
+        create_test_audio_file,
+        test_library,
+    ) -> None:
+        cases = [
+            ("AC/DC", "AC-DC"),
+            ("AC／DC", "AC／DC"),
+            ("Björk", "Björk"),
+        ]
+
+        for artist, expected_dir in cases:
+            input_dir = sanitized_dir(test_library, f"variant_{artist}")
+            track_path = input_dir / "01 - Track A.flac"
+            create_test_audio_file(
+                path=track_path,
+                title="Track A",
+                artist=artist,
+                album="Album",
+                track_number=1,
+            )
+
+            album = AlbumInfo(directory=input_dir)
+            album.tracks = [
+                TrackInfo(
+                    path=track_path,
+                    title="Track A",
+                    duration_seconds=180,
+                )
+            ]
+            album.total_tracks = 1
+            album.canonical_artist = artist
+            album.canonical_album = "Album"
+
+            organizer = OrganizeVisitor(
+                file_service=FileService(test_library, dry_run=False),
+                use_transactions=False,
+            )
+            assert organizer.visit(album) is True
+            assert album.directory.parts[-3:] == (
+                test_library.name,
+                expected_dir,
+                "Album",
+            )
 
     def test_the_beatles_variants(
         self,
@@ -138,8 +188,7 @@ class TestArtistNameVariants:
         Expected:
         - Normalized tokens remain distinct (no reordering)
         """
-        input_dir = test_library / "beatles_abbeyroad"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "beatles_abbeyroad")
 
         tracks = [
             {
@@ -204,7 +253,7 @@ class TestArtistNameVariants:
             with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                 from resonance.visitors import IdentifyVisitor
 
-                mock_mb = MagicMock()
+                mock_mb = MagicMock(spec_set=MusicBrainzClient)
                 identify_visitor = IdentifyVisitor(
                     musicbrainz=mock_mb,
                     canonicalizer=app.canonicalizer,
@@ -367,8 +416,7 @@ class TestArtistNameVariants:
         This is foundational: it prevents you from accidentally trying to make
         normalize_token do "display decisions".
         """
-        input_dir = test_library / "canonicalizer_mapping_artist"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "canonicalizer_mapping_artist")
 
         tracks = [
             {"filename": "01.flac", "title": "t1", "artist": "Bjork", "album": "Homogenic", "track_number": 1},
@@ -420,7 +468,7 @@ class TestArtistNameVariants:
             with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                 from resonance.visitors import IdentifyVisitor
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=canonicalizer,  # override app canonicalizer with mapped one
                     cache=app.cache,
                     release_search=None,
@@ -446,8 +494,7 @@ class TestArtistNameVariants:
         - Folder identity: canonical artist excludes featuring.
         - Track tags: raw artist strings preserved (until Enricher policy decides otherwise).
         """
-        input_dir = test_library / "feat_strip_canonical_only"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "feat_strip_canonical_only")
 
         tracks = [
             {"filename": "01.flac", "title": "t1", "artist": "Daft Punk", "album": "RAM", "track_number": 1},
@@ -487,7 +534,7 @@ class TestArtistNameVariants:
             with patch("resonance.services.metadata_reader.MetadataReader.read_track", mock_read_track):
                 from resonance.visitors import IdentifyVisitor
                 identify = IdentifyVisitor(
-                    musicbrainz=MagicMock(),
+                    musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                     canonicalizer=app.canonicalizer,
                     cache=app.cache,
                     release_search=None,

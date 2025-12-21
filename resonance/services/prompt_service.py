@@ -78,40 +78,39 @@ class PromptService:
         print("  [dg:ID] Provide Discogs release ID")
         print("  [enter] Skip for now (will prompt again)")
 
-        # Get user input
-        try:
-            response = input("\nYour choice: ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print()  # Newline after ^C/^D
-            raise UserSkippedError("User interrupted")
+        while True:
+            try:
+                response = input("\nYour choice: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print()  # Newline after ^C/^D
+                raise UserSkippedError("User interrupted")
 
-        # Parse response
-        if response == 's':
-            raise UserSkippedError("User chose to skip")
+            if not response:
+                continue
 
-        # Check if user selected a number from the list
-        if response.isdigit():
-            choice = int(response)
-            if 1 <= choice <= min(5, len(candidates)):
-                selected = candidates[choice - 1]
-                print(f"Selected: {selected.artist} - {selected.title}")
-                return (selected.provider, selected.release_id)
-            else:
+            normalized = response.lower()
+            if normalized in {"s", "skip"}:
+                raise UserSkippedError("User chose to skip")
+
+            # Check if user selected a number from the list
+            if normalized.isdigit():
+                choice = int(normalized)
+                if 1 <= choice <= min(5, len(candidates)):
+                    selected = candidates[choice - 1]
+                    print(f"Selected: {selected.artist} - {selected.title}")
+                    return (selected.provider, selected.release_id)
                 print(f"Invalid choice: {choice}")
-                return None
+                continue
 
-        if response.startswith('mb:'):
-            release_id = response[3:].strip()
-            if release_id:
-                return ("musicbrainz", release_id)
+            if normalized.startswith('mb:'):
+                release_id = normalized[3:].strip()
+                if release_id:
+                    return ("musicbrainz", release_id)
 
-        if response.startswith('dg:'):
-            release_id = response[3:].strip()
-            if release_id:
-                return ("discogs", release_id)
-
-        # Empty or unrecognized - skip for now
-        return None
+            if normalized.startswith('dg:'):
+                release_id = normalized[3:].strip()
+                if release_id:
+                    return ("discogs", release_id)
 
     def show_preview(self, album: AlbumInfo) -> None:
         """Show detailed preview of album."""

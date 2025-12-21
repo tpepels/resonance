@@ -8,11 +8,14 @@ Contract: Scanner is discovery-only and produces DirectoryInfo with:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+import pytest
 
 from resonance.core.identity import dir_signature, dir_id
 from resonance.infrastructure.scanner import LibraryScanner
-from tests.helpers.fs import AudioStubSpec, build_album_dir, create_non_audio_stub
+from tests.helpers.fs import AudioStubSpec, build_album_dir, create_audio_stub, create_non_audio_stub
 
 
 def _build_specs(prefix: str) -> list[AudioStubSpec]:
@@ -131,3 +134,62 @@ def test_iter_directories_ignores_non_audio_only_dirs(tmp_path: Path) -> None:
     dirs = list(scanner.iter_directories())
     assert len(dirs) == 1
     assert dirs[0].directory == fixture.path
+
+
+def test_scanner_same_dir_no_changes_has_same_dir_id(tmp_path: Path) -> None:
+    fixture = build_album_dir(tmp_path, "album", _build_specs("x"))
+    scanner = LibraryScanner(roots=[tmp_path])
+    first = scanner.collect_directory(fixture.path)
+    second = scanner.collect_directory(fixture.path)
+    assert first is not None
+    assert second is not None
+    assert first.dir_id == second.dir_id
+
+
+def test_scanner_audio_change_updates_dir_id(tmp_path: Path) -> None:
+    fixture = build_album_dir(tmp_path, "album", _build_specs("x"))
+    scanner = LibraryScanner(roots=[tmp_path])
+    batch1 = scanner.collect_directory(fixture.path)
+    assert batch1 is not None
+
+    create_audio_stub(
+        fixture.path / "new.flac",
+        AudioStubSpec("new.flac", "fp-new", duration_seconds=111),
+    )
+    batch2 = scanner.collect_directory(fixture.path)
+    assert batch2 is not None
+    assert batch2.dir_id != batch1.dir_id
+
+
+def test_scanner_skips_symlinked_files(tmp_path: Path) -> None:
+    if not hasattr(os, "symlink"):
+        pytest.skip("symlinks not supported")
+
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    target = target_dir / "target.flac"
+    target.write_text("stub")
+    link = tmp_path / "link.flac"
+    try:
+        os.symlink(target, link)
+    except OSError:
+        pytest.skip("symlink creation not permitted")
+
+    scanner = LibraryScanner(roots=[tmp_path])
+    assert scanner.collect_directory(tmp_path) is None
+
+
+def test_scanner_does_not_follow_symlink_dirs(tmp_path: Path) -> None:
+    if not hasattr(os, "symlink"):
+        pytest.skip("symlinks not supported")
+
+    real_dir = build_album_dir(tmp_path, "real", _build_specs("x"))
+    link_dir = tmp_path / "link_dir"
+    try:
+        os.symlink(real_dir.path, link_dir, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink creation not permitted")
+
+    scanner = LibraryScanner(roots=[tmp_path])
+    dirs = [batch.directory.name for batch in scanner.iter_directories()]
+    assert dirs == ["real"]

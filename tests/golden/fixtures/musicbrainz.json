@@ -1,0 +1,263 @@
+{
+  "standard_album": [
+    {
+      "release_id": "mb-std-1",
+      "title": "Standard Album",
+      "artist": "Artist A",
+      "year": 2020,
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 181, "fingerprint_id": "fp-std-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 182, "fingerprint_id": "fp-std-02"},
+        {"position": 3, "title": "Track 3", "duration_seconds": 183, "fingerprint_id": "fp-std-03"},
+        {"position": 4, "title": "Track 4", "duration_seconds": 184, "fingerprint_id": "fp-std-04"},
+        {"position": 5, "title": "Track 5", "duration_seconds": 185, "fingerprint_id": "fp-std-05"},
+        {"position": 6, "title": "Track 6", "duration_seconds": 186, "fingerprint_id": "fp-std-06"},
+        {"position": 7, "title": "Track 7", "duration_seconds": 187, "fingerprint_id": "fp-std-07"},
+        {"position": 8, "title": "Track 8", "duration_seconds": 188, "fingerprint_id": "fp-std-08"},
+        {"position": 9, "title": "Track 9", "duration_seconds": 189, "fingerprint_id": "fp-std-09"},
+        {"position": 10, "title": "Track 10", "duration_seconds": 190, "fingerprint_id": "fp-std-10"}
+      ]
+    }
+  ],
+  "multi_disc": [
+    {
+      "release_id": "mb-md-1",
+      "title": "Multi Disc Album",
+      "artist": "Artist B",
+      "year": 2019,
+      "tracks": [
+        {"position": 1, "title": "Track 1-1", "duration_seconds": 201, "fingerprint_id": "fp-md-1-01"},
+        {"position": 2, "title": "Track 1-2", "duration_seconds": 202, "fingerprint_id": "fp-md-1-02"},
+        {"position": 3, "title": "Track 1-3", "duration_seconds": 203, "fingerprint_id": "fp-md-1-03"},
+        {"position": 4, "title": "Track 1-4", "duration_seconds": 204, "fingerprint_id": "fp-md-1-04"},
+        {"position": 5, "title": "Track 1-5", "duration_seconds": 205, "fingerprint_id": "fp-md-1-05"},
+        {"position": 6, "title": "Track 2-1", "duration_seconds": 201, "fingerprint_id": "fp-md-2-01"},
+        {"position": 7, "title": "Track 2-2", "duration_seconds": 202, "fingerprint_id": "fp-md-2-02"},
+        {"position": 8, "title": "Track 2-3", "duration_seconds": 203, "fingerprint_id": "fp-md-2-03"},
+        {"position": 9, "title": "Track 2-4", "duration_seconds": 204, "fingerprint_id": "fp-md-2-04"},
+        {"position": 10, "title": "Track 2-5", "duration_seconds": 205, "fingerprint_id": "fp-md-2-05"}
+      ]
+    }
+  ],
+  "compilation": [
+    {
+      "release_id": "mb-comp-1",
+      "title": "Compilation Album",
+      "artist": "Various Artists",
+      "year": 2005,
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 171, "fingerprint_id": "fp-comp-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 172, "fingerprint_id": "fp-comp-02"},
+        {"position": 3, "title": "Track 3", "duration_seconds": 173, "fingerprint_id": "fp-comp-03"},
+        {"position": 4, "title": "Track 4", "duration_seconds": 174, "fingerprint_id": "fp-comp-04"},
+        {"position": 5, "title": "Track 5", "duration_seconds": 175, "fingerprint_id": "fp-comp-05"},
+        {"position": 6, "title": "Track 6", "duration_seconds": 176, "fingerprint_id": "fp-comp-06"},
+        {"position": 7, "title": "Track 7", "duration_seconds": 177, "fingerprint_id": "fp-comp-07"},
+        {"position": 8, "title": "Track 8", "duration_seconds": 178, "fingerprint_id": "fp-comp-08"}
+      ]
+    }
+  ],
+  "name_variants": [
+    {
+      "release_id": "mb-nv-1",
+      "title": "Name Variants",
+      "artist": "Björk/ACDC",
+      "year": 2012,
+      "tracks": [
+        {"position": 1, "title": "Track", "duration_seconds": 181, "fingerprint_id": "fp-nv-01"},
+        {"position": 2, "title": "Track", "duration_seconds": 182, "fingerprint_id": "fp-nv-02"},
+        {"position": 3, "title": "Track", "duration_seconds": 183, "fingerprint_id": "fp-nv-03"}
+      ]
+    }
+  ],
+  "classical": [
+    {
+      "release_id": "mb-classical-1",
+      "title": "Classical Work",
+      "artist": "Performer A",
+      "year": 1990,
+      "tracks": [
+        {"position": 1, "title": "Movement I", "duration_seconds": 420, "fingerprint_id": "fp-classical-01", "composer": "J.S. Bach"},
+        {"position": 2, "title": "Movement II", "duration_seconds": 410, "fingerprint_id": "fp-classical-02", "composer": "J.S. Bach"}
+      ]
+    }
+  ],
+  "extras_only": [
+    {
+      "release_id": "mb-extra-1",
+      "title": "Extras Album",
+      "artist": "Artist C",
+      "year": 2001,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 205, "fingerprint_id": "fp-extra-01"},
+        {"position": 2, "title": "Track B", "duration_seconds": 199, "fingerprint_id": "fp-extra-02"}
+      ]
+    }
+  ],
+  "single_track": [
+    {
+      "release_id": "mb-single-1",
+      "title": "Standalone Single",
+      "artist": "Artist D",
+      "year": 2018,
+      "tracks": [
+        {"position": 1, "title": "Single Track", "duration_seconds": 215, "fingerprint_id": "fp-single-01"}
+      ]
+    }
+  ],
+  "mixed_media": [
+    {
+      "release_id": "mb-mixed-1",
+      "title": "Mixed Media Album",
+      "artist": "Artist E",
+      "year": 2017,
+      "tracks": [
+        {"position": 1, "title": "Track One", "duration_seconds": 201, "fingerprint_id": "fp-mixed-01"},
+        {"position": 2, "title": "Track Two", "duration_seconds": 198, "fingerprint_id": "fp-mixed-02"}
+      ]
+    }
+  ],
+  "multi_composer": [
+    {
+      "release_id": "mb-mc-1",
+      "title": "Classical Mix",
+      "artist": "Orchestra A",
+      "year": 1995,
+      "tracks": [
+        {"position": 1, "title": "Symphony Movement", "duration_seconds": 401, "fingerprint_id": "fp-mc-01", "composer": "L. van Beethoven"},
+        {"position": 2, "title": "Concerto Movement", "duration_seconds": 389, "fingerprint_id": "fp-mc-02", "composer": "W.A. Mozart"}
+      ]
+    }
+  ],
+  "long_titles": [
+    {
+      "release_id": "mb-long-1",
+      "title": "Long Title Album",
+      "artist": "Orchestra Name",
+      "year": 2003,
+      "tracks": [
+        {"position": 1, "title": "Piano Concerto No. 23 in A Major, K. 488: II. Adagio in F-sharp Minor (Soloist Name; Orchestra Name; Conductor Name) with additional descriptive text to exceed typical filesystem limits and enforce deterministic truncation behavior in filenames", "duration_seconds": 312, "fingerprint_id": "fp-long-01"}
+      ]
+    }
+  ],
+  "renamed_mid_processing": [
+    {
+      "release_id": "mb-rename-1",
+      "title": "Rename Album",
+      "artist": "Artist F",
+      "year": 2010,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 180, "fingerprint_id": "fp-rename-01"},
+        {"position": 2, "title": "Track B", "duration_seconds": 182, "fingerprint_id": "fp-rename-02"}
+      ]
+    }
+  ],
+  "missing_middle_tracks": [
+    {
+      "release_id": "mb-gap-1",
+      "title": "Gapped Album",
+      "artist": "Artist G",
+      "year": 2008,
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 201, "fingerprint_id": "fp-gap-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 202, "fingerprint_id": "fp-gap-02"},
+        {"position": 5, "title": "Track 5", "duration_seconds": 205, "fingerprint_id": "fp-gap-05"},
+        {"position": 6, "title": "Track 6", "duration_seconds": 206, "fingerprint_id": "fp-gap-06"}
+      ]
+    }
+  ],
+  "case_only_rename": [
+    {
+      "release_id": "mb-case-1",
+      "title": "Case Album",
+      "artist": "Artist H",
+      "year": 2016,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 190, "fingerprint_id": "fp-case-01"}
+      ]
+    }
+  ],
+  "interrupted_apply": [
+    {
+      "release_id": "mb-crash-1",
+      "title": "Crash Album",
+      "artist": "Artist I",
+      "year": 2011,
+      "tracks": [
+        {"position": 1, "title": "Track A", "duration_seconds": 180, "fingerprint_id": "fp-crash-01"},
+        {"position": 2, "title": "Track B", "duration_seconds": 181, "fingerprint_id": "fp-crash-02"}
+      ]
+    }
+  ],
+  "opus_normalization": [
+    {
+      "release_id": "mb-op-1",
+      "title": "Beethoven Piano Sonatas",
+      "artist": "Wilhelm Kempff",
+      "year": 1965,
+      "tracks": [
+        {"position": 1, "title": "Piano Sonata No. 14 in C-sharp Minor, Op. 27 No. 2 'Moonlight': I. Adagio sostenuto", "duration_seconds": 420, "fingerprint_id": "fp-op-01", "composer": "Ludwig van Beethoven"},
+        {"position": 2, "title": "Piano Sonata in C-sharp Minor, op.27, no.2: II. Allegretto", "duration_seconds": 200, "fingerprint_id": "fp-op-02", "composer": "Ludwig van Beethoven"}
+      ]
+    }
+  ],
+  "conductor_vs_performer": [
+    {
+      "release_id": "mb-cvp-1",
+      "title": "Mozart Piano Concertos",
+      "artist": "English Chamber Orchestra",
+      "year": 1985,
+      "tracks": [
+        {"position": 1, "title": "Piano Concerto No. 21 in C Major, K. 467: I. Allegro maestoso", "duration_seconds": 450, "fingerprint_id": "fp-cvp-01", "composer": "Wolfgang Amadeus Mozart"}
+      ]
+    }
+  ],
+  "multi_performer_work": [
+    {
+      "release_id": "mb-mpw-1",
+      "title": "Brahms Piano Concertos - Various Soloists",
+      "artist": "Claudio Abbado",
+      "year": 1975,
+      "tracks": [
+        {"position": 1, "title": "Piano Concerto No. 2: I. Allegro non troppo", "duration_seconds": 380, "fingerprint_id": "fp-mpw-01", "composer": "Brahms"},
+        {"position": 2, "title": "Piano Concerto No. 2: II. Andante", "duration_seconds": 270, "fingerprint_id": "fp-mpw-02", "composer": "Brahms"}
+      ]
+    }
+  ],
+  "catalog_variants": [
+    {
+      "release_id": "mb-cat-1",
+      "title": "Catalog Variants",
+      "artist": "Various Artists",
+      "year": 1992,
+      "tracks": [
+        {"position": 1, "title": "Partita No. 3 in E Major, BWV 1006: Preludio", "duration_seconds": 320, "fingerprint_id": "fp-cat-01", "composer": "J.S. Bach"},
+        {"position": 2, "title": "Eine kleine Nachtmusik, K. 525: I. Allegro", "duration_seconds": 290, "fingerprint_id": "fp-cat-02", "composer": "W.A. Mozart"}
+      ]
+    }
+  ],
+  "partial_opera": [
+    {
+      "release_id": "mb-opera-1",
+      "title": "Puccini Opera Highlights",
+      "artist": "Herbert von Karajan",
+      "year": 1972,
+      "tracks": [
+        {"position": 1, "title": "La Boheme: Act II, Scene 3 - Quando m'en vo'", "duration_seconds": 480, "fingerprint_id": "fp-opera-01", "composer": "Giacomo Puccini"},
+        {"position": 2, "title": "La Boheme: Act IV, Scene 2 - Vecchia zimarra", "duration_seconds": 520, "fingerprint_id": "fp-opera-02", "composer": "Giacomo Puccini"}
+      ]
+    }
+  ],
+  "partial_tags": [
+    {
+      "release_id": "mb-pt-1",
+      "title": "Partial Tags Album",
+      "artist": "Artist J",
+      "year": 2009,
+      "tracks": [
+        {"position": 1, "title": "Track 1", "duration_seconds": 180, "fingerprint_id": "fp-pt-01"},
+        {"position": 2, "title": "Track 2", "duration_seconds": 182, "fingerprint_id": "fp-pt-02"}
+      ]
+    }
+  ]
+}

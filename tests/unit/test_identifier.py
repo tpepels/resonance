@@ -330,6 +330,70 @@ def test_calculate_tier_unsure_low_score():
     assert tier == ConfidenceTier.UNSURE
 
 
+def test_calculate_tier_certain_at_thresholds() -> None:
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-123",
+        title="Album",
+        artist="Artist",
+        tracks=(ProviderTrack(position=1, title="Track 1"),),
+    )
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+    thresholds = {
+        "certain_min_score": 0.80,
+        "certain_min_coverage": 0.75,
+        "probable_min_score": 0.60,
+        "multi_release_min_support": 0.30,
+    }
+    score = ReleaseScore(
+        release=release,
+        fingerprint_coverage=0.75,
+        track_count_match=True,
+        duration_fit=1.0,
+        year_penalty=0.0,
+        total_score=0.80,
+    )
+
+    tier, _reasons = calculate_tier((score,), evidence, thresholds=thresholds)
+    assert tier == ConfidenceTier.CERTAIN
+
+
+def test_calculate_tier_probable_just_below_certain() -> None:
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-123",
+        title="Album",
+        artist="Artist",
+        tracks=(ProviderTrack(position=1, title="Track 1"),),
+    )
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+    thresholds = {
+        "certain_min_score": 0.80,
+        "certain_min_coverage": 0.75,
+        "probable_min_score": 0.60,
+        "multi_release_min_support": 0.30,
+    }
+    score = ReleaseScore(
+        release=release,
+        fingerprint_coverage=0.75,
+        track_count_match=True,
+        duration_fit=1.0,
+        year_penalty=0.0,
+        total_score=0.79,
+    )
+
+    tier, _reasons = calculate_tier((score,), evidence, thresholds=thresholds)
+    assert tier == ConfidenceTier.PROBABLE
+
+
 def test_calculate_tier_unsure_multi_release_conflict_uses_stable_prefix():
     """
     Avoid brittle substring matching. We assert a stable prefix that the

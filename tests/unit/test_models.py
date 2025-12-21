@@ -466,3 +466,16 @@ class TestModelEdgeCasesMore:
         album.canonical_artist = "The Beatles"
         album.canonical_album = ""
         assert album.destination_path is None
+
+
+def test_album_destination_path_is_cached_and_stable() -> None:
+    album = AlbumInfo(directory=Path("/music/source"))
+    album.canonical_artist = "Artist"
+    album.canonical_album = "Album"
+    first = album.destination_path
+    assert first == Path("Artist") / "Album"
+
+    album.canonical_artist = "Other Artist"
+    album.canonical_album = "Other Album"
+    second = album.destination_path
+    assert second == first

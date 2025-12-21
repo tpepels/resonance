@@ -38,7 +38,19 @@ def test_build_cache_key_normalizes_query_order() -> None:
 
 def test_canonical_json_stable() -> None:
     payload = {"b": [2, 1], "a": {"y": 2, "x": 1}}
-    assert canonical_json(payload) == '{"a":{"x":1,"y":2},"b":[1,2]}'
+    assert canonical_json(payload) == '{"a":{"x":1,"y":2},"b":[2,1]}'
+
+
+def test_canonical_json_preserves_list_order() -> None:
+    payload = {
+        "items": [
+            {"id": 2, "name": "b"},
+            {"id": 1, "name": "a"},
+        ],
+    }
+    assert canonical_json(payload) == (
+        '{"items":[{"id":2,"name":"b"},{"id":1,"name":"a"}]}'
+    )
 
 
 def test_provider_cache_key_includes_client_version() -> None:

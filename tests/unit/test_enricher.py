@@ -40,7 +40,7 @@ def _make_plan() -> Plan:
     return Plan(
         dir_id="dir-1",
         source_path=Path("/music/album"),
-        signature_hash="sig-1",
+        signature_hash="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         provider="musicbrainz",
         release_id="mb-123",
         release_title="Album",

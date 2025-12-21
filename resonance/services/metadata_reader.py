@@ -210,6 +210,7 @@ class MetadataReader:
         track.album = track.album or data.get("album")
         track.album_artist = track.album_artist or data.get("album_artist")
         track.track_number = track.track_number or data.get("track_number")
+        track.disc_number = track.disc_number or data.get("disc_number")
         track.duration_seconds = track.duration_seconds or data.get("duration")
         track.composer = track.composer or data.get("composer")
         track.conductor = track.conductor or data.get("conductor")

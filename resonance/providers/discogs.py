@@ -26,6 +26,9 @@ from .musicbrainz import LookupResult
 from ..core.heuristics import guess_metadata_from_path
 from ..core.models import TrackInfo
 from ..infrastructure.cache import MetadataCache
+from .. import __version__ as RESONANCE_VERSION
+
+_CACHE_VERSION = "v1"
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +36,20 @@ logger = logging.getLogger(__name__)
 class DiscogsClient:
     """Discogs client for Resonance."""
 
-    def __init__(self, token: str, useragent: str = "resonance/0.1", cache: Optional[MetadataCache] = None) -> None:
+    def __init__(
+        self,
+        token: str,
+        useragent: str = "resonance/0.1",
+        cache: Optional[MetadataCache] = None,
+        offline: bool = False,
+    ) -> None:
         """Initialize the client."""
         if not token:
             raise ValueError("Discogs token required")
         self.token = token
         self.useragent = useragent
         self.cache = cache
+        self.offline = offline
 
     def enrich(self, track: TrackInfo) -> Optional[LookupResult]:
         """Enrich track metadata using Discogs."""
@@ -168,7 +178,11 @@ class DiscogsClient:
         """Fetch full release details from Discogs."""
         # Check cache first
         if self.cache:
-            cached = self.cache.get_discogs_release(str(release_id))
+            cached = self.cache.get_discogs_release(
+                str(release_id),
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
             if cached:
                 logger.debug("Discogs cache hit for release %s", release_id)
                 return cached
@@ -178,7 +192,12 @@ class DiscogsClient:
 
         if data and self.cache:
             logger.debug("Discogs cache miss; storing release %s", release_id)
-            self.cache.set_discogs_release(str(release_id), data)
+            self.cache.set_discogs_release(
+                str(release_id),
+                data,
+                cache_version=_CACHE_VERSION,
+                client_version=RESONANCE_VERSION,
+            )
 
         return data
 
@@ -273,6 +292,8 @@ class DiscogsClient:
 
     def _request(self, url: str) -> Optional[dict]:
         """Make HTTP request to Discogs API."""
+        if self.offline:
+            return None
         req = urllib.request.Request(url, headers={"User-Agent": self.useragent})
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:

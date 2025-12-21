@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Artist J/Partial Tags Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Partial Tags Album",
+        "albumartist": "Artist J",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "20990f327468cb54cc69180e52f3e42ff2ac45772dd85b8c5b3a9dffb8ca34e4",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-pt-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist J/Partial Tags Album/02 - Track 2.flac",
+      "tags": {
+        "album": "Partial Tags Album",
+        "albumartist": "Artist J",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "20990f327468cb54cc69180e52f3e42ff2ac45772dd85b8c5b3a9dffb8ca34e4",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-pt-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

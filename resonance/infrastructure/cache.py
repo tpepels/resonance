@@ -12,16 +12,23 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any, Optional
+
+from .provider_cache import canonical_json, provider_cache_key
 
 
 class MetadataCache:
     """SQLite-backed cache for expensive operations and user decisions."""
 
-    def __init__(self, path: Path, cache_limit_per_namespace: int | None = None) -> None:
+    def __init__(
+        self,
+        path: Path,
+        cache_limit_per_namespace: int | None = None,
+        now_fn=None,
+    ) -> None:
         """Initialize the cache.
 
         Args:
@@ -33,10 +40,29 @@ class MetadataCache:
         self._lock = Lock()
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._cache_limit_per_namespace = cache_limit_per_namespace
+        self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self._init_schema()
+
+    def _now_iso(self) -> str:
+        value = self._now_fn()
+        return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
     def _init_schema(self) -> None:
         """Create database schema."""
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        schema_version = self._get_metadata("schema_version")
+        if schema_version is None or schema_version != "1":
+            self._purge_schema()
+            self._set_metadata("schema_version", "1")
+            self._set_metadata("created_by_version", "0.1.0")
+
         # Generic key-value cache for API responses
         self._conn.execute(
             """
@@ -123,6 +149,32 @@ class MetadataCache:
 
         self._conn.commit()
 
+    def _purge_schema(self) -> None:
+        tables = (
+            "cache",
+            "processed_files",
+            "directory_releases",
+            "canonical_names",
+            "deferred_prompts",
+            "skipped_directories",
+            "file_moves",
+        )
+        for table in tables:
+            self._conn.execute(f"DROP TABLE IF EXISTS {table}")
+
+    def _get_metadata(self, key: str) -> Optional[str]:
+        row = self._conn.execute(
+            "SELECT value FROM schema_metadata WHERE key = ?",
+            (key,),
+        ).fetchone()
+        return row[0] if row else None
+
+    def _set_metadata(self, key: str, value: str) -> None:
+        self._conn.execute(
+            "INSERT OR REPLACE INTO schema_metadata (key, value) VALUES (?, ?)",
+            (key, value),
+        )
+
     def close(self) -> None:
         """Close the database connection."""
         with self._lock:
@@ -161,10 +213,11 @@ class MetadataCache:
             namespace: Cache namespace
         """
         with self._lock:
+            payload = canonical_json(value)
             self._conn.execute(
                 "INSERT OR REPLACE INTO cache (namespace, key, value, updated_at) "
                 "VALUES (?, ?, ?, ?)",
-                (namespace, key, json.dumps(value), datetime.now().isoformat()),
+                (namespace, key, payload, self._now_iso()),
             )
             self._enforce_cache_limit(namespace)
             self._conn.commit()
@@ -187,30 +240,132 @@ class MetadataCache:
         )
 
     # MusicBrainz cache
-    def get_mb_release(self, release_id: str) -> Optional[dict[str, Any]]:
+    def get_mb_release(
+        self,
+        release_id: str,
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get cached MusicBrainz release."""
+        if client_version:
+            key = provider_cache_key(
+                provider="musicbrainz",
+                request_type="release",
+                query={"id": release_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+            cached = self.get(key, namespace="musicbrainz:release")
+            if cached is not None:
+                return cached
         return self.get(release_id, namespace="musicbrainz:release")
 
-    def set_mb_release(self, release_id: str, data: dict[str, Any]) -> None:
+    def set_mb_release(
+        self,
+        release_id: str,
+        data: dict[str, Any],
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> None:
         """Cache MusicBrainz release."""
-        self.set(release_id, data, namespace="musicbrainz:release")
+        if client_version:
+            key = provider_cache_key(
+                provider="musicbrainz",
+                request_type="release",
+                query={"id": release_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+        else:
+            key = release_id
+        self.set(key, data, namespace="musicbrainz:release")
 
-    def get_mb_recording(self, recording_id: str) -> Optional[dict[str, Any]]:
+    def get_mb_recording(
+        self,
+        recording_id: str,
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get cached MusicBrainz recording."""
+        if client_version:
+            key = provider_cache_key(
+                provider="musicbrainz",
+                request_type="recording",
+                query={"id": recording_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+            cached = self.get(key, namespace="musicbrainz:recording")
+            if cached is not None:
+                return cached
         return self.get(recording_id, namespace="musicbrainz:recording")
 
-    def set_mb_recording(self, recording_id: str, data: dict[str, Any]) -> None:
+    def set_mb_recording(
+        self,
+        recording_id: str,
+        data: dict[str, Any],
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> None:
         """Cache MusicBrainz recording."""
-        self.set(recording_id, data, namespace="musicbrainz:recording")
+        if client_version:
+            key = provider_cache_key(
+                provider="musicbrainz",
+                request_type="recording",
+                query={"id": recording_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+        else:
+            key = recording_id
+        self.set(key, data, namespace="musicbrainz:recording")
 
     # Discogs cache
-    def get_discogs_release(self, release_id: str) -> Optional[dict[str, Any]]:
+    def get_discogs_release(
+        self,
+        release_id: str,
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
         """Get cached Discogs release."""
+        if client_version:
+            key = provider_cache_key(
+                provider="discogs",
+                request_type="release",
+                query={"id": release_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+            cached = self.get(key, namespace="discogs:release")
+            if cached is not None:
+                return cached
         return self.get(release_id, namespace="discogs:release")
 
-    def set_discogs_release(self, release_id: str, data: dict[str, Any]) -> None:
+    def set_discogs_release(
+        self,
+        release_id: str,
+        data: dict[str, Any],
+        *,
+        cache_version: str = "v1",
+        client_version: Optional[str] = None,
+    ) -> None:
         """Cache Discogs release."""
-        self.set(release_id, data, namespace="discogs:release")
+        if client_version:
+            key = provider_cache_key(
+                provider="discogs",
+                request_type="release",
+                query={"id": release_id},
+                version=cache_version,
+                client_version=client_version,
+            )
+        else:
+            key = release_id
+        self.set(key, data, namespace="discogs:release")
 
     # Directory release decisions
     def get_directory_release(self, directory: Path) -> Optional[tuple[str, str, float]]:
@@ -239,7 +394,7 @@ class MetadataCache:
                 "INSERT OR REPLACE INTO directory_releases "
                 "(directory_path, provider, release_id, match_confidence, updated_at) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (str(directory), provider, release_id, confidence, datetime.now().isoformat()),
+                (str(directory), provider, release_id, confidence, self._now_iso()),
             )
             self._conn.commit()
 
@@ -267,7 +422,7 @@ class MetadataCache:
             self._conn.execute(
                 "INSERT OR REPLACE INTO canonical_names (cache_key, canonical_name, updated_at) "
                 "VALUES (?, ?, ?)",
-                (cache_key, canonical_name, datetime.now().isoformat()),
+                (cache_key, canonical_name, self._now_iso()),
             )
             self._conn.commit()
 
@@ -278,7 +433,7 @@ class MetadataCache:
             self._conn.execute(
                 "INSERT OR REPLACE INTO deferred_prompts (directory_path, reason, created_at) "
                 "VALUES (?, ?, ?)",
-                (str(directory), reason, datetime.now().isoformat()),
+                (str(directory), reason, self._now_iso()),
             )
             self._conn.commit()
 
@@ -310,7 +465,7 @@ class MetadataCache:
             self._conn.execute(
                 "INSERT OR REPLACE INTO skipped_directories (directory_path, reason, created_at) "
                 "VALUES (?, ?, ?)",
-                (str(directory), reason, datetime.now().isoformat()),
+                (str(directory), reason, self._now_iso()),
             )
             self._conn.commit()
 
@@ -340,6 +495,6 @@ class MetadataCache:
         with self._lock:
             self._conn.execute(
                 "INSERT INTO file_moves (source_path, target_path, moved_at) VALUES (?, ?, ?)",
-                (str(source), str(target), datetime.now().isoformat()),
+                (str(source), str(target), self._now_iso()),
             )
             self._conn.commit()

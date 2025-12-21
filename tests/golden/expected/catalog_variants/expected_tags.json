@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Various Artists/Catalog Variants/01 - Partita No. 3 in E Major, BWV 1006 Preludio.flac",
+      "tags": {
+        "album": "Bach Solo Works",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "5abc87d0a7cea01be105fefac16f72329f06b9f8b7d682548abbbea5e00911a1",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-cat-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Partita No. 3 in E Major, BWV 1006: Preludio",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Various Artists/Catalog Variants/02 - Eine kleine Nachtmusik, K. 525 I. Allegro.flac",
+      "tags": {
+        "album": "Mozart Serenades",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "5abc87d0a7cea01be105fefac16f72329f06b9f8b7d682548abbbea5e00911a1",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-cat-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Eine kleine Nachtmusik, K. 525: I. Allegro",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

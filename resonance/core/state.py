@@ -29,6 +29,7 @@ class DirectoryRecord:
     last_seen_path: Path
     signature_hash: str
     state: DirectoryState
+    signature_version: int = 1
     pinned_provider: Optional[str] = None
     pinned_release_id: Optional[str] = None
     pinned_confidence: Optional[float] = None

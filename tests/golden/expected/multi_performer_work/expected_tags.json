@@ -1,0 +1,36 @@
+{
+  "tracks": [
+    {
+      "path": "Brahms/Brahms Piano Concertos - Various Soloists/01 - Piano Concerto No. 2 I. Allegro non troppo.flac",
+      "tags": {
+        "album": "Brahms Piano Concertos - Various Soloists",
+        "albumartist": "Claudio Abbado",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "a3a340cd646e384de60d2c8b24ca7cba99b533cf3a8dd56b6e75a46638a671df",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-mpw-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Concerto No. 2: I. Allegro non troppo",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Brahms/Brahms Piano Concertos - Various Soloists/02 - Piano Concerto No. 2 II. Andante.flac",
+      "tags": {
+        "album": "Brahms Piano Concertos - Various Soloists",
+        "albumartist": "Claudio Abbado",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "a3a340cd646e384de60d2c8b24ca7cba99b533cf3a8dd56b6e75a46638a671df",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-mpw-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Concerto No. 2: II. Andante",
+        "tracknumber": "2"
+      }
+    }
+  ]
+}

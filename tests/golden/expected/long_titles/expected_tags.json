@@ -1,0 +1,20 @@
+{
+  "tracks": [
+    {
+      "path": "Orchestra Name/Long Title Album/01 - Piano Concerto No. 23 in A Major, K. 488 II. Adagio in F-sharp Minor (Soloist Name; Orchestra Name; Conductor Name) with additional descriptive text to exceed typical filesystem limits and enforce det.flac",
+      "tags": {
+        "album": "Long Title Album",
+        "albumartist": "Orchestra Name",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "1c17ecac2a533aa43a8e98224197f0b96e027e8914aef11ff420c26177b275fe",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-long-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Piano Concerto No. 23 in A Major, K. 488: II. Adagio in F-sharp Minor (Soloist Name; Orchestra Name; Conductor Name) with additional descriptive text to exceed typical filesystem limits and enforce deterministic truncation behavior in filenames",
+        "tracknumber": "1"
+      }
+    }
+  ]
+}

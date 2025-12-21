@@ -14,6 +14,8 @@ import pytest
 
 from resonance.app import ResonanceApp
 from resonance.core.models import AlbumInfo
+from tests.helpers.paths import sanitized_dir
+from resonance.providers.musicbrainz import MusicBrainzClient, LookupResult
 
 
 from dataclasses import dataclass
@@ -29,9 +31,7 @@ class TrackSpec:
 
 
 def _make_album_dir(test_library: Path, name: str) -> Path:
-    d = test_library / name
-    d.mkdir()
-    return d
+    return sanitized_dir(test_library, name)
 
 
 def _patch_reader_for_tracks(tracks: list[TrackSpec]):
@@ -84,25 +84,20 @@ class TestMultiArtistAlbums:
         )
 
         # Mock MusicBrainz client
-        mock_mb_client = MagicMock()
+        mock_mb_client = MagicMock(spec_set=MusicBrainzClient)
         app.musicbrainz = mock_mb_client
 
         # Mock fingerprinting to return known recordings
-        def mock_fingerprint_track(track):
+        def mock_enrich(track):
             # Simulate successful fingerprinting
             track.fingerprint = f"mock_fingerprint_{track.path.stem}"
             track.duration_seconds = 180
             track.acoustid_id = f"acoustid_{track.path.stem}"
             track.musicbrainz_recording_id = f"recording_{track.path.stem}"
             track.musicbrainz_release_id = getz_gilberto_scenario.expected_output["release_id"]
-            return True
+            return LookupResult(track, score=1.0)
 
-        mock_mb_client.fingerprint_and_lookup_track = mock_fingerprint_track
-
-        # Mock release fetching
-        mock_mb_client._fetch_release_tracks = MagicMock(
-            return_value=getz_gilberto_scenario.mock_responses["musicbrainz"]
-        )
+        mock_mb_client.enrich = mock_enrich
 
         try:
             # Create pipeline
@@ -141,8 +136,7 @@ class TestMultiArtistAlbums:
         - Track-level artist credits preserved
         """
         # Create test directory
-        input_dir = test_library / "daft_punk_ram"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "daft_punk_ram")
 
         # Create test files with featuring variants
         tracks = [
@@ -191,7 +185,7 @@ class TestMultiArtistAlbums:
             from resonance.visitors import IdentifyVisitor
 
             # Mock MusicBrainz client
-            mock_mb = MagicMock()
+            mock_mb = MagicMock(spec_set=MusicBrainzClient)
             app.musicbrainz = mock_mb
 
             identify_visitor = IdentifyVisitor(
@@ -252,8 +246,7 @@ class TestMultiArtistAlbums:
         - Individual track artists NOT used for organization
         - All files in single directory
         """
-        input_dir = test_library / "pulp_fiction_ost"
-        input_dir.mkdir()
+        input_dir = sanitized_dir(test_library, "pulp_fiction_ost")
 
         tracks = [
             {
@@ -303,7 +296,7 @@ class TestMultiArtistAlbums:
             # Basic validation: tracks loaded
             from resonance.visitors import IdentifyVisitor
 
-            mock_mb = MagicMock()
+            mock_mb = MagicMock(spec_set=MusicBrainzClient)
             app.musicbrainz = mock_mb
 
             def mock_read_track(path):
@@ -385,7 +378,7 @@ class TestMultiArtistAlbums:
             album = AlbumInfo(directory=input_dir)
 
             from resonance.visitors import IdentifyVisitor
-            mock_mb = MagicMock()
+            mock_mb = MagicMock(spec_set=MusicBrainzClient)
             identify = IdentifyVisitor(
                 musicbrainz=mock_mb,
                 canonicalizer=app.canonicalizer,
@@ -452,7 +445,7 @@ class TestMultiArtistAlbums:
 
             from resonance.visitors import IdentifyVisitor
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -519,7 +512,7 @@ class TestMultiArtistAlbums:
 
             from resonance.visitors import IdentifyVisitor
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -582,7 +575,7 @@ class TestMultiArtistAlbums:
 
             from resonance.visitors import IdentifyVisitor
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -641,7 +634,7 @@ class TestMultiArtistAlbums:
 
             from resonance.visitors import IdentifyVisitor
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -703,7 +696,7 @@ class TestMultiArtistAlbums:
             from resonance.visitors import IdentifyVisitor
 
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -765,7 +758,7 @@ class TestMultiArtistAlbums:
             from resonance.visitors import IdentifyVisitor
 
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,
@@ -834,7 +827,7 @@ class TestMultiArtistAlbums:
             from resonance.visitors import IdentifyVisitor
 
             identify = IdentifyVisitor(
-                musicbrainz=MagicMock(),
+                musicbrainz=MagicMock(spec_set=MusicBrainzClient),
                 canonicalizer=app.canonicalizer,
                 cache=app.cache,
                 release_search=None,

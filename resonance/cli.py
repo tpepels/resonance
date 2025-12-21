@@ -188,31 +188,37 @@ def main() -> int:
         parser.print_help()
         return 1
 
-    # Import here to avoid slow startup
-    if args.command == "scan":
-        from .commands.scan import run_scan
-        return run_scan(args)
-    elif args.command == "daemon":
-        from .commands.daemon import run_daemon
-        return run_daemon(args)
-    elif args.command == "prompt":
-        from .commands.prompt import run_prompt
-        return run_prompt(args)
-    elif args.command == "identify":
-        from .commands.identify import run_identify
-        return run_identify(args, provider_client=None)
-    elif args.command == "plan":
-        from .commands.plan import run_plan
-        return run_plan(args)
-    elif args.command == "prescan":
-        from .commands.prescan import run_prescan
-        return run_prescan(args)
-    elif args.command == "apply":
-        from .commands.apply import run_apply
-        return run_apply(args)
-    else:
-        parser.print_help()
-        return 1
+    try:
+        # Import here to avoid slow startup
+        if args.command == "scan":
+            from .commands.scan import run_scan
+            return run_scan(args)
+        elif args.command == "daemon":
+            from .commands.daemon import run_daemon
+            return run_daemon(args)
+        elif args.command == "prompt":
+            from .commands.prompt import run_prompt
+            return run_prompt(args)
+        elif args.command == "identify":
+            from .commands.identify import run_identify
+            return run_identify(args, provider_client=None)
+        elif args.command == "plan":
+            from .commands.plan import run_plan
+            return run_plan(args)
+        elif args.command == "prescan":
+            from .commands.prescan import run_prescan
+            return run_prescan(args)
+        elif args.command == "apply":
+            from .commands.apply import run_apply
+            return run_apply(args)
+        else:
+            parser.print_help()
+            return 1
+    except Exception as exc:  # pragma: no cover - exercised in CLI tests
+        from .errors import exit_code_for_exception
+
+        print(str(exc), file=sys.stderr)
+        return exit_code_for_exception(exc)
 
 
 if __name__ == "__main__":

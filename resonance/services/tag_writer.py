@@ -124,6 +124,8 @@ class MutagenTagWriter:
     def read_tags(self, path: Path) -> dict[str, str]:
         self._require_mutagen()
         ext = path.suffix.lower()
+        if ext not in (".mp3", ".flac", ".m4a", ".mp4"):
+            raise ValueError(f"Unsupported audio format: {ext}")
         if ext == ".mp3":
             tags: dict[str, str] = {}
             try:
@@ -157,7 +159,7 @@ class MutagenTagWriter:
                         value = value[0]
                     tags[key] = str(value)
             return tags
-        raise ValueError(f"Unsupported audio format: {ext}")
+        return {}
 
     def apply_patch(
         self, path: Path, set_tags: dict[str, str], allow_overwrite: bool
@@ -201,6 +203,21 @@ class MutagenTagWriter:
             audio.save()
         else:
             raise ValueError(f"Unsupported audio format: {ext}")
+        supported_keys: set[str]
+        if ext == ".mp3":
+            supported_keys = set(self._MP3_KEYS.keys())
+        elif ext in (".m4a", ".mp4"):
+            supported_keys = {"title", "artist", "album", "albumartist", "tracknumber", "discnumber"}
+        else:
+            supported_keys = set(set_tags.keys())
+        readback = self.read_tags(path)
+        mismatched = sorted(
+            key for key in tags_set
+            if key in supported_keys and readback.get(key) != set_tags[key]
+        )
+        if mismatched:
+            keys = ", ".join(mismatched)
+            raise ValueError(f"Tag write verification failed for {path}: {keys}")
         return TagWriteResult(
             file_path=path,
             tags_set=tuple(tags_set),

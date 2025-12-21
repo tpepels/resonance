@@ -15,6 +15,7 @@ def run_audit(*, store, dir_id: str, apply_report=None) -> dict[str, str | None 
         "pinned_provider": record.pinned_provider,
         "pinned_release_id": record.pinned_release_id,
     }
+    report.update(store.get_audit_artifacts(dir_id))
     if apply_report is not None:
         report["last_apply_errors"] = tuple(apply_report.errors)
     return report

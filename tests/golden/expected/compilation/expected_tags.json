@@ -1,0 +1,132 @@
+{
+  "tracks": [
+    {
+      "path": "Various Artists/Compilation Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/02 - Track 2.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/03 - Track 3.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 3",
+        "tracknumber": "3"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/04 - Track 4.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 4",
+        "tracknumber": "4"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/05 - Track 5.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 5",
+        "tracknumber": "5"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/06 - Track 6.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 6",
+        "tracknumber": "6"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/07 - Track 7.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 7",
+        "tracknumber": "7"
+      }
+    },
+    {
+      "path": "Various Artists/Compilation Album/08 - Track 8.flac",
+      "tags": {
+        "album": "Compilation Album",
+        "albumartist": "Various Artists",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "d25598355f550fad26f66ee1313d59aea70170405ac5ac6be49325d9a7f1658b",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-comp-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 8",
+        "tracknumber": "8"
+      }
+    }
+  ]
+}

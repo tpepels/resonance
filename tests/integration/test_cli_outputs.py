@@ -121,10 +121,58 @@ def test_identify_outputs_json_and_human(tmp_path: Path) -> None:
     ]
 
 
+def test_identify_human_output_is_deterministic(tmp_path: Path) -> None:
+    directory = tmp_path / "album"
+    _write_audio(directory / "01 - Track A.flac")
+    _write_audio(directory / "02 - Track B.flac")
+
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-1",
+        title="Album",
+        artist="Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track A", duration_seconds=10),
+            ProviderTrack(position=2, title="Track B", duration_seconds=10),
+        ),
+    )
+
+    def evidence_builder(_files: list[Path]) -> DirectoryEvidence:
+        tracks = (
+            TrackEvidence(fingerprint_id=None, duration_seconds=10, existing_tags={}),
+            TrackEvidence(fingerprint_id=None, duration_seconds=10, existing_tags={}),
+        )
+        return DirectoryEvidence(
+            tracks=tracks,
+            track_count=2,
+            total_duration_seconds=20,
+        )
+
+    provider = StubProviderClient([release])
+
+    lines_first, sink_first = _capture_output()
+    args = Namespace(directory=directory, json=False)
+    run_identify(
+        args,
+        provider_client=provider,
+        evidence_builder=evidence_builder,
+        output_sink=sink_first,
+    )
+
+    lines_second, sink_second = _capture_output()
+    run_identify(
+        args,
+        provider_client=provider,
+        evidence_builder=evidence_builder,
+        output_sink=sink_second,
+    )
+    assert lines_first == lines_second
+
+
 def test_plan_outputs_json_and_human(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
-        record = store.get_or_create("dir-1", tmp_path / "album", "sig-1")
+        record = store.get_or_create("dir-1", tmp_path / "album", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(
             record.dir_id,
             DirectoryState.RESOLVED_AUTO,
@@ -177,6 +225,7 @@ def test_apply_outputs_json(tmp_path: Path) -> None:
         ),
         tag_ops=(),
         errors=(),
+        warnings=(),
         rollback_attempted=False,
         rollback_success=False,
     )
@@ -197,6 +246,7 @@ def test_apply_outputs_json(tmp_path: Path) -> None:
     assert payload["schema_version"] == "v1"
     assert payload["command"] == "apply"
     assert payload["data"]["status"] == "APPLIED"
+    assert payload["data"]["warnings"] == []
 
 
 def test_identify_outputs_provider_not_configured_json(tmp_path: Path) -> None:

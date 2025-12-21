@@ -1,0 +1,164 @@
+{
+  "tracks": [
+    {
+      "path": "Artist A/Standard Album/01 - Track 1.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 1",
+        "tracknumber": "1"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/02 - Track 2.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 2",
+        "tracknumber": "2"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/03 - Track 3.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 3",
+        "tracknumber": "3"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/04 - Track 4.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 4",
+        "tracknumber": "4"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/05 - Track 5.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 5",
+        "tracknumber": "5"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/06 - Track 6.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 6",
+        "tracknumber": "6"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/07 - Track 7.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 7",
+        "tracknumber": "7"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/08 - Track 8.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 8",
+        "tracknumber": "8"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/09 - Track 9.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 9",
+        "tracknumber": "9"
+      }
+    },
+    {
+      "path": "Artist A/Standard Album/10 - Track 10.flac",
+      "tags": {
+        "album": "Standard Album",
+        "albumartist": "Artist A",
+        "resonance.prov.applied_at_utc": "2024-01-01T00:00:00Z",
+        "resonance.prov.dir_id": "6caf75581b0f16ae090867a1d97b9b6f81ef56ed1b7931cf281b863c732804f0",
+        "resonance.prov.pinned_provider": "musicbrainz",
+        "resonance.prov.pinned_release_id": "mb-std-1",
+        "resonance.prov.tool": "resonance",
+        "resonance.prov.tool_version": "0.1.0",
+        "resonance.prov.version": "1",
+        "title": "Track 10",
+        "tracknumber": "10"
+      }
+    }
+  ]
+}

@@ -8,10 +8,11 @@ import pytest
 from resonance.core.models import AlbumInfo, TrackInfo, UserSkippedError
 from resonance.services.release_search import ReleaseCandidate, ReleaseSearchService
 from resonance.services.prompt_service import PromptService
+from resonance.providers.musicbrainz import MusicBrainzClient
 
 
 def test_release_auto_select_picks_best_when_clear_lead():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     candidates = [
         ReleaseCandidate(
             provider="musicbrainz",
@@ -41,7 +42,7 @@ def test_release_auto_select_picks_best_when_clear_lead():
 
 
 def test_release_auto_select_refuses_when_gap_is_small():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     candidates = [
         ReleaseCandidate(
             provider="musicbrainz",
@@ -93,12 +94,12 @@ def test_prompt_service_skip_raises(monkeypatch):
 # --- additional service tests (release search + prompt) ---
 
 def test_release_auto_select_returns_none_on_empty_list():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     assert svc.auto_select_best([], min_score=0.8, min_coverage=0.8) is None
 
 
 def test_release_auto_select_single_candidate_respects_thresholds():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     c = ReleaseCandidate(
         provider="musicbrainz",
         release_id="mbid-1",
@@ -139,7 +140,7 @@ def test_release_auto_select_single_candidate_respects_thresholds():
 
 
 def test_release_auto_select_refuses_on_equal_scores_or_ambiguous_tie():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     candidates = [
         ReleaseCandidate(
             provider="musicbrainz",
@@ -167,7 +168,7 @@ def test_release_auto_select_refuses_on_equal_scores_or_ambiguous_tie():
 
 
 def test_release_auto_select_is_order_independent_for_best_choice():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     c1 = ReleaseCandidate(
         provider="musicbrainz",
         release_id="mbid-1",
@@ -185,7 +186,7 @@ def test_release_auto_select_is_order_independent_for_best_choice():
         artist="Artist",
         year=1999,
         track_count=10,
-        score=0.82,
+        score=0.70,
         coverage=0.90,
     )
 
@@ -196,8 +197,24 @@ def test_release_auto_select_is_order_independent_for_best_choice():
     assert best_a.release_id == best_b.release_id == "mbid-1"
 
 
+def test_release_auto_select_rejects_non_numeric_score() -> None:
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
+    candidate = ReleaseCandidate(
+        provider="musicbrainz",
+        release_id="mbid-1",
+        title="Album",
+        artist="Artist",
+        year=1999,
+        track_count=10,
+        score=MagicMock(),
+        coverage=0.9,
+    )
+    with pytest.raises(TypeError, match="Candidate score must be numeric"):
+        svc.auto_select_best([candidate], min_score=0.8, min_coverage=0.8)
+
+
 def test_release_auto_select_prefers_higher_coverage_when_scores_equal_if_supported():
-    svc = ReleaseSearchService(musicbrainz=MagicMock(), discogs=None)
+    svc = ReleaseSearchService(musicbrainz=MagicMock(spec_set=MusicBrainzClient), discogs=None)
     candidates = [
         ReleaseCandidate(
             provider="musicbrainz",

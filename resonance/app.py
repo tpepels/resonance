@@ -36,6 +36,7 @@ class ResonanceApp:
         interactive: bool = True,
         dry_run: bool = False,
         delete_nonaudio: bool = False,
+        offline: bool = False,
     ):
         """Initialize Resonance application.
 
@@ -53,6 +54,7 @@ class ResonanceApp:
         self.interactive = interactive
         self.dry_run = dry_run
         self.delete_nonaudio = delete_nonaudio
+        self.offline = offline
 
         # Initialize infrastructure
         self.cache = MetadataCache(cache_path)
@@ -63,6 +65,7 @@ class ResonanceApp:
             self.musicbrainz = MusicBrainzClient(
                 acoustid_api_key=acoustid_api_key,
                 cache=self.cache,
+                offline=offline,
             )
 
         self.discogs = None
@@ -70,6 +73,7 @@ class ResonanceApp:
             self.discogs = DiscogsClient(
                 token=discogs_token,
                 cache=self.cache,
+                offline=offline,
             )
 
         # Initialize services
