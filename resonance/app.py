@@ -7,10 +7,13 @@ from pathlib import Path
 from typing import Optional
 
 from .core.identity import IdentityCanonicalizer
+from .core.provider_fusion import CombinedProviderClient, NamedProvider
 from .infrastructure.cache import MetadataCache
 from .infrastructure.scanner import LibraryScanner
 from .providers.musicbrainz import MusicBrainzClient
 from .providers.discogs import DiscogsClient
+from .providers.caching import CachedProviderClient, ProviderConfig
+from . import __version__ as RESONANCE_VERSION
 from .services.file_service import FileService
 from .services.prompt_service import PromptService
 from .services.release_search import ReleaseSearchService
@@ -68,6 +71,35 @@ class ResonanceApp:
                 cache=self.cache,
                 offline=offline,
             )
+        self.provider_client = None
+        providers: list[NamedProvider] = []
+        if self.musicbrainz:
+            mb_cached = CachedProviderClient(
+                self.musicbrainz,
+                self.cache,
+                ProviderConfig(
+                    provider_name="musicbrainz",
+                    client_version=RESONANCE_VERSION,
+                    offline=offline,
+                ),
+            )
+            providers.append(NamedProvider("musicbrainz", mb_cached))
+        if self.discogs:
+            discogs_cached = CachedProviderClient(
+                self.discogs,
+                self.cache,
+                ProviderConfig(
+                    provider_name="discogs",
+                    client_version=RESONANCE_VERSION,
+                    offline=offline,
+                ),
+            )
+            providers.append(NamedProvider("discogs", discogs_cached))
+        if providers:
+            if len(providers) == 1:
+                self.provider_client = providers[0].client
+            else:
+                self.provider_client = CombinedProviderClient(tuple(providers))
 
         # Initialize services
         self.canonicalizer = IdentityCanonicalizer(cache=self.cache)

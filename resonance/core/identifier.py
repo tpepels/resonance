@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+import json
 from typing import Callable, Optional, Protocol
 
 
@@ -66,6 +67,7 @@ class ProviderRelease:
     artist: str
     tracks: tuple[ProviderTrack, ...]
     year: Optional[int] = None
+    release_kind: Optional[str] = None
 
     @property
     def track_count(self) -> int:
@@ -156,16 +158,17 @@ def extract_evidence(
     Returns:
         DirectoryEvidence with track information
     """
-    # For now, stub implementation - will be filled in
+    # Minimal evidence extraction using sidecar tags when present.
     tracks: list[TrackEvidence] = []
     total_duration = 0
 
     for audio_file in sorted(audio_files):
+        existing_tags = _read_existing_tags(audio_file)
         # Placeholder - real implementation would read from files
         track = TrackEvidence(
             fingerprint_id=None,
             duration_seconds=None,
-            existing_tags={},
+            existing_tags=existing_tags,
         )
         tracks.append(track)
 
@@ -174,6 +177,25 @@ def extract_evidence(
         track_count=len(tracks),
         total_duration_seconds=total_duration,
     )
+
+
+def _read_existing_tags(path: Path) -> dict[str, str]:
+    metadata_path = path.with_suffix(path.suffix + ".meta.json")
+    if not metadata_path.exists():
+        return {}
+    try:
+        data = json.loads(metadata_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    tags = data.get("tags")
+    if not isinstance(tags, dict):
+        return {}
+    normalized: dict[str, str] = {}
+    for key, value in tags.items():
+        if value is None:
+            continue
+        normalized[str(key)] = str(value)
+    return normalized
 
 
 def score_release(
@@ -255,12 +277,20 @@ def score_release(
     # Year penalty (placeholder)
     year_penalty = 0.0
 
+    # Single -> album penalty (avoid false upgrades)
+    single_album_penalty = 0.0
+    if evidence.track_count <= 3:
+        release_kind = release.release_kind or _infer_release_kind(release)
+        if release_kind == "album" and release.track_count >= evidence.track_count + 3:
+            single_album_penalty = 0.2
+
     # Total score
     total_score = (
         coverage * thresholds["fingerprint_weight"]
         + (1.0 if track_count_match else 0.0) * thresholds["track_count_weight"]
         + duration_fit * thresholds["duration_weight"]
         - year_penalty
+        - single_album_penalty
     )
 
     return ReleaseScore(
@@ -271,6 +301,16 @@ def score_release(
         year_penalty=year_penalty,
         total_score=total_score,
     )
+
+
+def _infer_release_kind(release: ProviderRelease) -> str:
+    """Infer release kind from track count as a fallback."""
+    count = release.track_count
+    if count <= 2:
+        return "single"
+    if count <= 6:
+        return "ep"
+    return "album"
 
 
 def merge_and_rank_candidates(

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from resonance.core.identifier import ProviderClient, ProviderRelease
+from resonance.core.identity import match_key_album, match_key_artist, match_key_work
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ class CombinedProviderClient(ProviderClient):
                     artist=release.artist,
                     tracks=release.tracks,
                     year=release.year,
+                    release_kind=release.release_kind,
                 )
             )
         return normalized
@@ -69,13 +71,19 @@ class CombinedProviderClient(ProviderClient):
     def _dedupe_and_sort(self, releases: list[ProviderRelease]) -> list[ProviderRelease]:
         deduped: dict[tuple, ProviderRelease] = {}
         for release in releases:
+            track_key = tuple(
+                (
+                    track.position,
+                    track.fingerprint_id
+                    or match_key_work(track.title)
+                    or track.title.casefold(),
+                )
+                for track in release.tracks
+            )
             key = (
-                release.title.casefold(),
-                release.artist.casefold(),
-                tuple(
-                    (track.position, track.fingerprint_id or "")
-                    for track in release.tracks
-                ),
+                match_key_album(release.title) or release.title.casefold(),
+                match_key_artist(release.artist) or release.artist.casefold(),
+                track_key,
             )
             existing = deduped.get(key)
             if existing is None:

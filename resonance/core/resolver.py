@@ -94,6 +94,24 @@ def resolve_directory(
             reasons=("Directory already queued for user resolution",),
         )
 
+    mb_release_id = _musicbrainz_release_from_tags(evidence)
+    if mb_release_id:
+        updated = store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider="musicbrainz",
+            pinned_release_id=mb_release_id,
+            pinned_confidence=1.0,
+        )
+        return ResolveOutcome(
+            dir_id=updated.dir_id,
+            state=updated.state,
+            pinned_provider=updated.pinned_provider,
+            pinned_release_id=updated.pinned_release_id,
+            pinned_confidence=updated.pinned_confidence,
+            reasons=("musicbrainz_albumid present in tags",),
+        )
+
     # State must be NEW - run identification
     result = identify(evidence, provider_client)
 
@@ -150,3 +168,15 @@ def _queue_for_prompt(
         needs_prompt=True,
         reasons=reasons,
     )
+
+
+def _musicbrainz_release_from_tags(evidence: DirectoryEvidence) -> Optional[str]:
+    """Return MusicBrainz album id if all tagged tracks agree."""
+    release_ids = {
+        track.existing_tags.get("musicbrainz_albumid")
+        for track in evidence.tracks
+        if track.existing_tags.get("musicbrainz_albumid")
+    }
+    if len(release_ids) == 1:
+        return next(iter(release_ids))
+    return None

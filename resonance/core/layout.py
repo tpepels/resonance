@@ -86,7 +86,7 @@ def compute_destination_path(
     )
 
     if is_compilation:
-        if not album_folder:
+        if not album_folder or not various_artists:
             return None
         return Path(various_artists) / album_folder
 
@@ -101,7 +101,7 @@ def compute_destination_path(
             return Path(performer_value) / album_folder
         if performer_value:
             return Path(performer_value)
-        if album_folder:
+        if album_folder and various_artists:
             return Path(various_artists) / album_folder
         return None
 

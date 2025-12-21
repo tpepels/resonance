@@ -169,6 +169,32 @@ def test_score_release_no_fingerprints():
     assert score.total_score > 0.0
 
 
+def test_single_track_penalizes_album_upgrade() -> None:
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-album",
+        title="Album",
+        artist="Artist",
+        tracks=tuple(
+            ProviderTrack(
+                position=index,
+                title=f"Track {index}",
+                fingerprint_id="fp1" if index == 1 else None,
+                duration_seconds=180,
+            )
+            for index in range(1, 8)
+        ),
+    )
+
+    score = score_release(evidence, release)
+    assert score.total_score < 0.6
+
+
 def test_merge_and_rank_candidates_deterministic_ordering_tiebreaks_only():
     """
     Tie-break test: keep total_score identical AND component fields identical,

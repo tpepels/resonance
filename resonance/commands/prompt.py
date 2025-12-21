@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from argparse import Namespace
-from pathlib import Path
-
 from ..core.identifier import identify
 from ..core.state import DirectoryState
 from ..infrastructure.scanner import LibraryScanner

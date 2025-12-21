@@ -229,6 +229,51 @@ def test_path_change_does_not_trigger_identify(tmp_path: Path, monkeypatch: pyte
         store.close()
 
 
+def test_musicbrainz_albumid_skips_identify(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Existing MusicBrainz album id should auto-resolve without provider calls."""
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        store.get_or_create("dir-mbid", Path("/music/album"), "b" * 64)
+        provider = StubProviderClient([])
+        calls = _install_identify_guard(monkeypatch)
+
+        from resonance.core.resolver import resolve_directory
+
+        evidence = DirectoryEvidence(
+            tracks=(
+                TrackEvidence(
+                    fingerprint_id=None,
+                    duration_seconds=180,
+                    existing_tags={"musicbrainz_albumid": "mb-123"},
+                ),
+                TrackEvidence(
+                    fingerprint_id=None,
+                    duration_seconds=200,
+                    existing_tags={"musicbrainz_albumid": "mb-123"},
+                ),
+            ),
+            track_count=2,
+            total_duration_seconds=380,
+        )
+
+        outcome = resolve_directory(
+            dir_id="dir-mbid",
+            path=Path("/music/album"),
+            signature_hash="b" * 64,
+            evidence=evidence,
+            store=store,
+            provider_client=provider,
+        )
+
+        assert calls["count"] == 0
+        provider.assert_not_called()
+        assert outcome.state == DirectoryState.RESOLVED_AUTO
+        assert outcome.pinned_provider == "musicbrainz"
+        assert outcome.pinned_release_id == "mb-123"
+    finally:
+        store.close()
+
+
 def test_signature_change_triggers_identify(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Signature change must trigger identify() (at least once)."""
     store = DirectoryStateStore(tmp_path / "state.db")

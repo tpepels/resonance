@@ -175,7 +175,7 @@ def build_tag_patch(
                 "title": track_by_position[op.track_position].title,
                 "tracknumber": str(op.track_position),
                 **(
-                    {"musicbrainz_recordingid": track_by_position[op.track_position].recording_id}
+                    {"musicbrainz_recordingid": str(track_by_position[op.track_position].recording_id)}
                     if track_by_position[op.track_position].recording_id
                     else {}
                 ),

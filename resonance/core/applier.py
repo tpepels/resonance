@@ -22,7 +22,7 @@ from resonance.core.validation import (
     validate_signature_hash,
 )
 from resonance.infrastructure.directory_store import DirectoryStateStore
-from resonance.services.tag_writer import MetaJsonTagWriter, TagWriter, normalize_tag_set
+from resonance.services.tag_writer import MetaJsonTagWriter, TagValue, TagWriter, normalize_tag_set
 from resonance.infrastructure.scanner import LibraryScanner
 
 
@@ -334,7 +334,10 @@ def apply_plan(
                 existing = tag_writer.read_tags(dest)
             except Exception:  # noqa: BLE001 - fallback to tag writes
                 return False
-            combined = {**album_tags, **track_patch.set_tags, **provenance_tags}
+            combined: dict[str, TagValue] = {}
+            combined.update(album_tags)
+            combined.update(track_patch.set_tags)
+            combined.update(provenance_tags)
             normalized = normalize_tag_set(combined)
             for key, value in normalized.items():
                 existing_value = existing.get(key)
@@ -575,12 +578,12 @@ def apply_plan(
     if case_insensitive_collisions:
         normalized: dict[str, Path] = {}
         for _, dest in file_moves:
-            key = str(dest).lower()
-            prior = normalized.get(key)
+            lower_key = str(dest).lower()
+            prior = normalized.get(lower_key)
             if prior and prior != dest:
                 errors.append(f"Case-insensitive collision: {prior} vs {dest}")
                 break
-            normalized[key] = dest
+            normalized[lower_key] = dest
             if dest.parent.exists():
                 for entry in dest.parent.iterdir():
                     if entry.name.lower() == dest.name.lower() and entry.name != dest.name:
@@ -598,17 +601,17 @@ def apply_plan(
 
     seen_destinations: dict[Path, Path] = {}
     for _, dest in file_moves:
-        key = dest
+        dest_key = dest
         if allowed_roots and not dest.is_absolute():
             try:
-                key = _resolve_destination_path(dest, allowed_roots)
+                dest_key = _resolve_destination_path(dest, allowed_roots)
             except ValueError as exc:
                 errors.append(str(exc))
                 continue
-        if key in seen_destinations:
+        if dest_key in seen_destinations:
             errors.append(f"Duplicate destination path: {dest}")
             break
-        seen_destinations[key] = dest
+        seen_destinations[dest_key] = dest
 
     if plan.conflict_policy == "FAIL":
         for _, dest in file_moves:
