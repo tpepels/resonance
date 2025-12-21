@@ -57,6 +57,11 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    scan_parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Allow legacy V2 visitor pipeline (deprecated)",
+    )
 
     # Daemon command
     daemon_parser = subparsers.add_parser(
@@ -85,6 +90,11 @@ def main() -> int:
         action="store_true",
         help="Run a single scan cycle and exit",
     )
+    daemon_parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Allow legacy V2 visitor pipeline (deprecated)",
+    )
 
     # Prompt command (answer deferred prompts)
     prompt_parser = subparsers.add_parser(
@@ -96,6 +106,11 @@ def main() -> int:
         type=Path,
         default=Path.home() / ".cache" / "resonance" / "metadata.db",
         help="Cache database path",
+    )
+    prompt_parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Allow legacy V2 visitor pipeline (deprecated)",
     )
 
     identify_parser = subparsers.add_parser(

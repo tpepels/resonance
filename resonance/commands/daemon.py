@@ -21,6 +21,12 @@ def run_daemon(args: Namespace) -> int:
     Returns:
         Exit code (0 for success)
     """
+    if not getattr(args, "legacy", False):
+        print(
+            "daemon uses deprecated V2 visitor pipeline; rerun with --legacy or use V3 commands."
+        )
+        return 2
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(levelname)s: %(message)s",

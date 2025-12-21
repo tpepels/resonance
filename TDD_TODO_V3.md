@@ -119,6 +119,8 @@ For each scenario, freeze the following **expected artifacts**:
 
 - [x] Add `scripts/regen_golden.py` helper to regenerate snapshots
 - [ ] Snapshot changes require an explicit justification (bug fix or deliberate behavior change)
+  - Policy: any snapshot regen must include a short justification in the commit message
+    or in a `docs/CHANGELOG.md` entry (one sentence is sufficient).
 
 ### 0.8 Golden corpus expansion for V3 (from CANONICALIZATION_AUDIT.md)
 
@@ -182,7 +184,7 @@ This section is complete when:
 
 - [x] E2E: singleton dir → Discogs match (CERTAIN) → plan → apply → tags written
 - [x] E2E: ambiguous results → QUEUED_PROMPT with candidate list + reasons
-- [ ] Heuristics tests:
+- [x] Heuristics tests:
   - [x] duration tolerance windows
   - [x] track-count match scoring
   - [x] fuzzy title normalization (feat variants, punctuation, apostrophes, diacritics)
@@ -212,7 +214,7 @@ This section is complete when:
 
 - [x] E2E: multi-disc dir → MB multi-medium release → plan → apply
 - [x] E2E: classical case (composer/work/performers heavy)
-- [ ] Scoring tests:
+- [x] Scoring tests:
   - [x] prefer exact medium/track count match
   - [x] penalize mismatched disc counts
   - [x] prefer higher track-duration alignment
@@ -228,7 +230,7 @@ This section is complete when:
 
 ### 3.1 Resolution strategy (Feature)
 
-- [ ] Implement:
+- [x] Implement:
   - [x] query MB and Discogs (order configurable)
   - [x] merge candidates into unified ranked list
   - [x] provenance display + reason codes
@@ -295,7 +297,7 @@ This section is complete when:
 ### 5.2 Extras handling (Feature)
 
 - [x] Policy: keep/move/rename extras (cover.jpg, booklet.pdf, .cue, .log)
-- [ ] Tests:
+- [x] Tests:
   - cover art follows album
   - extras don’t collide across discs
   - unknown extras handled deterministically (kept or moved to Extras)
@@ -303,11 +305,11 @@ This section is complete when:
 
 ### 5.3 Collision policy (Integration)
 
-- [ ] Tests:
+- [x] Tests:
   - same destination filename from different sources
   - case-insensitive collisions (Track.flac vs track.flac)
-- [ ] Feature behavior: FAIL by default or deterministic suffixing
-- [ ] E2E: collision is explained; apply does not partially mutate
+- [x] Feature behavior: FAIL by default or deterministic suffixing
+- [x] E2E: collision is explained; apply does not partially mutate
 
 ### 5.4 Idempotent rerun (Integration)
 

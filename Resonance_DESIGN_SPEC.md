@@ -292,6 +292,12 @@ Folder layout decisions are **Planner responsibilities only**.
 * Else: album artist or performer.
 * Works/movements live in tags, not folders.
 
+### V3 implementation notes (deviations)
+
+* V3 layout uses `Artist/Year - Album/## - Title.ext` for stable year-prefixed folders.
+* Tag patches are produced by the Enricher artifact (not embedded inside Plan) and applied by Applier.
+* Apply signature checks are based on the plan’s tracked source files to avoid drift from scanner merge policy.
+
 ---
 
 ## 8. Tagging policy

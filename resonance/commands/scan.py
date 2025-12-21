@@ -45,6 +45,23 @@ def run_scan(args: Namespace, *, output_sink=print) -> int:
     Returns:
         Exit code (0 for success)
     """
+    if not getattr(args, "legacy", False):
+        payload = {
+            "status": "LEGACY_DISABLED",
+            "message": "scan uses deprecated V2 visitor pipeline; rerun with --legacy or use V3 commands.",
+        }
+        if getattr(args, "json", False):
+            _emit_output(
+                command="scan",
+                payload=payload,
+                json_output=True,
+                output_sink=output_sink,
+                human_lines=(),
+            )
+        else:
+            output_sink(payload["message"])
+        return 2
+
     # Set up logging
     logging.basicConfig(
         level=logging.INFO,

@@ -110,6 +110,7 @@ def test_enricher_builds_patch_for_resolved_auto() -> None:
     assert patch.album_patch.set_tags == {
         "album": "Album",
         "albumartist": "Artist",
+        "musicbrainz_albumid": "mb-123",
     }
     assert [tp.track_position for tp in patch.track_patches] == [1, 2]
     assert [tp.set_tags["title"] for tp in patch.track_patches] == [

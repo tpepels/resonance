@@ -39,16 +39,16 @@ pip install -e .
 
 ### Interactive Scan
 ```bash
-resonance scan /path/to/music
+resonance scan --legacy /path/to/music
 ```
 
 ### Daemon Mode
 ```bash
 # Start watching a directory
-resonance daemon /path/to/music
+resonance daemon --legacy /path/to/music
 
 # Later, answer deferred prompts
-resonance prompt
+resonance prompt --legacy
 ```
 
 ### Other Commands
@@ -57,12 +57,15 @@ resonance prompt
 resonance --help
 
 # Reprocess skipped directories
-resonance scan --unjail /path/to/music
+resonance scan --legacy --unjail /path/to/music
 ```
 
 ## Architecture
 
-Resonance uses a clean **Visitor Pattern**:
+Resonance uses the V3 pipeline by default (scan → identify → resolve → plan → apply).
+The V2 visitor pipeline is deprecated and only available via `--legacy` flags.
+
+Legacy V2 Visitor Pattern:
 
 ```
 Directory → Process with Visitors:

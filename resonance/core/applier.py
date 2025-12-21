@@ -345,7 +345,7 @@ def apply_plan(
     if not plan.source_path.exists() or not plan.source_path.is_dir():
         errors.append("Plan source_path does not exist or is not a directory")
     else:
-        audio_files = _collect_audio_files(plan.source_path)
+        audio_files = sorted({op.source_path for op in plan.operations if op.source_path.exists()})
         if not audio_files:
             errors.append("Signature check failed: no audio files found")
         else:
@@ -402,6 +402,20 @@ def apply_plan(
         for _, dest in file_moves:
             if not any(_is_within(root, dest) for root in allowed_roots):
                 errors.append(f"Destination outside allowed roots: {dest}")
+
+    seen_destinations: dict[Path, Path] = {}
+    for _, dest in file_moves:
+        key = dest
+        if allowed_roots and not dest.is_absolute():
+            try:
+                key = _resolve_destination_path(dest, allowed_roots)
+            except ValueError as exc:
+                errors.append(str(exc))
+                continue
+        if key in seen_destinations:
+            errors.append(f"Duplicate destination path: {dest}")
+            break
+        seen_destinations[key] = dest
 
     if plan.conflict_policy == "FAIL":
         for _, dest in file_moves:

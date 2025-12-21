@@ -7,8 +7,10 @@ import json
 from pathlib import Path
 
 from resonance.commands.apply import run_apply
+from resonance.commands.daemon import run_daemon
 from resonance.commands.identify import run_identify
 from resonance.commands.plan import run_plan
+from resonance.commands.prompt import run_prompt
 from resonance.commands.scan import run_scan
 from resonance.core.applier import ApplyReport, ApplyStatus, FileOpResult
 from resonance.core.identifier import (
@@ -63,6 +65,7 @@ def test_scan_json_output_is_deterministic(tmp_path: Path) -> None:
         delete_nonaudio=False,
         dry_run=True,
         json=True,
+        legacy=True,
     )
     run_scan(args, output_sink=sink)
     payload = json.loads(lines[0])
@@ -72,6 +75,45 @@ def test_scan_json_output_is_deterministic(tmp_path: Path) -> None:
     assert data["audio_count"] == 2
     assert data["non_audio_count"] == 1
     assert data["status"] == "FOUND"
+
+
+def test_scan_requires_legacy_flag_by_default(tmp_path: Path) -> None:
+    directory = tmp_path / "album"
+    _write_audio(directory / "01 - Track A.flac")
+
+    lines, sink = _capture_output()
+    args = Namespace(
+        directory=directory,
+        cache=tmp_path / "cache.db",
+        unjail=False,
+        delete_nonaudio=False,
+        dry_run=True,
+        json=True,
+        legacy=False,
+    )
+    exit_code = run_scan(args, output_sink=sink)
+    payload = json.loads(lines[0])
+    assert exit_code == 2
+    assert payload["data"]["status"] == "LEGACY_DISABLED"
+
+
+def test_daemon_requires_legacy_flag_by_default(tmp_path: Path) -> None:
+    args = Namespace(
+        directory=tmp_path / "library",
+        cache=tmp_path / "cache.db",
+        interval=1.0,
+        once=True,
+        legacy=False,
+    )
+    assert run_daemon(args) == 2
+
+
+def test_prompt_requires_legacy_flag_by_default(tmp_path: Path) -> None:
+    args = Namespace(
+        cache=tmp_path / "cache.db",
+        legacy=False,
+    )
+    assert run_prompt(args) == 2
 
 
 def test_identify_outputs_json_and_human(tmp_path: Path) -> None:

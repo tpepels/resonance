@@ -178,7 +178,53 @@ def test_applier_fails_on_collision(tmp_path: Path) -> None:
         assert report.status == ApplyStatus.FAILED
         assert any("Destination already exists" in err for err in report.errors)
         assert all("Missing source file" not in err for err in report.errors)
+        assert any("Destination already exists" in err for err in report.errors)
         assert (fixture.path / "01 - Track A.flac").exists()
+        assert (fixture.path / "02 - Track B.flac").exists()
+    finally:
+        store.close()
+
+
+def test_applier_fails_on_duplicate_destination_in_plan(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    plan = replace(
+        plan,
+        operations=(
+            TrackOperation(
+                track_position=1,
+                source_path=fixture.path / "01 - Track A.flac",
+                destination_path=Path("Artist/Album/01 - Track A.flac"),
+                track_title="Track A",
+            ),
+            TrackOperation(
+                track_position=2,
+                source_path=fixture.path / "02 - Track B.flac",
+                destination_path=Path("Artist/Album/01 - Track A.flac"),
+                track_title="Track B",
+            ),
+        ),
+    )
+    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert any("Duplicate destination path" in err for err in report.errors)
+        assert (fixture.path / "01 - Track A.flac").exists()
+        assert (fixture.path / "02 - Track B.flac").exists()
     finally:
         store.close()
 
@@ -208,6 +254,75 @@ def test_applier_fails_on_signature_mismatch(tmp_path: Path) -> None:
             "Signature hash mismatch between plan and source directory" in err
             for err in report.errors
         )
+    finally:
+        store.close()
+
+
+def test_applier_signature_uses_plan_source_set(tmp_path: Path) -> None:
+    source_dir = tmp_path / "source" / "album"
+    disc1 = source_dir / "Disc 1"
+    disc2 = source_dir / "Disc 2"
+    audio_files = [
+        create_audio_stub(
+            disc1 / "01 - Track A.flac",
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+        ),
+        create_audio_stub(
+            disc2 / "02 - Track B.flac",
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ),
+    ]
+
+    signature_hash = dir_signature(audio_files).signature_hash
+    plan = Plan(
+        dir_id="dir-nested",
+        source_path=source_dir,
+        signature_hash=signature_hash,
+        provider="musicbrainz",
+        release_id="mb-123",
+        release_title="Album",
+        release_artist="Artist",
+        destination_path=Path("Artist/Album"),
+        operations=(
+            TrackOperation(
+                track_position=1,
+                source_path=audio_files[0],
+                destination_path=Path("Artist/Album/01 - Track A.flac"),
+                track_title="Track A",
+            ),
+            TrackOperation(
+                track_position=2,
+                source_path=audio_files[1],
+                destination_path=Path("Artist/Album/02 - Track B.flac"),
+                track_title="Track B",
+            ),
+        ),
+        non_audio_policy="MOVE_WITH_ALBUM",
+        plan_version="v1",
+        is_compilation=False,
+        compilation_reason=None,
+        is_classical=False,
+    )
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, source_dir, signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        assert (tmp_path / "library/Artist/Album/01 - Track A.flac").exists()
+        assert (tmp_path / "library/Artist/Album/02 - Track B.flac").exists()
     finally:
         store.close()
 
