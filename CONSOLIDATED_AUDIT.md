@@ -306,7 +306,7 @@ def test_applier_crash_after_file_moves_before_db_commit(tmp_path):
     # Assert: returns NOOP_ALREADY_APPLIED, DB state is APPLIED
 ```
 
-**Status:** Added rollback-failure coverage (`test_applier_reports_rollback_failure`).
+**Status:** Added rollback-failure coverage (`test_applier_reports_rollback_failure`) and tag-write crash coverage (`test_applier_fails_on_tag_write_crash`).
 
 ---
 

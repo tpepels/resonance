@@ -6,10 +6,13 @@ from pathlib import Path
 import shutil
 
 from resonance.core.applier import ApplyStatus, apply_plan
+from resonance.core.enricher import build_tag_patch
+from resonance.core.identifier import ProviderRelease, ProviderTrack
 from resonance.core.identity.signature import dir_signature
 from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
+from resonance.services.tag_writer import TagWriteResult
 from tests.helpers.fs import AudioStubSpec, build_album_dir
 import pytest
 
@@ -164,5 +167,80 @@ def test_applier_reports_rollback_failure(tmp_path: Path, monkeypatch: pytest.Mo
         assert report.rollback_attempted is True
         assert report.rollback_success is False
         assert any("Move failed" in err for err in report.errors)
+    finally:
+        store.close()
+
+
+def test_applier_fails_on_tag_write_crash(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    release = ProviderRelease(
+        provider="musicbrainz",
+        release_id="mb-123",
+        title="Album",
+        artist="Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track A"),
+            ProviderTrack(position=2, title="Track B"),
+        ),
+    )
+    tag_patch = build_tag_patch(plan, release, DirectoryState.RESOLVED_AUTO)
+
+    class _FailingWriter:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def read_tags(self, _path: Path) -> dict[str, str]:
+            return {}
+
+        def apply_patch(
+            self, _path: Path, set_tags: dict[str, str], allow_overwrite: bool
+        ):
+            self.calls += 1
+            if self.calls >= 2:
+                raise RuntimeError("tag write crash")
+            return TagWriteResult(
+                file_path=_path,
+                tags_set=tuple(sorted(set_tags.keys())),
+                tags_skipped=(),
+            )
+
+        def write_tags_exact(self, _path: Path, tags: dict[str, str]) -> None:
+            return None
+
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        report = apply_plan(
+            plan,
+            tag_patch=tag_patch,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+            tag_writer=_FailingWriter(),
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert report.rollback_attempted is True
+        assert any("Tag write failed" in err for err in report.errors)
     finally:
         store.close()
