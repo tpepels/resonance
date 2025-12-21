@@ -411,7 +411,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 |-------------|--------|-------|
 | 1. Core invariants gate (golden corpus) | ✅ GREEN | 26/26 scenarios |
 | 2. Discogs + MusicBrainz integrated | ⚙️ IN PROGRESS | Provider fixtures ready |
-| 3. Tag writing (FLAC/MP3/M4A) | ⚙️ IN PROGRESS | FLAC complete, MP3/M4A partial |
+| 3. Tag writing (FLAC/MP3/M4A) | ⚙️ IN PROGRESS | FLAC complete; MP3/M4A depend on mutagen (skipped when unavailable) |
 | 4. Move/rename behavior | ⚙️ IN PROGRESS | Multi-disc/collision tests exist |
 | 5. Big 10 suite green | ❌ NOT STARTED | Waiting on provider integration |
 
