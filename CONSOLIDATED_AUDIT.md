@@ -128,6 +128,8 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 - [ ] If deprecated: Remove `resonance/visitors/`, update CLI to use V3 exclusively
 - [ ] If harmonized: Refactor visitors to call V3 pipeline functions
 
+**Status:** CLI `scan/daemon/prompt` now require `--legacy` to run V2 visitors, defaulting to V3-only paths.
+
 ---
 
 #### C-2: No Single Composition Root 🔴 **BLOCKING**
@@ -145,6 +147,8 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 - [ ] Add `DirectoryStateStore` to `ResonanceApp.__init__()`
 - [ ] Expose as `app.store`
 - [ ] Commands delegate construction to `ResonanceApp.from_env()`
+
+**Status:** CLI now constructs `DirectoryStateStore` once and injects it into `run_plan`/`run_apply` (no ad-hoc store creation in those commands).
 
 ---
 
@@ -302,6 +306,8 @@ def test_applier_crash_after_file_moves_before_db_commit(tmp_path):
     # Assert: returns NOOP_ALREADY_APPLIED, DB state is APPLIED
 ```
 
+**Status:** Added rollback-failure coverage (`test_applier_reports_rollback_failure`).
+
 ---
 
 ### 3.2 Schema Versioning (STOP-SHIP GAP)
@@ -329,6 +335,8 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
     # Assert: raises ValueError("DB schema 99 > supported 4. Please upgrade Resonance.")
 ```
 
+**Status:** Added migration coverage from schema v3 to v4 (`test_schema_migration_from_v3_preserves_records`).
+
 ---
 
 ### 3.3 Tag Validation (CRITICAL GAP)
@@ -343,6 +351,8 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 | Tag key namespace collision | ❌ | **LOW** | P2 |
 
 **Risk:** Null bytes can truncate strings or crash parsers. No validation exists.
+
+**Status:** Added validation in tag normalization and unit tests for null bytes, overlong values, and invalid UTF-8 bytes.
 
 ---
 

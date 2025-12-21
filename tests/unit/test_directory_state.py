@@ -398,3 +398,55 @@ def test_schema_migration_from_v1_preserves_records(tmp_path: Path) -> None:
         assert version == "4"
     finally:
         store.close()
+
+
+def test_schema_migration_from_v3_preserves_records(tmp_path: Path) -> None:
+    db = tmp_path / "state.db"
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE schema_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES (?, ?)",
+            ("schema_version", "3"),
+        )
+        conn.execute(
+            """
+            CREATE TABLE directories (
+                dir_id TEXT PRIMARY KEY,
+                last_seen_path TEXT NOT NULL,
+                signature_hash TEXT NOT NULL,
+                signature_version INTEGER NOT NULL DEFAULT 1,
+                state TEXT NOT NULL,
+                pinned_provider TEXT,
+                pinned_release_id TEXT,
+                pinned_confidence REAL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO directories (dir_id, last_seen_path, signature_hash, signature_version, state, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ("dir-1", "/music/a", "a" * 64, 1, "NEW", "now", "now"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    store = DirectoryStateStore(db)
+    try:
+        record = store.get("dir-1")
+        assert record is not None
+        assert record.signature_hash == "a" * 64
+        version = store._get_metadata("schema_version")
+        assert version == "4"
+    finally:
+        store.close()

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from resonance.services.tag_writer import format_tag_keys, normalize_tag_set
 
 
@@ -19,6 +21,24 @@ def test_normalize_tag_set_preserves_diacritics() -> None:
     tags = {"artist": "Björk"}
     normalized = normalize_tag_set(tags)
     assert normalized["artist"] == "Björk"
+
+
+def test_normalize_tag_set_rejects_null_bytes() -> None:
+    tags = {"title": "Bad\x00Title"}
+    with pytest.raises(ValueError, match="null byte"):
+        normalize_tag_set(tags)
+
+
+def test_normalize_tag_set_rejects_overlong_values() -> None:
+    tags = {"title": "A" * 1001}
+    with pytest.raises(ValueError, match="exceeds 1000"):
+        normalize_tag_set(tags)
+
+
+def test_normalize_tag_set_rejects_invalid_utf8_bytes() -> None:
+    tags = {"title": b"\xff"}
+    with pytest.raises(ValueError, match="invalid UTF-8"):
+        normalize_tag_set(tags)
 
 
 def test_format_tag_keys_mp3_includes_core_and_mbids() -> None:

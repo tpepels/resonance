@@ -34,12 +34,8 @@ def run_plan(
     output_sink=print,
 ) -> int:
     """Generate a plan for a resolved directory."""
-    close_store = False
     if store is None:
-        if not args.state_db:
-            raise ValidationError("state_db is required")
-        store = DirectoryStateStore(args.state_db)
-        close_store = True
+        raise ValidationError("store is required; construct it in the CLI composition root")
     if pinned_release is None:
         raise ValidationError("pinned_release is required")
 
@@ -53,8 +49,7 @@ def run_plan(
         plan_hash = hashlib.sha256(serialize_plan(plan).encode("utf-8")).hexdigest()
         store.record_plan_summary(plan.dir_id, plan_hash, plan.plan_version)
     finally:
-        if close_store:
-            store.close()
+        pass
 
     payload = _plan_payload(plan)
     emit_output(

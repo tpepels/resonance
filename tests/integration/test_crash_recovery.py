@@ -11,6 +11,7 @@ from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from tests.helpers.fs import AudioStubSpec, build_album_dir
+import pytest
 
 
 def _signature_hash(source_dir: Path) -> str:
@@ -104,5 +105,64 @@ def test_applier_crash_after_file_moves_before_db_commit(tmp_path: Path) -> None
         updated = store.get(plan.dir_id)
         assert updated is not None
         assert updated.state == DirectoryState.APPLIED
+    finally:
+        store.close()
+
+
+def test_applier_reports_rollback_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [
+            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
+            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
+        ],
+    )
+    plan = _make_plan(fixture.path)
+    store = DirectoryStateStore(tmp_path / "state.db")
+    try:
+        record = store.get_or_create(plan.dir_id, fixture.path, plan.signature_hash)
+        store.set_state(
+            record.dir_id,
+            DirectoryState.RESOLVED_AUTO,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+        store.set_state(
+            record.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=plan.provider,
+            pinned_release_id=plan.release_id,
+        )
+
+        fail_on_rollback = {"enabled": False}
+        real_move = shutil.move
+
+        def move_with_failure(src: str, dest: str):
+            if fail_on_rollback["enabled"] and src.endswith("01 - Track A.flac"):
+                raise OSError("rollback failed")
+            return real_move(src, dest)
+
+        monkeypatch.setattr("resonance.core.applier.shutil.move", move_with_failure)
+
+        def fail_second_move(src: Path, dest: Path) -> None:
+            if dest.name.startswith("02 - Track B"):
+                fail_on_rollback["enabled"] = True
+                raise OSError("simulated move failure")
+            return real_move(str(src), str(dest))
+
+        monkeypatch.setattr("resonance.core.applier._move_file", fail_second_move)
+
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert report.rollback_attempted is True
+        assert report.rollback_success is False
+        assert any("Move failed" in err for err in report.errors)
     finally:
         store.close()

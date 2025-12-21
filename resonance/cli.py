@@ -218,14 +218,28 @@ def main() -> int:
             from .commands.identify import run_identify
             return run_identify(args, provider_client=None)
         elif args.command == "plan":
+            if not args.state_db:
+                raise ValueError("state_db is required")
+            from .infrastructure.directory_store import DirectoryStateStore
             from .commands.plan import run_plan
-            return run_plan(args)
+            store = DirectoryStateStore(args.state_db)
+            try:
+                return run_plan(args, store=store)
+            finally:
+                store.close()
         elif args.command == "prescan":
             from .commands.prescan import run_prescan
             return run_prescan(args)
         elif args.command == "apply":
+            if not args.state_db:
+                raise ValueError("state_db is required")
+            from .infrastructure.directory_store import DirectoryStateStore
             from .commands.apply import run_apply
-            return run_apply(args)
+            store = DirectoryStateStore(args.state_db)
+            try:
+                return run_apply(args, store=store)
+            finally:
+                store.close()
         else:
             parser.print_help()
             return 1

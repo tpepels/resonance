@@ -19,6 +19,7 @@ def run_apply(
     *,
     apply_fn=apply_plan,
     config_loader=load_settings,
+    store: DirectoryStateStore | None = None,
     output_sink=print,
 ) -> int:
     """Resolve tag writer backend and dispatch apply."""
@@ -84,7 +85,8 @@ def run_apply(
             human_lines=(f"apply: status={payload['status']}",),
         )
         return 0
-    store = DirectoryStateStore(Path(args.state_db))
+    if store is None:
+        raise ValidationError("store is required; construct it in the CLI composition root")
     try:
         plan = None  # TODO: load plan artifact
         tag_patch = None  # TODO: load tag patch artifact

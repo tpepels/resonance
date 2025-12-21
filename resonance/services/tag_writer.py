@@ -60,11 +60,30 @@ class TagWriter(Protocol):
         ...
 
 
-TagValue = str | Sequence[str]
+TagValue = str | bytes | Sequence[str | bytes]
 
 
 def _collapse_whitespace(value: str) -> str:
     return " ".join(value.split())
+
+
+def _validate_tag_value(value: str) -> None:
+    if "\x00" in value:
+        raise ValueError("Tag value contains null byte")
+    if len(value) > 1000:
+        raise ValueError("Tag value exceeds 1000 characters")
+
+
+def _normalize_scalar(value: str | bytes) -> str:
+    if isinstance(value, bytes):
+        try:
+            decoded = value.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValueError("Tag value contains invalid UTF-8") from exc
+        value = decoded
+    normalized = _collapse_whitespace(str(value))
+    _validate_tag_value(normalized)
+    return normalized
 
 
 def normalize_tag_set(tags: dict[str, TagValue]) -> dict[str, str]:
@@ -73,12 +92,12 @@ def normalize_tag_set(tags: dict[str, TagValue]) -> dict[str, str]:
         if value is None:
             continue
         if isinstance(value, (list, tuple)):
-            parts = [_collapse_whitespace(str(part)) for part in value if part]
+            parts = [_normalize_scalar(part) for part in value if part]
             joined = "; ".join(part for part in parts if part)
             if joined:
                 normalized[key] = joined
             continue
-        normalized[key] = _collapse_whitespace(str(value))
+        normalized[key] = _normalize_scalar(value)
     return normalized
 
 
