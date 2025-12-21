@@ -360,6 +360,32 @@ def test_applier_rejects_path_traversal_in_source_path(tmp_path: Path) -> None:
         store.close()
 
 
+def test_applier_rejects_source_path_mismatch(tmp_path: Path) -> None:
+    fixture = build_album_dir(
+        tmp_path / "source",
+        "album",
+        [AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a")],
+    )
+    plan = _make_plan(fixture.path)
+    plan = replace(
+        plan,
+        source_path=tmp_path / "moved",
+    )
+    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
+    try:
+        report = apply_plan(
+            plan,
+            tag_patch=None,
+            store=store,
+            allowed_roots=(tmp_path / "library",),
+            dry_run=False,
+        )
+        assert report.status == ApplyStatus.FAILED
+        assert any("source_path" in err and "last_seen_path" in err for err in report.errors)
+    finally:
+        store.close()
+
+
 def test_applier_rejects_path_traversal_in_destination_path(tmp_path: Path) -> None:
     fixture = build_album_dir(
         tmp_path / "source",

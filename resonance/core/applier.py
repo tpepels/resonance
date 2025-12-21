@@ -403,6 +403,8 @@ def apply_plan(
         errors.append(f"Directory state must be PLANNED, got {record.state.value}")
     elif record.signature_hash != plan.signature_hash:
         errors.append("Signature hash mismatch between plan and store")
+    elif record.last_seen_path.resolve() != plan.source_path.resolve():
+        errors.append("Plan source_path does not match record last_seen_path")
     if plan.settings_hash is not None and plan.settings_hash != settings_hash:
         errors.append("Settings hash mismatch between plan and apply")
 

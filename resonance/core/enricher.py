@@ -124,7 +124,11 @@ def build_tag_patch(
     overwrite_fields: tuple[str, ...] = (),
     now_fn=lambda: datetime.now(timezone.utc),
 ) -> TagPatch:
-    """Build a deterministic tag patch from a plan and pinned release."""
+    """Build a deterministic tag patch from a plan and pinned release.
+
+    Note: behavior is deterministic but state-conditional; resolution_state gates
+    whether tags are emitted (e.g., RESOLVED_USER may be suppressed unless allowed).
+    """
     if resolution_state not in (
         DirectoryState.RESOLVED_AUTO,
         DirectoryState.RESOLVED_USER,
