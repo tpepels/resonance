@@ -36,7 +36,7 @@ Resonance is in **early V3** with a solid deterministic core pipeline (scan → 
 | **Unit Tests** | ~180 | ✅ GREEN | Core logic, identity, signature, planner |
 | **Integration Tests** | ~280 | ✅ GREEN | Full pipeline, provider fusion, CLI |
 | **Golden Corpus** | 26 scenarios | ✅ GREEN | Snapshot-based regression tests |
-| **Crash Recovery** | 3 | 🟡 IN PROGRESS | Covers move-before-commit, rollback failure, tag-write crash |
+| **Crash Recovery** | 5 | 🟡 IN PROGRESS | Covers move-before-commit, rollback failure, tag-write crash, disk full, permission denied |
 | **Schema Versioning** | 4 | 🟡 IN PROGRESS | Downgrade protection + migrations covered |
 | **Security (Path Safety)** | 8 | ✅ GOOD | Path traversal, SafePath validation |
 
@@ -277,17 +277,17 @@ Per architecture: "No business logic in visitors."
 
 ### 3.1 Crash Recovery (STOP-SHIP GAP)
 
-**Coverage:** 🟡 **38%** (3/8 scenarios)
+**Coverage:** 🟡 **62%** (5/8 scenarios)
 
 | Scenario | Tested? | Risk | Priority |
 |----------|---------|------|----------|
 | Crash after all file moves, before DB commit | ✅ | **CRITICAL** | P0 |
 | Crash during rollback | ✅ | **HIGH** | P0 |
 | Power loss during SQLite transaction | ❌ | **MEDIUM** | P1 |
-| Disk full during file move | ❌ | **MEDIUM** | P1 |
+| Disk full during file move | ✅ | **MEDIUM** | P1 |
 | Crash after file moves, before tag writes | ❌ | **MEDIUM** | P1 |
 | Crash mid-tag write | ✅ | **LOW** | P2 |
-| Permission denied mid-apply | ❌ | **LOW** | P2 |
+| Permission denied mid-apply | ✅ | **LOW** | P2 |
 | Multiple crashes (crash → recover → crash) | ❌ | **LOW** | P2 |
 
 **Most Common Failure:** Crash after heavy file I/O succeeds but before fast DB commit.
@@ -295,8 +295,8 @@ Per architecture: "No business logic in visitors."
 **Current Behavior:** If all moves completed before a crash, re-apply returns `NOOP_ALREADY_APPLIED`
 and updates state to `APPLIED` (verified by `test_applier_crash_after_file_moves_before_db_commit`).
 
-**Status:** Crash-after-move, rollback failure, and tag-write crash scenarios are covered. Remaining gaps
-include DB/WAL failure modes, disk full, and permission failures.
+**Status:** Crash-after-move, rollback failure, tag-write crash, disk-full, and permission-denied
+scenarios are covered. Remaining gaps include DB/WAL failure modes and the “before tag writes” window.
 
 ---
 
@@ -497,7 +497,7 @@ def test_directory_store_rejects_future_schema_version(tmp_path):
 
 | Risk Area | Current | Target | Priority |
 |-----------|---------|--------|----------|
-| **Crash Recovery** | 🟡 38% | 🟢 80% | P0 - STOP-SHIP |
+| **Crash Recovery** | 🟡 62% | 🟢 80% | P0 - STOP-SHIP |
 | **Schema Versioning** | 🟡 57% | 🟢 90% | P0 - STOP-SHIP |
 | **Tag Validation** | 🔴 0% | 🟢 80% | P1 - HIGH |
 | **Path Safety** | 🟢 75% | 🟢 90% | P2 - MEDIUM |
