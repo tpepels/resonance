@@ -21,6 +21,76 @@ def main() -> int:
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
+    # Workflow commands
+    scan_parser = subparsers.add_parser(
+        "scan",
+        help="Scan library for audio directories",
+    )
+    scan_parser.add_argument(
+        "library_root",
+        type=Path,
+        help="Library root directory to scan",
+    )
+    scan_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    scan_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    resolve_parser = subparsers.add_parser(
+        "resolve",
+        help="Resolve scanned directories using provider metadata",
+    )
+    resolve_parser.add_argument(
+        "library_root",
+        type=Path,
+        help="Library root directory to resolve",
+    )
+    resolve_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    resolve_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path",
+    )
+    resolve_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    prompt_parser = subparsers.add_parser(
+        "prompt",
+        help="Interactively resolve queued directories",
+    )
+    prompt_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    prompt_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path",
+    )
+    prompt_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    # Diagnostic commands
     identify_parser = subparsers.add_parser(
         "identify",
         help="Identify a directory and score provider candidates",
@@ -98,7 +168,31 @@ def main() -> int:
 
     try:
         # Import here to avoid slow startup
-        if args.command == "identify":
+        if args.command == "scan":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.scan import run_scan
+            store = DirectoryStateStore(args.state_db)
+            try:
+                return run_scan(args, store=store)
+            finally:
+                store.close()
+        elif args.command == "resolve":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.resolve import run_resolve
+            store = DirectoryStateStore(args.state_db)
+            try:
+                return run_resolve(args, store=store)
+            finally:
+                store.close()
+        elif args.command == "prompt":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.prompt import run_prompt
+            store = DirectoryStateStore(args.state_db)
+            try:
+                return run_prompt(args, store=store)
+            finally:
+                store.close()
+        elif args.command == "identify":
             from .commands.identify import run_identify
             return run_identify(args, provider_client=None)
         elif args.command == "plan":

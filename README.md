@@ -36,42 +36,67 @@ pip install -e .
 
 ## Usage
 
-### V3 Pipeline (Recommended)
+### V3 Pipeline (Complete Workflow)
 
-The V3 pipeline uses a deterministic state machine with explicit plan artifacts:
+The V3 pipeline uses a deterministic state machine with explicit state transitions:
 
 ```bash
-# 1. Identify a directory
-resonance identify /path/to/album --json > identification.json
+# 1. Scan library to discover audio directories
+resonance scan /path/to/library --state-db ~/.local/share/resonance/state.db
 
-# 2. Create a plan (requires directory in state DB)
+# 2. Resolve directories using provider metadata (MusicBrainz, Discogs)
+resonance resolve /path/to/library --state-db ~/.local/share/resonance/state.db
+
+# 3. Answer prompts for uncertain matches
+resonance prompt --state-db ~/.local/share/resonance/state.db
+
+# 4. Create a plan for a resolved directory
 resonance plan --dir-id <dir-id> --state-db ~/.local/share/resonance/state.db
 
-# 3. Apply the plan
+# 5. Apply the plan
 resonance apply --plan plan.json --state-db ~/.local/share/resonance/state.db
 ```
 
-### Prescan (Build Canonical Mappings)
+### State Transitions
 
-```bash
-# Scan library to build canonical artist/composer mappings
-resonance prescan /path/to/library --cache ~/.cache/resonance/metadata.db
+Directories flow through the following states:
+
+```
+NEW → (resolve) → RESOLVED_AUTO or QUEUED_PROMPT
+QUEUED_PROMPT → (prompt) → RESOLVED_USER or JAILED
+RESOLVED_AUTO/RESOLVED_USER → (plan) → PLANNED
+PLANNED → (apply) → APPLIED
 ```
 
-### Commands
+**Key Invariants:**
+
+- **No-rematch**: Once resolved, directories are never re-queried to providers
+- **Idempotent**: Rerunning scan/resolve on unchanged directories is a no-op
+- **Deterministic**: Same inputs always produce same outputs
+
+### JSON Output Mode
+
+All workflow commands support `--json` for machine-readable output:
+
+```bash
+# Scan with JSON output
+resonance scan /path/to/library --state-db state.db --json
+
+# Resolve with JSON output
+resonance resolve /path/to/library --state-db state.db --json
+```
+
+### Diagnostic Commands
 
 ```bash
 # Show help
 resonance --help
 
-# Identify a directory
+# Identify a single directory (diagnostic, doesn't modify state)
 resonance identify /path/to/album
 
-# Create a plan
-resonance plan --dir-id <dir-id> --state-db state.db
-
-# Apply a plan
-resonance apply --plan plan.json --state-db state.db
+# Build canonical artist/composer mappings
+resonance prescan /path/to/library --cache ~/.cache/resonance/metadata.db
 ```
 
 ## Architecture
@@ -79,11 +104,12 @@ resonance apply --plan plan.json --state-db state.db
 Resonance uses a **V3 deterministic pipeline**:
 
 ```
-scan → identify → resolve → plan → apply
+scan → resolve → prompt → plan → apply
 ```
 
 Each phase is:
-- **Pure**: No side effects in scan, identify, and plan stages
+
+- **Pure**: No side effects in scan, resolve (read-only), and plan stages
 - **Auditable**: Full trace of decisions and changes
 - **Deterministic**: Same inputs always produce same outputs
 - **Transactional**: Apply operations can be rolled back

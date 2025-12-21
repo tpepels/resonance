@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from ..core.identifier import identify
+from argparse import Namespace
+
+from ..core.identifier import extract_evidence, identify
 from ..core.state import DirectoryState
+from ..errors import ValidationError
 from ..infrastructure.scanner import LibraryScanner
 
 
@@ -106,3 +109,34 @@ def run_prompt_uncertain(
                     pinned_release_id=release_id,
                 )
             continue
+
+
+def run_prompt(
+    args: Namespace,
+    *,
+    store=None,
+    provider_client=None,
+    input_provider=input,
+    output_sink=print,
+) -> int:
+    """CLI entry point for prompt command."""
+    if store is None:
+        raise ValidationError("store is required; construct it in the CLI composition root")
+
+    # TODO: Get or create provider client from cache_db if provided
+    # For now, provider_client should be passed in or will be None
+
+    # Use extract_evidence as the evidence builder
+    def evidence_builder(audio_files):
+        return extract_evidence(audio_files)
+
+    # Call the interactive prompt function
+    run_prompt_uncertain(
+        store=store,
+        provider_client=provider_client,
+        input_provider=input_provider,
+        output_sink=output_sink,
+        evidence_builder=evidence_builder,
+    )
+
+    return 0
