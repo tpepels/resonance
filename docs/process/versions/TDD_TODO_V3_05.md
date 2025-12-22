@@ -207,6 +207,31 @@ These are mandatory to ensure gates are meaningful.
 - ☐ Replace with fake providers or public-method mocks (`spec_set`).
 - ☐ Ensure all score comparisons are numeric.
 
+### Coverage Gates (Required to close V3)
+
+### Coverage Gates (Required to close V3)
+
+We cannot close V3 unless the real execution wiring is exercised by tests (not only pure core logic).
+
+Hard wiring gates (must be > 0% covered):
+- ☐ `resonance/app.py` coverage is **> 0%**
+- ☐ `resonance/commands/identify.py` coverage is **> 0%**
+- ☐ `resonance/commands/unjail.py` coverage is **> 0%**
+
+Second-tier 0% policy (must be resolved explicitly):
+For any **non-legacy** production module with **0% coverage**, choose exactly one of:
+
+- ☐ **(A) Add a smoke-level test** that executes the module’s real entrypoint(s), raising coverage to **> 0%**, OR
+- ☐ **(B) Declare module as non-shipping / unused**, and:
+  - ☐ remove it, OR
+  - ☐ move it under `resonance/legacy/`, OR
+  - ☐ exclude it via coverage config *with a written justification in this file*.
+
+Current additional 0% production modules observed in coverage (resolve each via A or B):
+- ☐ `resonance/infrastructure/transaction.py` → A / B
+- ☐ `resonance/services/file_service.py` → A / B
+- ☐ `resonance/legacy/prompt_service.py` → A / B (legacy acceptable only if confirmed not on the V3 execution path)
+
 ---
 
 ## Definition of Done (V3.05)
@@ -222,6 +247,18 @@ V3.05 is complete ONLY if:
 - ☐ Anti-placeholder gates cannot be bypassed.
 - ☐ Golden corpus remains green.
 - ☐ V3 provider scope (MB + Discogs + AcoustID) is now **fully real**.
+
+### Coverage DoD Addendum (Hard Gate)
+
+- ☐ `resonance/app.py` coverage > 0%
+- ☐ `resonance/commands/identify.py` coverage > 0%
+- ☐ `resonance/commands/unjail.py` coverage > 0%
+
+### Coverage DoD Addendum (0% Policy)
+
+- ☐ Every non-legacy production module at 0% coverage has been resolved via:
+  - ☐ added smoke coverage (>0%), OR
+  - ☐ removed/moved to legacy/excluded with written justification.
 
 ---
 
