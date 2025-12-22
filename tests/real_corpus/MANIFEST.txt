@@ -1,0 +1,21 @@
+# Real-world corpus subset manifest
+#
+# List directories (artist or album names) to include in the snapshot.
+# Each line should be a directory name relative to your library root.
+# Lines starting with # are ignored.
+#
+# Start with a small, diverse set (10-50 albums) representing:
+# - Different genres
+# - Classical (complex metadata)
+# - Various file formats (if applicable)
+# - Edge cases you've encountered
+#
+# Example entries (uncomment and customize for your library):
+
+# Bjork
+# Miles Davis
+# Antonio Vivaldi
+# Radiohead
+# Fela Kuti
+
+# Add your own directories below:

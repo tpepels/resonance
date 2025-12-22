@@ -1,0 +1,12 @@
+{
+  "_comment": "Pinned resolution decisions for deterministic real-world corpus tests",
+  "_schema": {
+    "dir_id": {
+      "provider": "musicbrainz | discogs",
+      "release_id": "mb:uuid | dg:id"
+    },
+    "OR": {
+      "action": "JAIL"
+    }
+  }
+}

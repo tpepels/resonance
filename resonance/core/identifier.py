@@ -413,9 +413,26 @@ def identify(
         candidates.extend(provider_client.search_by_fingerprints(fingerprints))
 
     # Search by metadata if no fingerprints or as fallback
-    # (Extract from existing tags - placeholder for now)
+    # Extract artist/album from existing tags (use first track as representative)
+    artist_hint = None
+    album_hint = None
+    if evidence.tracks:
+        first_track_tags = evidence.tracks[0].existing_tags
+        # Try common tag names for artist (prefer albumartist over artist)
+        artist_hint = (
+            first_track_tags.get("albumartist")
+            or first_track_tags.get("artist")
+            or first_track_tags.get("ALBUMARTIST")
+            or first_track_tags.get("ARTIST")
+        )
+        # Try common tag names for album
+        album_hint = (
+            first_track_tags.get("album")
+            or first_track_tags.get("ALBUM")
+        )
+
     candidates.extend(
-        provider_client.search_by_metadata(None, None, evidence.track_count)
+        provider_client.search_by_metadata(artist_hint, album_hint, evidence.track_count)
     )
 
     # Score all candidates

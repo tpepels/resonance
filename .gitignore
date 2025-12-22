@@ -44,3 +44,6 @@ htmlcov/
 # Cache
 *.db
 *.db-journal
+
+# Real-world corpus test data (local snapshots only)
+tests/real_corpus/input/

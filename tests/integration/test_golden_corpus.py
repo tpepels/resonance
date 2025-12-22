@@ -23,18 +23,17 @@ from resonance.infrastructure.scanner import LibraryScanner
 from resonance.services.tag_writer import MetaJsonTagWriter
 from tests.golden.corpus_builder import build_corpus
 from tests.golden.provider_fixtures import load_provider_fixtures
+from tests.integration._corpus_harness import (
+    assert_or_write_snapshot,
+    assert_valid_plan_hash,
+    filter_relevant_tags,
+    is_regen_enabled,
+    snapshot_path,
+)
 
 
 EXPECTED_ROOT = Path(__file__).resolve().parents[1] / "golden" / "expected"
-PROV_KEYS = (
-    "resonance.prov.version",
-    "resonance.prov.tool",
-    "resonance.prov.tool_version",
-    "resonance.prov.dir_id",
-    "resonance.prov.pinned_provider",
-    "resonance.prov.pinned_release_id",
-    "resonance.prov.applied_at_utc",
-)
+REGEN_ENV = "REGEN_GOLDEN"
 
 
 def _evidence_from_files(audio_files: list[Path]) -> DirectoryEvidence:
@@ -91,37 +90,8 @@ class FixtureProvider:
         return self._by_release_id[release_id]
 
 
-def _snapshot_path(scenario: str, name: str) -> Path:
-    return EXPECTED_ROOT / scenario / name
-
-
-def _assert_or_write_snapshot(path: Path, payload: object, regen: bool) -> None:
-    if regen:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, sort_keys=True, indent=2) + "\n")
-        return
-    if not path.exists():
-        raise FileNotFoundError(f"Missing snapshot: {path}. Set REGEN_GOLDEN=1 to create.")
-    expected = json.loads(path.read_text())
-    assert payload == expected
-
-
 def _read_tags(writer: MetaJsonTagWriter, file_path: Path) -> dict[str, str]:
     return writer.read_tags(file_path)
-
-
-def _filter_tags(tags: dict[str, str]) -> dict[str, str]:
-    filtered = {key: tags[key] for key in PROV_KEYS if key in tags}
-    for key in ("album", "albumartist", "title", "tracknumber"):
-        if key in tags:
-            filtered[key] = tags[key]
-    return filtered
-
-
-def _assert_plan_hash(tags: dict[str, str]) -> None:
-    plan_hash = tags.get("resonance.prov.plan_hash")
-    assert plan_hash is not None
-    assert re.fullmatch(r"[0-9a-f]{64}", plan_hash)
 
 
 def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
@@ -157,7 +127,7 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
     assert expected_skip.issubset(fixtures)
     assert expected_skip.isdisjoint(scanned)
 
-    regen = os.environ.get("REGEN_GOLDEN") == "1"
+    regen = is_regen_enabled(REGEN_ENV)
     fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
     store = DirectoryStateStore(tmp_path / "state.db")
@@ -240,10 +210,11 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
                 if path.is_file() and path.suffix != ".json"
             )
             try:
-                _assert_or_write_snapshot(
-                    _snapshot_path(scenario, "expected_layout.json"),
-                    actual_layout,
-                    regen,
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario, "expected_layout.json"),
+                    payload=actual_layout,
+                    regen=regen,
+                    regen_env_var=REGEN_ENV,
                 )
             except FileNotFoundError as exc:
                 failures.append(f"{scenario}: {exc}")
@@ -255,18 +226,19 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
             tag_entries: list[dict[str, object]] = []
             for path in sorted(output_root.rglob("*.flac")):
                 tags = _read_tags(writer, path)
-                _assert_plan_hash(tags)
+                assert_valid_plan_hash(tags)
                 tag_entries.append(
                     {
                         "path": str(path.relative_to(output_root)),
-                        "tags": _filter_tags(tags),
+                        "tags": filter_relevant_tags(tags),
                     }
                 )
             try:
-                _assert_or_write_snapshot(
-                    _snapshot_path(scenario, "expected_tags.json"),
-                    {"tracks": tag_entries},
-                    regen,
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario, "expected_tags.json"),
+                    payload={"tracks": tag_entries},
+                    regen=regen,
+                    regen_env_var=REGEN_ENV,
                 )
             except FileNotFoundError as exc:
                 failures.append(f"{scenario}: {exc}")
@@ -278,14 +250,15 @@ def test_golden_corpus_end_to_end(tmp_path: Path) -> None:
             record = store.get(batch.dir_id)
             assert record is not None
             try:
-                _assert_or_write_snapshot(
-                    _snapshot_path(scenario, "expected_state.json"),
-                    {
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario, "expected_state.json"),
+                    payload={
                         "pinned_provider": record.pinned_provider,
                         "pinned_release_id": record.pinned_release_id,
                         "state": record.state.value,
                     },
-                    regen,
+                    regen=regen,
+                    regen_env_var=REGEN_ENV,
                 )
             except FileNotFoundError as exc:
                 failures.append(f"{scenario}: {exc}")
