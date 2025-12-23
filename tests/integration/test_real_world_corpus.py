@@ -10,10 +10,20 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from resonance.infrastructure.directory_store import DirectoryStateStore
+    from resonance.services.tag_writer import MetaJsonTagWriter
+
 from tests.integration._filesystem_faker import FakerContext, create_faker_for_corpus
+from tests.integration._corpus_harness import (
+    assert_or_write_snapshot,
+    filter_relevant_tags,
+    snapshot_path,
+)
 
 
 @pytest.mark.skipif(
@@ -74,13 +84,125 @@ def test_real_world_corpus_deterministic_workflow():
                 parent_dir = str(Path(first_file).parent)
                 assert faker.isdir(parent_dir), f"Faker should see directory: {parent_dir}"
 
-        # TODO: Implement full workflow
-        # 1. Set up temporary databases
-        # 2. Run scan → resolve → plan → apply
-        # 3. Verify deterministic results
-        # 4. Generate/compare snapshots based on REGEN_REAL_CORPUS
+        # Implement full workflow execution
+        regen_real_corpus = os.environ.get("REGEN_REAL_CORPUS") == "1"
 
-        pytest.skip("Full workflow implementation pending - Phase 3 in progress")
+        # 1. Set up temporary databases and directories
+        temp_dir = Path(tempfile.mkdtemp())
+        state_db_path = temp_dir / "state.db"
+        cache_db_path = temp_dir / "cache.db"
+        output_root = temp_dir / "organized"
+
+        try:
+            # 2. Set up Resonance components
+            from resonance.infrastructure.directory_store import DirectoryStateStore
+            from resonance.infrastructure.scanner import LibraryScanner
+            from resonance.services.tag_writer import MetaJsonTagWriter
+            from resonance.core.applier import ApplyStatus, apply_plan
+            from resonance.core.enricher import build_tag_patch
+            from resonance.core.planner import plan_directory
+            from resonance.core.resolver import resolve_directory
+            from resonance.core.state import DirectoryState
+            from resonance.core.identifier import DirectoryEvidence, TrackEvidence
+            from resonance.core.identity.signature import dir_id, dir_signature
+            from resonance.providers.musicbrainz import MusicBrainzClient
+            from resonance.providers.discogs import DiscogsClient
+            from resonance.providers.caching import CachingProvider
+            from resonance.infrastructure.provider_cache import ProviderCache
+            from datetime import datetime, timezone
+
+            store = DirectoryStateStore(state_db_path)
+            writer = MetaJsonTagWriter()
+            provider_cache = ProviderCache(cache_db_path)
+            musicbrainz_provider = CachingProvider(MusicBrainzClient(), provider_cache)
+            discogs_provider = CachingProvider(DiscogsClient(token="dummy_token"), provider_cache)
+
+            # 3. Run scan to discover directories
+            scanner = LibraryScanner([Path(".")])  # Scan from current dir (faked by faker)
+            batches = list(scanner.iter_directories())
+
+            if not batches:
+                pytest.skip("No audio directories found in corpus")
+
+            # Sort by dir_id for deterministic processing
+            batches.sort(key=lambda b: b.dir_id)
+
+            # 4. Process each directory: scan → resolve → plan → apply
+            processed_dirs = []
+            fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
+
+            for batch in batches[:5]:  # Limit to first 5 for initial testing
+                scenario_name = batch.directory.name or f"dir_{batch.dir_id[:8]}"
+
+                # Create directory evidence from files
+                tracks = []
+                for file_path in sorted(batch.files):
+                    # For real corpus, we don't have .meta.json files, so create minimal evidence
+                    tracks.append(TrackEvidence(
+                        fingerprint_id=None,  # No fingerprints in real corpus
+                        duration_seconds=None,  # No duration data
+                        existing_tags={},  # No existing tags
+                    ))
+
+                evidence = DirectoryEvidence(
+                    tracks=tuple(tracks),
+                    track_count=len(tracks),
+                    total_duration_seconds=0,
+                )
+
+                # Resolve directory
+                outcome = resolve_directory(
+                    dir_id=batch.dir_id,
+                    path=batch.directory,
+                    signature_hash=batch.signature_hash,
+                    evidence=evidence,
+                    store=store,
+                    provider_client=musicbrainz_provider,  # Start with MusicBrainz
+                )
+
+                if outcome.state == DirectoryState.QUEUED_PROMPT:
+                    # For now, skip directories that need prompting
+                    # TODO: Implement scripted decisions from decisions.json
+                    continue
+
+                if outcome.state not in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
+                    continue
+
+                # Get resolved record
+                record = store.get(batch.dir_id)
+                if not record or not record.pinned_release_id:
+                    continue
+
+                # For now, skip planning if we don't have a proper release object
+                # TODO: Implement proper release object retrieval from provider
+                continue
+
+                # Apply plan
+                report = apply_plan(
+                    plan,
+                    tag_patch,
+                    store,
+                    allowed_roots=(output_root,),
+                    dry_run=False,
+                    tag_writer=writer,
+                )
+
+                if report.status == ApplyStatus.APPLIED:
+                    processed_dirs.append((scenario_name, batch.dir_id, plan, output_root))
+
+            # 5. Generate snapshots if regeneration enabled
+            if regen_real_corpus and processed_dirs:
+                _generate_snapshots(processed_dirs, corpus_root, store, writer)
+
+            # For now, just assert we processed at least one directory
+            assert len(processed_dirs) > 0, "No directories were successfully processed"
+
+        finally:
+            # Cleanup
+            import shutil
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+            store.close()
 
 
 @pytest.mark.skipif(
@@ -158,6 +280,58 @@ def test_real_world_corpus_snapshot_gating():
 
     # For now, just verify the environment variable handling
     assert "REGEN_REAL_CORPUS" in os.environ or regen_env != "1"
+
+
+def _generate_snapshots(
+    processed_dirs: list[tuple[str, str, object, Path]],
+    corpus_root: Path,
+    store: "DirectoryStateStore",
+    writer: "MetaJsonTagWriter",
+) -> None:
+    """Generate snapshots for processed directories."""
+    from tests.integration._corpus_harness import assert_valid_plan_hash
+
+    for scenario_name, dir_id, plan, output_root in processed_dirs:
+        # Layout snapshot (audio + extras, excluding .meta.json)
+        actual_layout = sorted(
+            str(path.relative_to(output_root))
+            for path in output_root.rglob("*")
+            if path.is_file() and path.suffix != ".json"
+        )
+
+        # Write layout snapshot
+        layout_path = snapshot_path(corpus_root, scenario_name, "expected_layout.json")
+        layout_path.parent.mkdir(parents=True, exist_ok=True)
+        layout_path.write_text(json.dumps(actual_layout, sort_keys=True, indent=2) + "\n")
+
+        # Tags snapshot (filtered, stable keys)
+        tag_entries = []
+        for path in sorted(output_root.rglob("*.flac")):
+            tags = writer.read_tags(path)
+            assert_valid_plan_hash(tags)
+            tag_entries.append(
+                {
+                    "path": str(path.relative_to(output_root)),
+                    "tags": filter_relevant_tags(tags),
+                }
+            )
+
+        # Write tags snapshot
+        tags_path = snapshot_path(corpus_root, scenario_name, "expected_tags.json")
+        tags_path.write_text(json.dumps({"tracks": tag_entries}, sort_keys=True, indent=2) + "\n")
+
+        # State snapshot
+        record = store.get(dir_id)
+        if record:
+            state_data = {
+                "pinned_provider": record.pinned_provider,
+                "pinned_release_id": record.pinned_release_id,
+                "state": record.state.value,
+            }
+
+            # Write state snapshot
+            state_path = snapshot_path(corpus_root, scenario_name, "expected_state.json")
+            state_path.write_text(json.dumps(state_data, sort_keys=True, indent=2) + "\n")
 
 
 # Placeholder for future implementation phases
