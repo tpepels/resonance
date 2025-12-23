@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 from tests.integration._filesystem_faker import FakerContext, create_faker_for_corpus
 from tests.integration._corpus_harness import (
     assert_or_write_snapshot,
+    assert_valid_plan_hash,
     filter_relevant_tags,
+    is_regen_enabled,
     snapshot_path,
 )
 
@@ -85,7 +87,9 @@ def test_real_world_corpus_deterministic_workflow():
                 assert faker.isdir(parent_dir), f"Faker should see directory: {parent_dir}"
 
         # Implement full workflow execution
-        regen_real_corpus = os.environ.get("REGEN_REAL_CORPUS") == "1"
+        regen_real_corpus = is_regen_enabled("REGEN_REAL_CORPUS")
+        REGEN_ENV_VAR = "REGEN_REAL_CORPUS"
+        EXPECTED_ROOT = corpus_root
 
         # 1. Set up temporary databases and directories
         temp_dir = Path(tempfile.mkdtemp())
@@ -128,7 +132,7 @@ def test_real_world_corpus_deterministic_workflow():
             batches.sort(key=lambda b: b.dir_id)
 
             # 4. Process each directory: scan → resolve → plan → apply
-            processed_dirs = []
+            failures = []
             fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
             for batch in batches[:5]:  # Limit to first 5 for initial testing
@@ -170,12 +174,43 @@ def test_real_world_corpus_deterministic_workflow():
 
                 # Get resolved record
                 record = store.get(batch.dir_id)
-                if not record or not record.pinned_release_id:
+                if not record or not record.pinned_release_id or not record.pinned_provider:
                     continue
 
-                # For now, skip planning if we don't have a proper release object
-                # TODO: Implement proper release object retrieval from provider
-                continue
+                # Retrieve the full ProviderRelease object
+                pinned_release = musicbrainz_provider.release_by_id(
+                    record.pinned_provider, record.pinned_release_id
+                )
+                if not pinned_release:
+                    # Try Discogs if MusicBrainz failed
+                    pinned_release = discogs_provider.release_by_id(
+                        record.pinned_provider, record.pinned_release_id
+                    )
+                if not pinned_release:
+                    continue
+
+                # Plan directory
+                plan = plan_directory(
+                    record=record,
+                    pinned_release=pinned_release,
+                    source_files=batch.files,
+                )
+
+                # Mark as planned
+                store.set_state(
+                    batch.dir_id,
+                    DirectoryState.PLANNED,
+                    pinned_provider=record.pinned_provider,
+                    pinned_release_id=record.pinned_release_id,
+                )
+
+                # Build tag patch
+                tag_patch = build_tag_patch(
+                    plan,
+                    pinned_release,
+                    outcome.state,
+                    now_fn=lambda: fixed_now,
+                )
 
                 # Apply plan
                 report = apply_plan(
@@ -187,15 +222,80 @@ def test_real_world_corpus_deterministic_workflow():
                     tag_writer=writer,
                 )
 
-                if report.status == ApplyStatus.APPLIED:
-                    processed_dirs.append((scenario_name, batch.dir_id, plan, output_root))
+                if report.status != ApplyStatus.APPLIED:
+                    failures.append(
+                        f"{scenario_name}: apply status {report.status.value} errors={report.errors}"
+                    )
+                    if output_root.exists():
+                        import shutil
+                        shutil.rmtree(output_root)
+                    continue
 
-            # 5. Generate snapshots if regeneration enabled
-            if regen_real_corpus and processed_dirs:
-                _generate_snapshots(processed_dirs, corpus_root, store, writer)
+                # Generate/compare snapshots for this directory
+                try:
+                    # Layout snapshot (audio + extras, excluding .meta.json)
+                    actual_layout = sorted(
+                        str(path.relative_to(output_root))
+                        for path in output_root.rglob("*")
+                        if path.is_file() and path.suffix != ".json"
+                    )
+                    assert_or_write_snapshot(
+                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_layout.json"),
+                        payload=actual_layout,
+                        regen=regen_real_corpus,
+                        regen_env_var=REGEN_ENV_VAR,
+                    )
 
-            # For now, just assert we processed at least one directory
-            assert len(processed_dirs) > 0, "No directories were successfully processed"
+                    # Tags snapshot (filtered, stable keys)
+                    tag_entries = []
+                    for path in sorted(output_root.rglob("*.flac")):
+                        tags = writer.read_tags(path)
+                        assert_valid_plan_hash(tags)
+                        tag_entries.append(
+                            {
+                                "path": str(path.relative_to(output_root)),
+                                "tags": filter_relevant_tags(tags),
+                            }
+                        )
+                    assert_or_write_snapshot(
+                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_tags.json"),
+                        payload={"tracks": tag_entries},
+                        regen=regen_real_corpus,
+                        regen_env_var=REGEN_ENV_VAR,
+                    )
+
+                    # State snapshot
+                    record = store.get(batch.dir_id)
+                    assert record is not None
+                    state_data = {
+                        "pinned_provider": record.pinned_provider,
+                        "pinned_release_id": record.pinned_release_id,
+                        "state": record.state.value,
+                    }
+                    assert_or_write_snapshot(
+                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_state.json"),
+                        payload=state_data,
+                        regen=regen_real_corpus,
+                        regen_env_var=REGEN_ENV_VAR,
+                    )
+
+                except FileNotFoundError as exc:
+                    failures.append(f"{scenario_name}: {exc}")
+                    if output_root.exists():
+                        import shutil
+                        shutil.rmtree(output_root)
+                    continue
+
+                # Reset output root for next scenario
+                if output_root.exists():
+                    import shutil
+                    shutil.rmtree(output_root)
+
+            # Report any failures
+            if failures:
+                raise AssertionError(
+                    "Real-world corpus failures:\n" + "\n".join(failures)
+                )
 
         finally:
             # Cleanup
@@ -282,56 +382,7 @@ def test_real_world_corpus_snapshot_gating():
     assert "REGEN_REAL_CORPUS" in os.environ or regen_env != "1"
 
 
-def _generate_snapshots(
-    processed_dirs: list[tuple[str, str, object, Path]],
-    corpus_root: Path,
-    store: "DirectoryStateStore",
-    writer: "MetaJsonTagWriter",
-) -> None:
-    """Generate snapshots for processed directories."""
-    from tests.integration._corpus_harness import assert_valid_plan_hash
-
-    for scenario_name, dir_id, plan, output_root in processed_dirs:
-        # Layout snapshot (audio + extras, excluding .meta.json)
-        actual_layout = sorted(
-            str(path.relative_to(output_root))
-            for path in output_root.rglob("*")
-            if path.is_file() and path.suffix != ".json"
-        )
-
-        # Write layout snapshot
-        layout_path = snapshot_path(corpus_root, scenario_name, "expected_layout.json")
-        layout_path.parent.mkdir(parents=True, exist_ok=True)
-        layout_path.write_text(json.dumps(actual_layout, sort_keys=True, indent=2) + "\n")
-
-        # Tags snapshot (filtered, stable keys)
-        tag_entries = []
-        for path in sorted(output_root.rglob("*.flac")):
-            tags = writer.read_tags(path)
-            assert_valid_plan_hash(tags)
-            tag_entries.append(
-                {
-                    "path": str(path.relative_to(output_root)),
-                    "tags": filter_relevant_tags(tags),
-                }
-            )
-
-        # Write tags snapshot
-        tags_path = snapshot_path(corpus_root, scenario_name, "expected_tags.json")
-        tags_path.write_text(json.dumps({"tracks": tag_entries}, sort_keys=True, indent=2) + "\n")
-
-        # State snapshot
-        record = store.get(dir_id)
-        if record:
-            state_data = {
-                "pinned_provider": record.pinned_provider,
-                "pinned_release_id": record.pinned_release_id,
-                "state": record.state.value,
-            }
-
-            # Write state snapshot
-            state_path = snapshot_path(corpus_root, scenario_name, "expected_state.json")
-            state_path.write_text(json.dumps(state_data, sort_keys=True, indent=2) + "\n")
+# Snapshot generation/comparison is now implemented inline in the main test
 
 
 # Placeholder for future implementation phases

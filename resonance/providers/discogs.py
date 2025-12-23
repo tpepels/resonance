@@ -93,6 +93,21 @@ class DiscogsClient(ProviderClient):
         releases.sort(key=lambda entry: entry.release_id)
         return releases
 
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """Fetch a Discogs release by ID."""
+        if provider != "discogs":
+            return None
+        try:
+            release_int_id = int(release_id)
+        except ValueError:
+            return None
+        details = self._fetch_release(release_int_id)
+        if not details:
+            return None
+        # Need to create a minimal result dict for _release_from_payload
+        result = {"id": release_int_id}
+        return self._release_from_payload(result, details)
+
     def _fetch_release(self, release_id: int) -> Optional[dict]:
         if self._cache:
             cached = self._cache.get_discogs_release(

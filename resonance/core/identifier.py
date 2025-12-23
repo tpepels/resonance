@@ -145,6 +145,21 @@ class ProviderClient(Protocol):
         """
         ...
 
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """Fetch a specific release by provider and release_id.
+
+        Used when a release has already been identified and pinned,
+        but the full ProviderRelease object is needed for planning/applying.
+
+        Args:
+            provider: Provider name ("musicbrainz", "discogs")
+            release_id: Provider-specific release identifier
+
+        Returns:
+            ProviderRelease if found, None otherwise
+        """
+        ...
+
 
 # Scoring thresholds (versioned)
 SCORING_V1_THRESHOLDS = {

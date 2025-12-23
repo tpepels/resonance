@@ -63,12 +63,12 @@ class MusicBrainzClient(ProviderClient):
         if self._offline or musicbrainzngs is None:
             return []
 
-        payload = musicbrainzngs.search_releases(
+        params = musicbrainzngs.search_releases(
             artist=artist,
             release=album,
             limit=_SEARCH_LIMIT,
         )
-        releases = payload.get("release-list", [])
+        releases = params.get("release-list", [])
         results: list[ProviderRelease] = []
         for release in releases:
             release_id = release.get("id")
@@ -81,6 +81,15 @@ class MusicBrainzClient(ProviderClient):
 
         results.sort(key=lambda entry: entry.release_id)
         return results
+
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """Fetch a MusicBrainz release by ID."""
+        if provider != "musicbrainz":
+            return None
+        details = self._fetch_release(release_id)
+        if not details:
+            return None
+        return self._build_release(details)
 
     def _fetch_release(self, release_id: str) -> Optional[dict]:
         if self._cache:

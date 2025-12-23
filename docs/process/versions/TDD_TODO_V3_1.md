@@ -146,14 +146,8 @@ This test should execute the workflow in a controlled way:
 
 ### 2.3 Scripted prompt decisions (Test-only)
 
-* [ ] Implement a **test-only prompt driver**:
-
-  * Reads queued directories
-  * Applies deterministic scripted decisions:
-
-    * If a directory already pinned/certain: no action
-    * If PROBABLE: pick top candidate (stable ordering)
-    * If UNSURE: jail (or require explicit mapping file)
+* [x] Implement basic directory processing pipeline (resolves directories that don't need prompting)
+* [ ] Add scripted prompt decisions from `decisions.json` for directories that need user input
 * [ ] Integration test: scripted prompt results in terminal states for all dirs
 
 **Acceptance**
@@ -193,14 +187,14 @@ This test should execute the workflow in a controlled way:
 
 ### 3.3 Expected tags snapshot
 
-* [ ] Implement `expected_tags.json` containing:
+* [x] Implement `expected_tags.json` containing:
 
   * `tracks[]` with:
 
     * relative path
     * tags dict
-* [ ] Enforce deterministic tag dict serialization
-* [ ] Include provenance tags (as you do in golden) 
+* [x] Enforce deterministic tag dict serialization
+* [x] Include provenance tags (as you do in golden)
 
 **Acceptance**
 
@@ -222,7 +216,7 @@ You already have golden regen gated via `REGEN_GOLDEN` .
 
 ### 4.2 Test gating behavior
 
-* [ ] In `test_real_world_corpus.py`:
+* [x] In `test_real_world_corpus.py`:
 
   * if `tests/real_corpus/input/` missing: skip with actionable message
   * if `REGEN_REAL_CORPUS=1`: regenerate `expected_*` snapshots
