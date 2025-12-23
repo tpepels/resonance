@@ -21,7 +21,7 @@ def run_resonance_command(cmd: List[str], cwd: Path) -> str:
             cwd=cwd,
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout
+            timeout=300,  # 5 minute timeout
         )
         return f"Command: {' '.join(cmd)}\nExit code: {result.returncode}\n\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
     except subprocess.TimeoutExpired:
@@ -30,7 +30,9 @@ def run_resonance_command(cmd: List[str], cwd: Path) -> str:
         return f"Command: {' '.join(cmd)}\nERROR: {e}\n"
 
 
-def analyze_directory(directory: Path, repo_root: Path) -> Dict[str, Any]:
+def analyze_directory(
+    directory: Path, repo_root: Path, state_db: Path | None = None, cache_db: Path | None = None
+) -> Dict[str, Any]:
     """Analyze a music directory with Resonance and capture results."""
     analysis = {
         "directory": str(directory),
@@ -43,9 +45,9 @@ def analyze_directory(directory: Path, repo_root: Path) -> Dict[str, Any]:
         return analysis
 
     # Count audio files
-    audio_extensions = {'.flac', '.mp3', '.m4a', '.aac', '.ogg', '.wav'}
+    audio_extensions = {".flac", ".mp3", ".m4a", ".aac", ".ogg", ".wav"}
     audio_files = []
-    for file_path in directory.rglob('*'):
+    for file_path in directory.rglob("*"):
         if file_path.is_file() and file_path.suffix.lower() in audio_extensions:
             audio_files.append(str(file_path.relative_to(directory)))
 
@@ -57,9 +59,18 @@ def analyze_directory(directory: Path, repo_root: Path) -> Dict[str, Any]:
         return analysis
 
     # Run Resonance commands using the CLI entry point with proper argument passing
-    def make_resonance_cmd(*args):
-        cmd_args = ['resonance'] + list(args)
-        return [sys.executable, "-c", f"import sys; sys.argv = {cmd_args!r}; from resonance.cli import main; main()"]
+    def make_resonance_cmd(cmd_name, *args):
+        cmd_args = ["resonance", cmd_name] + list(args)
+        if state_db:
+            cmd_args.extend(["--state-db", str(state_db)])
+        # Only add cache-db for commands that support it (resolve, not scan)
+        if cache_db and cmd_name in ["resolve"]:
+            cmd_args.extend(["--cache-db", str(cache_db)])
+        return [
+            sys.executable,
+            "-c",
+            f"import sys; sys.argv = {cmd_args!r}; from resonance.cli import main; main()",
+        ]
 
     # Change to the music library root (parent of the album directory)
     library_root = directory.parent
@@ -67,18 +78,24 @@ def analyze_directory(directory: Path, repo_root: Path) -> Dict[str, Any]:
 
     analysis["library_root"] = str(library_root)
     analysis["album_name"] = album_name
+    if state_db:
+        analysis["state_db"] = str(state_db)
+    if cache_db:
+        analysis["cache_db"] = str(cache_db)
 
     # Run scan command (finds and analyzes the directory)
-    scan_cmd = make_resonance_cmd("scan", album_name)
+    # Note: scan command operates on the library root, not individual albums
+    scan_cmd = make_resonance_cmd("scan", ".")
     analysis["scan_output"] = run_resonance_command(scan_cmd, library_root)
 
     # Run resolve command (shows matching candidates)
-    resolve_cmd = make_resonance_cmd("resolve", album_name)
+    resolve_cmd = make_resonance_cmd("resolve", ".")
     analysis["resolve_output"] = run_resonance_command(resolve_cmd, library_root)
 
-    # Run plan command (shows what would be done)
-    plan_cmd = make_resonance_cmd("plan", album_name)
-    analysis["plan_output"] = run_resonance_command(plan_cmd, library_root)
+    # For plan command, we need a dir_id, so we'll skip it for now unless we can get the dir_id from scan
+    analysis["plan_note"] = (
+        "Plan command requires dir_id from successful scan. Run 'resonance scan --state-db <db> <album>' first to get dir_id, then 'resonance plan --dir-id <id> --state-db <db> <album>'"
+    )
 
     return analysis
 
@@ -90,19 +107,22 @@ def main():
     parser.add_argument(
         "directories",
         nargs="+",
-        help="Music directories to analyze (can be album folders or artist folders)"
+        help="Music directories to analyze (can be album folders or artist folders)",
     )
     parser.add_argument(
-        "--output",
-        "-o",
-        type=Path,
-        help="Output file for JSON results (default: print to stdout)"
+        "--output", "-o", type=Path, help="Output file for JSON results (default: print to stdout)"
     )
+    parser.add_argument(
+        "--state-db",
+        type=Path,
+        help="Path to Resonance state database (will be created if it doesn't exist)",
+    )
+    parser.add_argument("--cache-db", type=Path, help="Path to Resonance cache database (optional)")
     parser.add_argument(
         "--repo-root",
         type=Path,
         default=Path(__file__).parent.parent,
-        help="Path to Resonance repository root"
+        help="Path to Resonance repository root",
     )
 
     args = parser.parse_args()
@@ -124,11 +144,11 @@ def main():
 
         # If directory contains audio files directly, analyze it
         # Otherwise, find subdirectories that contain audio files
-        audio_extensions = {'.flac', '.mp3', '.m4a', '.aac', '.ogg', '.wav'}
+        audio_extensions = {".flac", ".mp3", ".m4a", ".aac", ".ogg", ".wav"}
         has_audio = any(dir_path.rglob(f"*{ext}") for ext in audio_extensions)
 
         if has_audio:
-            analysis = analyze_directory(dir_path, repo_root)
+            analysis = analyze_directory(dir_path, repo_root, args.state_db, args.cache_db)
             results.append(analysis)
             print(f"Completed analysis of {dir_path}", file=sys.stderr)
         else:
@@ -140,9 +160,12 @@ def main():
                         album_dirs.append(subdir)
 
             if album_dirs:
-                print(f"Found {len(album_dirs)} album directories, analyzing first few...", file=sys.stderr)
+                print(
+                    f"Found {len(album_dirs)} album directories, analyzing first few...",
+                    file=sys.stderr,
+                )
                 for album_dir in album_dirs[:3]:  # Limit to first 3 albums
-                    analysis = analyze_directory(album_dir, repo_root)
+                    analysis = analyze_directory(album_dir, repo_root, args.state_db, args.cache_db)
                     results.append(analysis)
                     print(f"Completed analysis of {album_dir}", file=sys.stderr)
             else:
@@ -150,7 +173,7 @@ def main():
 
     # Output results
     if args.output:
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             json.dump(results, f, indent=2)
         print(f"Results saved to: {args.output}", file=sys.stderr)
     else:

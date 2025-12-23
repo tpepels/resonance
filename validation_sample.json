@@ -14,8 +14,10 @@
     "audio_count": 6,
     "library_root": "/home/tom/music/Miles Davis",
     "album_name": "Kind of Blue",
-    "scan_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'scan', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance scan [-h] --state-db STATE_DB [--json] library_root\nresonance scan: error: the following arguments are required: --state-db\n",
-    "resolve_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'resolve', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance resolve [-h] --state-db STATE_DB [--cache-db CACHE_DB]\n                         [--json]\n                         library_root\nresonance resolve: error: the following arguments are required: --state-db\n",
-    "plan_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'plan', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance plan [-h] --dir-id DIR_ID [--state-db STATE_DB] [--json]\nresonance plan: error: the following arguments are required: --dir-id\n"
+    "state_db": "/tmp/resonance_validation/state.db",
+    "cache_db": "/tmp/resonance_validation/cache.db",
+    "scan_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'scan', '.', '--state-db', '/tmp/resonance_validation/state.db']; from resonance.cli import main; main()\nExit code: 0\n\nSTDOUT:\nscan: library_root=/home/tom/music/Miles Davis\nscan: scanned=2 new=2 already_tracked=0 skipped=0\n\n\nSTDERR:\n",
+    "resolve_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'resolve', '.', '--state-db', '/tmp/resonance_validation/state.db', '--cache-db', '/tmp/resonance_validation/cache.db']; from resonance.cli import main; main()\nExit code: 0\n\nSTDOUT:\nresolve: library_root=/home/tom/music/Miles Davis\nresolve: processed=2 resolved_auto=0 queued_prompt=0 skipped=0\n\n\nSTDERR:\n",
+    "plan_note": "Plan command requires dir_id from successful scan. Run 'resonance scan --state-db <db> <album>' first to get dir_id, then 'resonance plan --dir-id <id> --state-db <db> <album>'"
   }
 ]
