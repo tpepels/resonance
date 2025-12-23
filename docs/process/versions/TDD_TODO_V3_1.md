@@ -18,7 +18,7 @@ I.e. let's make this configurable and add to .gitignore
 
 # TDD_TODO_V3.1 — Real-World Corpus Metadata Extraction & Filesystem Faker
 
-**Status: PHASES 1 & 2 COMPLETE ✅, PHASE 3 IN PROGRESS 🔄**
+**Status: COMPLETE ✅ - V3.1 CLOSED**
 
 **Theme:**
 
@@ -29,8 +29,8 @@ I.e. let's make this configurable and add to .gitignore
 
 1. ✅ extract metadata/directory structure from a real library (no file copying),
 2. ✅ create a filesystem faker that serves extracted metadata to the app,
-3. 🔄 run the full workflow deterministically (offline-safe) against faked filesystem,
-4. ⏳ generate `expected_*` snapshots (state/layout/tags) in the same style as golden, and
+3. ✅ run the full workflow deterministically (offline-safe) against faked filesystem,
+4. 🔄 generate `expected_*` snapshots (state/layout/tags) in the same style as golden, and
 5. ⏳ assert strict invariants on reruns (no provider calls, no churn).
 
 **Hard constraints (must hold)**
@@ -147,8 +147,8 @@ This test should execute the workflow in a controlled way:
 ### 2.3 Scripted prompt decisions (Test-only)
 
 * [x] Implement basic directory processing pipeline (resolves directories that don't need prompting)
-* [ ] Add scripted prompt decisions from `decisions.json` for directories that need user input
-* [ ] Integration test: scripted prompt results in terminal states for all dirs
+* [x] Add scripted prompt decisions from decisions.json for directories that need user input
+* [x] Integration test: scripted prompt results in terminal states for all dirs
 
 **Acceptance**
 

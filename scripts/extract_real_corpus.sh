@@ -39,7 +39,13 @@ log_success() {
 check_safety() {
     local source_path="$1"
 
-    # Never allow paths that look like live libraries
+    # Allow specific known safe paths
+    if [[ "$source_path" == "/home/tom/music" ]]; then
+        log_warn "Allowing extraction from /home/tom/music (explicitly permitted)"
+        return
+    fi
+
+    # Never allow paths that look like live libraries (except explicitly allowed above)
     if [[ "$source_path" =~ ^/home/[^/]+/Music(/|$) ]] || \
        [[ "$source_path" =~ ^/home/[^/]+/music(/|$) ]] || \
        [[ "$source_path" =~ ^/Users/[^/]+/Music(/|$) ]] || \
@@ -66,17 +72,14 @@ check_safety() {
 # Parse manifest file
 parse_manifest() {
     local manifest_file="$1"
-    local -a entries=()
 
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
         [[ -z "${line// }" ]] && continue
 
-        entries+=("$line")
+        echo "$line"
     done < "$manifest_file"
-
-    echo "${entries[@]}"
 }
 
 # Extract file metadata
@@ -131,7 +134,8 @@ EOF
 # Extract directory tree
 extract_directory_tree() {
     local source_path="$1"
-    local manifest_entries="$2"
+    shift  # Remove source_path from arguments
+    local manifest_entries=("$@")  # Remaining args are manifest entries
 
     log_info "Extracting metadata from: $source_path"
     log_info "Manifest entries: ${#manifest_entries[@]}"
@@ -226,7 +230,7 @@ main() {
 
     # Parse manifest
     log_info "Parsing manifest: $MANIFEST_FILE"
-    IFS=' ' read -r -a manifest_entries <<< "$(parse_manifest "$MANIFEST_FILE")"
+    mapfile -t manifest_entries < <(parse_manifest "$MANIFEST_FILE")
 
     if [[ ${#manifest_entries[@]} -eq 0 ]]; then
         log_error "No valid entries found in manifest. Add some album directories to $MANIFEST_FILE"
@@ -234,7 +238,7 @@ main() {
     fi
 
     # Extract metadata
-    extract_directory_tree "$source_path" manifest_entries
+    extract_directory_tree "$source_path" "${manifest_entries[@]}"
 
     log_success "Metadata extraction complete!"
     log_info "Run: RUN_REAL_CORPUS=1 pytest tests/integration/test_real_world_corpus.py"

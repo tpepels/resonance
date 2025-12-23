@@ -59,250 +59,334 @@ def test_real_world_corpus_deterministic_workflow():
     assert 'files' in metadata, "Metadata missing 'files' key"
     assert len(metadata['files']) > 0, "Metadata contains no files"
 
-    # Create filesystem faker
-    faker = create_faker_for_corpus(corpus_root)
+    # 1. Set up temporary databases and directories
+    temp_dir = Path(tempfile.mkdtemp())
 
-    # Use faker context for the entire test
-    with FakerContext(faker) as faker_ctx:
-        # Test will be implemented in phases:
-        # Phase 1: Basic faker integration
-        # Phase 2: Full workflow execution
-        # Phase 3: Deterministic rerun validation
-        # Phase 4: Snapshot generation/comparison
+    # Create temporary directory structure from metadata
+    fake_library_root = temp_dir / "fake_library"
 
-        # For now, just verify faker integration works
-        assert faker_ctx is faker
+    # Create directory structure and empty files based on metadata
+    for file_info in metadata['files']:
+        file_path = file_info['path']
+        full_path = fake_library_root / file_path
 
-        # Verify we can access files through faker
-        metadata_content = metadata['files']
-        if metadata_content:
-            first_file = metadata_content[0]['path']
+        # Create parent directories
+        full_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Test that faker provides filesystem access
-            assert faker.exists(first_file), f"Faker should see file: {first_file}"
+        # Create empty file with correct size (if we want to test file operations)
+        # For now, just create empty files since we only care about directory structure
+        if not full_path.exists():
+            full_path.touch()
 
-            # Test directory operations
-            if '/' in first_file:
-                parent_dir = str(Path(first_file).parent)
-                assert faker.isdir(parent_dir), f"Faker should see directory: {parent_dir}"
-
-        # Implement full workflow execution
-        regen_real_corpus = is_regen_enabled("REGEN_REAL_CORPUS")
-        REGEN_ENV_VAR = "REGEN_REAL_CORPUS"
-        EXPECTED_ROOT = corpus_root
-
-        # 1. Set up temporary databases and directories
-        temp_dir = Path(tempfile.mkdtemp())
-        state_db_path = temp_dir / "state.db"
-        cache_db_path = temp_dir / "cache.db"
-        output_root = temp_dir / "organized"
-
+    # Load scripted decisions if available
+    decisions_file = corpus_root / 'decisions.json'
+    scripted_decisions = {}
+    if decisions_file.exists():
         try:
-            # 2. Set up Resonance components
-            from resonance.infrastructure.directory_store import DirectoryStateStore
-            from resonance.infrastructure.scanner import LibraryScanner
-            from resonance.services.tag_writer import MetaJsonTagWriter
-            from resonance.core.applier import ApplyStatus, apply_plan
-            from resonance.core.enricher import build_tag_patch
-            from resonance.core.planner import plan_directory
-            from resonance.core.resolver import resolve_directory
-            from resonance.core.state import DirectoryState
-            from resonance.core.identifier import DirectoryEvidence, TrackEvidence
-            from resonance.core.identity.signature import dir_id, dir_signature
-            from resonance.providers.musicbrainz import MusicBrainzClient
-            from resonance.providers.discogs import DiscogsClient
-            from resonance.providers.caching import CachingProvider
-            from resonance.infrastructure.provider_cache import ProviderCache
-            from datetime import datetime, timezone
+            with open(decisions_file, 'r', encoding='utf-8') as f:
+                decisions_data = json.load(f)
+                scripted_decisions = decisions_data.get('decisions', {})
+        except (json.JSONDecodeError, OSError):
+            # If decisions file is malformed, continue without scripted decisions
+            pass
 
-            store = DirectoryStateStore(state_db_path)
-            writer = MetaJsonTagWriter()
-            provider_cache = ProviderCache(cache_db_path)
-            musicbrainz_provider = CachingProvider(MusicBrainzClient(), provider_cache)
-            discogs_provider = CachingProvider(DiscogsClient(token="dummy_token"), provider_cache)
+    # Implement full workflow execution
+    regen_real_corpus = is_regen_enabled("REGEN_REAL_CORPUS")
+    REGEN_ENV_VAR = "REGEN_REAL_CORPUS"
+    EXPECTED_ROOT = corpus_root
 
-            # 3. Run scan to discover directories
-            scanner = LibraryScanner([Path(".")])  # Scan from current dir (faked by faker)
-            batches = list(scanner.iter_directories())
+    state_db_path = temp_dir / "state.db"
+    cache_db_path = temp_dir / "cache.db"
+    output_root = temp_dir / "organized"
 
-            if not batches:
-                pytest.skip("No audio directories found in corpus")
+    try:
+        # 2. Set up Resonance components
+        from resonance.infrastructure.directory_store import DirectoryStateStore
+        from resonance.infrastructure.scanner import LibraryScanner
+        from resonance.services.tag_writer import MetaJsonTagWriter
+        from resonance.core.applier import ApplyStatus, apply_plan
+        from resonance.core.enricher import build_tag_patch
+        from resonance.core.planner import plan_directory
+        from resonance.core.resolver import resolve_directory
+        from resonance.core.state import DirectoryState
+        from resonance.core.identifier import DirectoryEvidence, TrackEvidence, ConfidenceTier
+        from resonance.core.identity.signature import dir_id, dir_signature
+        from resonance.providers.musicbrainz import MusicBrainzClient
+        from resonance.providers.discogs import DiscogsClient
+        from resonance.providers.caching import CachedProviderClient, ProviderConfig
+        from resonance.infrastructure.cache import MetadataCache
+        from datetime import datetime, timezone
 
-            # Sort by dir_id for deterministic processing
-            batches.sort(key=lambda b: b.dir_id)
+        store = DirectoryStateStore(state_db_path)
+        writer = MetaJsonTagWriter()
+        provider_cache = MetadataCache(cache_db_path)
 
-            # 4. Process each directory: scan → resolve → plan → apply
-            failures = []
-            fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        # Create cached provider clients
+        mb_config = ProviderConfig(provider_name="musicbrainz", client_version="v1")
+        dg_config = ProviderConfig(provider_name="discogs", client_version="v1")
 
-            for batch in batches[:5]:  # Limit to first 5 for initial testing
-                scenario_name = batch.directory.name or f"dir_{batch.dir_id[:8]}"
+        musicbrainz_provider = CachedProviderClient(MusicBrainzClient(), provider_cache, mb_config)
+        discogs_provider = CachedProviderClient(DiscogsClient(token="dummy_token"), provider_cache, dg_config)
 
-                # Create directory evidence from files
-                tracks = []
-                for file_path in sorted(batch.files):
-                    # For real corpus, we don't have .meta.json files, so create minimal evidence
-                    tracks.append(TrackEvidence(
-                        fingerprint_id=None,  # No fingerprints in real corpus
-                        duration_seconds=None,  # No duration data
-                        existing_tags={},  # No existing tags
-                    ))
+        # 3. Run scan to discover directories
+        scanner = LibraryScanner([fake_library_root])  # Scan from faked library root
+        batches = list(scanner.iter_directories())
 
-                evidence = DirectoryEvidence(
-                    tracks=tuple(tracks),
-                    track_count=len(tracks),
-                    total_duration_seconds=0,
-                )
+        # Debug: print what scanner found
+        print(f"DEBUG: Scanner found {len(batches)} batches")
+        for i, batch in enumerate(batches[:3]):  # Show first 3
+            print(f"DEBUG: Batch {i}: dir={batch.directory}, files={len(batch.files)}")
 
-                # Resolve directory
-                outcome = resolve_directory(
-                    dir_id=batch.dir_id,
-                    path=batch.directory,
-                    signature_hash=batch.signature_hash,
-                    evidence=evidence,
-                    store=store,
-                    provider_client=musicbrainz_provider,  # Start with MusicBrainz
-                )
+        if not batches:
+            pytest.skip("No audio directories found in corpus")
 
-                if outcome.state == DirectoryState.QUEUED_PROMPT:
-                    # For now, skip directories that need prompting
-                    # TODO: Implement scripted decisions from decisions.json
+        # Sort by dir_id for deterministic processing
+        batches.sort(key=lambda b: b.dir_id)
+
+        # 4. Process each directory: scan → resolve → plan → apply
+        failures = []
+        fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
+
+        for batch in batches[:5]:  # Limit to first 5 for initial testing
+            scenario_name = batch.directory.name or f"dir_{batch.dir_id[:8]}"
+
+            # Create directory evidence from files
+            tracks = []
+            for file_path in sorted(batch.files):
+                # For real corpus, we don't have .meta.json files, so create minimal evidence
+                tracks.append(TrackEvidence(
+                    fingerprint_id=None,  # No fingerprints in real corpus
+                    duration_seconds=None,  # No duration data
+                    existing_tags={},  # No existing tags
+                ))
+
+            evidence = DirectoryEvidence(
+                tracks=tuple(tracks),
+                track_count=len(tracks),
+                total_duration_seconds=0,
+            )
+
+            # Resolve directory
+            outcome = resolve_directory(
+                dir_id=batch.dir_id,
+                path=batch.directory,
+                signature_hash=batch.signature_hash,
+                evidence=evidence,
+                store=store,
+                provider_client=musicbrainz_provider,  # Start with MusicBrainz
+            )
+
+            if outcome.state == DirectoryState.QUEUED_PROMPT:
+                # Check for scripted decision
+                scripted_decision = scripted_decisions.get(batch.dir_id)
+                if scripted_decision:
+                    if scripted_decision == "AUTO":
+                        # Apply automatic resolution using top candidate
+                        # Run identification to get candidates
+                        from resonance.core.identifier import identify
+                        result = identify(evidence, musicbrainz_provider)
+
+                        if result.best_candidate and result.tier in (ConfidenceTier.PROBABLE, ConfidenceTier.CERTAIN):
+                            # Use the best candidate
+                            best = result.best_candidate
+                            store.set_state(
+                                batch.dir_id,
+                                DirectoryState.RESOLVED_USER,
+                                pinned_provider=best.release.provider,
+                                pinned_release_id=best.release.release_id,
+                                pinned_confidence=best.total_score,
+                            )
+                            # Re-run resolve to get the updated outcome
+                            outcome = resolve_directory(
+                                dir_id=batch.dir_id,
+                                path=batch.directory,
+                                signature_hash=batch.signature_hash,
+                                evidence=evidence,
+                                store=store,
+                                provider_client=musicbrainz_provider,
+                            )
+                        else:
+                            # No good candidates, jail it
+                            store.set_state(batch.dir_id, DirectoryState.JAILED)
+                            continue
+                    elif scripted_decision == "JAIL":
+                        # Jail the directory
+                        store.set_state(batch.dir_id, DirectoryState.JAILED)
+                        continue
+                    elif isinstance(scripted_decision, str):
+                        # Specific release_id provided
+                        # Parse provider:release_id format
+                        if ":" in scripted_decision:
+                            provider_name, release_id = scripted_decision.split(":", 1)
+                            # Validate the release exists
+                            if provider_name == "musicbrainz":
+                                release_obj = musicbrainz_provider.release_by_id(provider_name, release_id)
+                            elif provider_name == "discogs":
+                                release_obj = discogs_provider.release_by_id(provider_name, release_id)
+                            else:
+                                continue  # Invalid provider
+
+                            if release_obj:
+                                # Apply the scripted decision
+                                store.set_state(
+                                    batch.dir_id,
+                                    DirectoryState.RESOLVED_USER,
+                                    pinned_provider=provider_name,
+                                    pinned_release_id=release_id,
+                                )
+                                # Re-run resolve to get the updated outcome
+                                outcome = resolve_directory(
+                                    dir_id=batch.dir_id,
+                                    path=batch.directory,
+                                    signature_hash=batch.signature_hash,
+                                    evidence=evidence,
+                                    store=store,
+                                    provider_client=musicbrainz_provider,
+                                )
+                            else:
+                                continue  # Release not found
+                        else:
+                            continue  # Invalid format
+                    else:
+                        continue  # Invalid decision format
+                else:
+                    # No scripted decision available, skip
                     continue
 
-                if outcome.state not in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
-                    continue
+            if outcome.state not in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
+                continue
 
-                # Get resolved record
-                record = store.get(batch.dir_id)
-                if not record or not record.pinned_release_id or not record.pinned_provider:
-                    continue
+            # Get resolved record
+            record = store.get(batch.dir_id)
+            if not record or not record.pinned_release_id or not record.pinned_provider:
+                continue
 
-                # Retrieve the full ProviderRelease object
-                pinned_release = musicbrainz_provider.release_by_id(
+            # Retrieve the full ProviderRelease object
+            pinned_release = musicbrainz_provider.release_by_id(
+                record.pinned_provider, record.pinned_release_id
+            )
+            if not pinned_release:
+                # Try Discogs if MusicBrainz failed
+                pinned_release = discogs_provider.release_by_id(
                     record.pinned_provider, record.pinned_release_id
                 )
                 if not pinned_release:
-                    # Try Discogs if MusicBrainz failed
-                    pinned_release = discogs_provider.release_by_id(
-                        record.pinned_provider, record.pinned_release_id
-                    )
-                if not pinned_release:
                     continue
 
-                # Plan directory
-                plan = plan_directory(
-                    record=record,
-                    pinned_release=pinned_release,
-                    source_files=batch.files,
+            # Plan directory
+            plan = plan_directory(
+                record=record,
+                pinned_release=pinned_release,
+                source_files=batch.files,
+            )
+
+            # Mark as planned
+            store.set_state(
+                batch.dir_id,
+                DirectoryState.PLANNED,
+                pinned_provider=record.pinned_provider,
+                pinned_release_id=record.pinned_release_id,
+            )
+
+            # Build tag patch
+            tag_patch = build_tag_patch(
+                plan,
+                pinned_release,
+                outcome.state,
+                now_fn=lambda: fixed_now,
+            )
+
+            # Apply plan
+            report = apply_plan(
+                plan,
+                tag_patch,
+                store,
+                allowed_roots=(output_root,),
+                dry_run=False,
+                tag_writer=writer,
+            )
+
+            if report.status != ApplyStatus.APPLIED:
+                failures.append(
+                    f"{scenario_name}: apply status {report.status.value} errors={report.errors}"
                 )
-
-                # Mark as planned
-                store.set_state(
-                    batch.dir_id,
-                    DirectoryState.PLANNED,
-                    pinned_provider=record.pinned_provider,
-                    pinned_release_id=record.pinned_release_id,
-                )
-
-                # Build tag patch
-                tag_patch = build_tag_patch(
-                    plan,
-                    pinned_release,
-                    outcome.state,
-                    now_fn=lambda: fixed_now,
-                )
-
-                # Apply plan
-                report = apply_plan(
-                    plan,
-                    tag_patch,
-                    store,
-                    allowed_roots=(output_root,),
-                    dry_run=False,
-                    tag_writer=writer,
-                )
-
-                if report.status != ApplyStatus.APPLIED:
-                    failures.append(
-                        f"{scenario_name}: apply status {report.status.value} errors={report.errors}"
-                    )
-                    if output_root.exists():
-                        import shutil
-                        shutil.rmtree(output_root)
-                    continue
-
-                # Generate/compare snapshots for this directory
-                try:
-                    # Layout snapshot (audio + extras, excluding .meta.json)
-                    actual_layout = sorted(
-                        str(path.relative_to(output_root))
-                        for path in output_root.rglob("*")
-                        if path.is_file() and path.suffix != ".json"
-                    )
-                    assert_or_write_snapshot(
-                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_layout.json"),
-                        payload=actual_layout,
-                        regen=regen_real_corpus,
-                        regen_env_var=REGEN_ENV_VAR,
-                    )
-
-                    # Tags snapshot (filtered, stable keys)
-                    tag_entries = []
-                    for path in sorted(output_root.rglob("*.flac")):
-                        tags = writer.read_tags(path)
-                        assert_valid_plan_hash(tags)
-                        tag_entries.append(
-                            {
-                                "path": str(path.relative_to(output_root)),
-                                "tags": filter_relevant_tags(tags),
-                            }
-                        )
-                    assert_or_write_snapshot(
-                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_tags.json"),
-                        payload={"tracks": tag_entries},
-                        regen=regen_real_corpus,
-                        regen_env_var=REGEN_ENV_VAR,
-                    )
-
-                    # State snapshot
-                    record = store.get(batch.dir_id)
-                    assert record is not None
-                    state_data = {
-                        "pinned_provider": record.pinned_provider,
-                        "pinned_release_id": record.pinned_release_id,
-                        "state": record.state.value,
-                    }
-                    assert_or_write_snapshot(
-                        path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_state.json"),
-                        payload=state_data,
-                        regen=regen_real_corpus,
-                        regen_env_var=REGEN_ENV_VAR,
-                    )
-
-                except FileNotFoundError as exc:
-                    failures.append(f"{scenario_name}: {exc}")
-                    if output_root.exists():
-                        import shutil
-                        shutil.rmtree(output_root)
-                    continue
-
-                # Reset output root for next scenario
                 if output_root.exists():
                     import shutil
                     shutil.rmtree(output_root)
+                continue
 
-            # Report any failures
-            if failures:
-                raise AssertionError(
-                    "Real-world corpus failures:\n" + "\n".join(failures)
+            # Generate/compare snapshots for this directory
+            try:
+                # Layout snapshot (audio + extras, excluding .meta.json)
+                actual_layout = sorted(
+                    str(path.relative_to(output_root))
+                    for path in output_root.rglob("*")
+                    if path.is_file() and path.suffix != ".json"
+                )
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_layout.json"),
+                    payload=actual_layout,
+                    regen=regen_real_corpus,
+                    regen_env_var=REGEN_ENV_VAR,
                 )
 
-        finally:
-            # Cleanup
-            import shutil
-            if temp_dir.exists():
-                shutil.rmtree(temp_dir)
-            store.close()
+                # Tags snapshot (filtered, stable keys)
+                tag_entries = []
+                for path in sorted(output_root.rglob("*.flac")):
+                    tags = writer.read_tags(path)
+                    assert_valid_plan_hash(tags)
+                    tag_entries.append(
+                        {
+                            "path": str(path.relative_to(output_root)),
+                            "tags": filter_relevant_tags(tags),
+                        }
+                    )
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_tags.json"),
+                    payload={"tracks": tag_entries},
+                    regen=regen_real_corpus,
+                    regen_env_var=REGEN_ENV_VAR,
+                )
+
+                # State snapshot
+                record = store.get(batch.dir_id)
+                assert record is not None
+                state_data = {
+                    "pinned_provider": record.pinned_provider,
+                    "pinned_release_id": record.pinned_release_id,
+                    "state": record.state.value,
+                }
+                assert_or_write_snapshot(
+                    path=snapshot_path(EXPECTED_ROOT, scenario_name, "expected_state.json"),
+                    payload=state_data,
+                    regen=regen_real_corpus,
+                    regen_env_var=REGEN_ENV_VAR,
+                )
+
+            except FileNotFoundError as exc:
+                failures.append(f"{scenario_name}: {exc}")
+                if output_root.exists():
+                    import shutil
+                    shutil.rmtree(output_root)
+                continue
+
+            # Reset output root for next scenario
+            if output_root.exists():
+                import shutil
+                shutil.rmtree(output_root)
+
+        # Report any failures
+        if failures:
+            raise AssertionError(
+                "Real-world corpus failures:\n" + "\n".join(failures)
+            )
+
+    finally:
+        # Cleanup
+        import shutil
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+        store.close()
 
 
 @pytest.mark.skipif(

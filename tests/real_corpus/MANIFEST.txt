@@ -11,31 +11,7 @@
 # Start with 10-20 albums for development iteration
 # Expand to 50+ for comprehensive testing
 
-# Rock/Pop examples
-Rock Band/Greatest Hits (1990)
-Pop Artist/Best Of (1985)
-
-# Classical examples
-Classical/Beethoven/Symphony No. 5 (1975)
-Classical/Mozart/Don Giovanni (1982)
-
-# Jazz examples
-Jazz/Artist/Cookin' (1958)
-
-# Electronic/Dance examples
-Electronic/Artist/Album (2005)
-
-# Soundtrack examples
-Soundtracks/Various Artists/Movie Soundtrack (1994)
-
-# Compilation examples
-Compilations/Various Artists/80s Hits (1989)
-
-# Live albums
-Rock Band/Live at Venue (1992)
-
-# Box sets
-Artist/The Complete Collection (1998)
-
-# Import/special editions
-Artist/Album (Deluxe Edition) (2001)
+# Real albums from /home/tom/music for V3.1 corpus testing
+# Format: Artist/Album (relative to music library root)
+# Start with just one album for testing
+Abel Selaocoe/Hymns of Bantu

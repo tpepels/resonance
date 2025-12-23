@@ -74,6 +74,11 @@ class CachedProviderClient(ProviderClient):
         self._cache = cache
         self._config = config
 
+    @property
+    def capabilities(self):
+        """Delegate capabilities to underlying provider."""
+        return self._provider.capabilities
+
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Search by fingerprints with cache-first semantics.
 
@@ -171,6 +176,61 @@ class CachedProviderClient(ProviderClient):
         )
 
         return releases
+
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """Fetch a specific release by provider and release_id with caching.
+
+        Cache key: provider:release_by_id:version:client_version:provider=X|release_id=Y
+
+        Returns:
+            Cached or fresh ProviderRelease if found, None otherwise
+        """
+        # Build stable cache key
+        cache_key = provider_cache_key(
+            provider=self._config.provider_name,
+            request_type="release_by_id",
+            query={"provider": provider, "release_id": release_id},
+            version=self._config.cache_version,
+            client_version=self._config.client_version,
+        )
+
+        # Cache-first read
+        cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:release")
+        if cached is not None:
+            # Cache hit - deserialize to ProviderRelease
+            if cached:
+                releases = self._deserialize_releases(cached)
+                return releases[0] if releases else None
+            return None
+
+        # Cache miss
+        if self._config.offline:
+            # Offline mode: deterministic error on cache miss
+            raise RuntimeFailure(
+                f"Provider {self._config.provider_name} requires network "
+                f"(offline mode, cache miss for release_by_id: "
+                f"provider={provider}, release_id={release_id})"
+            )
+
+        # Online mode: call provider
+        release = self._provider.release_by_id(provider, release_id)
+
+        # Write-through to cache (serialize as list for consistency)
+        if release:
+            self._cache.set(
+                cache_key,
+                self._serialize_releases([release]),
+                namespace=f"{self._config.provider_name}:release",
+            )
+        else:
+            # Cache negative result
+            self._cache.set(
+                cache_key,
+                None,
+                namespace=f"{self._config.provider_name}:release",
+            )
+
+        return release
 
     def _serialize_releases(self, releases: list[ProviderRelease]) -> list[dict]:
         """Convert ProviderRelease objects to JSON-serializable dicts."""

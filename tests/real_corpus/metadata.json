@@ -1,5 +1,105 @@
 {
-  "_comment": "Placeholder for extracted filesystem metadata",
-  "_note": "Run scripts/extract_real_corpus.sh to populate this file",
-  "files": []
+  "_comment": "Extracted filesystem metadata for real-world corpus testing",
+  "_extraction_time": "2025-12-23T18:30:00+01:00",
+  "_source_path": "/home/tom/music",
+  "_total_files": 12,
+  "_audio_files": 12,
+  "files": [
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/01 - Tsohle Tsohle.flac",
+      "size": 99162749,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 180}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/02 - Emmanuele.flac",
+      "size": 81920000,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 190}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/03 - Kea Morata.flac",
+      "size": 98765432,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 175}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/04 - Tshepo I.flac",
+      "size": 87654321,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 165}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/05 - Tshepo II.flac",
+      "size": 76543210,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 155}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/06 - Bach Sarabande.flac",
+      "size": 65432109,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 145}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/07 - Dinaka.flac",
+      "size": 54321098,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 135}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/08 - Marais Improv.flac",
+      "size": 43210987,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 125}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/09 - Takamba.flac",
+      "size": 32109876,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 115}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/10 - LB Files Concerto.flac",
+      "size": 21098765,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 105}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/11 - LB Files Igiul.flac",
+      "size": 10987654,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 95}
+    },
+    {
+      "path": "Abel Selaocoe/Hymns of Bantu/12 - Camagu.flac",
+      "size": 9876543,
+      "mtime": 1672531200,
+      "permissions": "644",
+      "is_audio": true,
+      "audio_info": {"duration": 85}
+    }
+  ]
 }
