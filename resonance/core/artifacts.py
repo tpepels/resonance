@@ -9,7 +9,12 @@ from typing import Any
 
 from resonance.core.enricher import AlbumTagPatch, TagPatch, TrackTagPatch
 from resonance.core.planner import Plan, TrackOperation
-from resonance.core.validation import SafePath, validate_dir_id, validate_release_id, validate_signature_hash
+from resonance.core.validation import (
+    SafePath,
+    validate_dir_id,
+    validate_release_id,
+    validate_signature_hash,
+)
 
 
 def _require(value: Any, name: str) -> Any:
@@ -67,7 +72,11 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
             "track_position",
         )
         src = Path(_ensure_str(_require(raw_op.get("source_path"), "source_path"), "source_path"))
-        dest = Path(_ensure_str(_require(raw_op.get("destination_path"), "destination_path"), "destination_path"))
+        dest = Path(
+            _ensure_str(
+                _require(raw_op.get("destination_path"), "destination_path"), "destination_path"
+            )
+        )
         src = source_path / src if not src.is_absolute() else src
         dest = _resolve_destination_path(dest, allowed_roots)
         SafePath(src, (source_path,))
@@ -77,7 +86,9 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
                 track_position=track_position,
                 source_path=src,
                 destination_path=dest,
-                track_title=_ensure_str(_require(raw_op.get("track_title"), "track_title"), "track_title"),
+                track_title=_ensure_str(
+                    _require(raw_op.get("track_title"), "track_title"), "track_title"
+                ),
             )
         )
 
@@ -87,19 +98,33 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
         signature_hash=signature_hash,
         provider=_ensure_str(_require(data.get("provider"), "provider"), "provider"),
         release_id=release_id,
-        release_title=_ensure_str(_require(data.get("release_title"), "release_title"), "release_title"),
-        release_artist=_ensure_str(_require(data.get("release_artist"), "release_artist"), "release_artist"),
+        release_title=_ensure_str(
+            _require(data.get("release_title"), "release_title"), "release_title"
+        ),
+        release_artist=_ensure_str(
+            _require(data.get("release_artist"), "release_artist"), "release_artist"
+        ),
         destination_path=_resolve_destination_path(
-            Path(_ensure_str(_require(data.get("destination_path"), "destination_path"), "destination_path")),
+            Path(
+                _ensure_str(
+                    _require(data.get("destination_path"), "destination_path"), "destination_path"
+                )
+            ),
             allowed_roots,
         ),
         operations=tuple(operations),
-        non_audio_policy=_ensure_str(_require(data.get("non_audio_policy"), "non_audio_policy"), "non_audio_policy"),
-        plan_version=_ensure_str(_require(data.get("plan_version"), "plan_version"), "plan_version"),
+        non_audio_policy=_ensure_str(
+            _require(data.get("non_audio_policy"), "non_audio_policy"), "non_audio_policy"
+        ),
+        plan_version=_ensure_str(
+            _require(data.get("plan_version"), "plan_version"), "plan_version"
+        ),
         is_compilation=bool(data.get("is_compilation", False)),
         compilation_reason=data.get("compilation_reason"),
         is_classical=bool(data.get("is_classical", False)),
-        conflict_policy=_ensure_str(_require(data.get("conflict_policy"), "conflict_policy"), "conflict_policy"),
+        conflict_policy=_ensure_str(
+            _require(data.get("conflict_policy"), "conflict_policy"), "conflict_policy"
+        ),
         settings_hash=data.get("settings_hash"),
     )
     return plan

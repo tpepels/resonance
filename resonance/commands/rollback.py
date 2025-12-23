@@ -11,10 +11,7 @@ def run_rollback(
 ) -> dict[str, object]:
     """Rollback file moves using an ApplyReport."""
     restored = False
-    dest_to_source = {
-        Path(op.destination_path): Path(op.source_path)
-        for op in report.file_ops
-    }
+    dest_to_source = {Path(op.destination_path): Path(op.source_path) for op in report.file_ops}
     for op in report.file_ops:
         src = Path(op.source_path)
         dest = Path(op.destination_path)
@@ -29,9 +26,7 @@ def run_rollback(
                 if not target.exists() and target in dest_to_source:
                     target = dest_to_source[target]
                 if target.exists():
-                    tag_writer.write_tags_exact(
-                        target, dict(op.before_tags)
-                    )
+                    tag_writer.write_tags_exact(target, dict(op.before_tags))
     return {
         "restored": restored,
         "errors": tuple(report.errors),

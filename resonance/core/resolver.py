@@ -67,7 +67,11 @@ def resolve_directory(
     record = store.get_or_create(dir_id, path, signature_hash)
 
     # CRITICAL: Skip identify() if already resolved or applied
-    if record.state in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER, DirectoryState.APPLIED):
+    if record.state in (
+        DirectoryState.RESOLVED_AUTO,
+        DirectoryState.RESOLVED_USER,
+        DirectoryState.APPLIED,
+    ):
         return ResolveOutcome(
             dir_id=record.dir_id,
             state=record.state,

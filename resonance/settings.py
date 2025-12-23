@@ -43,7 +43,9 @@ def load_settings(path: Optional[Path]) -> Settings:
         json_settings = json.loads(path.read_text())
 
     # Resolve each setting with environment variable override
-    backend = os.getenv("RESONANCE_TAG_WRITER_BACKEND") or json_settings.get("tag_writer_backend", _DEFAULT_BACKEND)
+    backend = os.getenv("RESONANCE_TAG_WRITER_BACKEND") or json_settings.get(
+        "tag_writer_backend", _DEFAULT_BACKEND
+    )
     if backend not in _ALLOWED_BACKENDS:
         raise ValueError(f"Unsupported tag writer backend: {backend}")
 

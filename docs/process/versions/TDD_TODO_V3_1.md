@@ -16,25 +16,29 @@ I.e. let's make this configurable and add to .gitignore
 
 ---
 
-# TDD_TODO_V3.1 — Real-World Corpus Capture & Regression Harness
+# TDD_TODO_V3.1 — Real-World Corpus Metadata Extraction & Filesystem Faker
+
+**Status: PHASES 1 & 2 COMPLETE ✅, PHASE 3 IN PROGRESS 🔄**
 
 **Theme:**
 
 > V3 proves correctness on curated cases.
 > **V3.1 proves correctness survives your actual library.**
 
-**Scope:** Add a “real-world corpus” test harness that can:
+**Scope:** Add a "real-world corpus" test harness that can:
 
-1. snapshot a real library into a safe fixture workspace,
-2. run the full workflow deterministically (offline-safe),
-3. generate `expected_*` snapshots (state/layout/tags) in the same style as golden, and
-4. assert strict invariants on reruns (no provider calls, no churn).
+1. ✅ extract metadata/directory structure from a real library (no file copying),
+2. ✅ create a filesystem faker that serves extracted metadata to the app,
+3. 🔄 run the full workflow deterministically (offline-safe) against faked filesystem,
+4. ⏳ generate `expected_*` snapshots (state/layout/tags) in the same style as golden, and
+5. ⏳ assert strict invariants on reruns (no provider calls, no churn).
 
 **Hard constraints (must hold)**
 
-* No mutation of the user’s real library path (tests operate on a snapshot/copy only)
+* No mutation of the user's real library path (only metadata extraction)
+* No file copying - only extract directory structure and file metadata
 * No network required for test execution (offline-safe by default)
-* Regen is explicit and gated (like golden regen via env flag) 
+* Regen is explicit and gated (like golden regen via env flag)
 * No new providers, no new tagging formats, no architectural rewrites
 
 ---
@@ -53,61 +57,94 @@ I.e. let's make this configurable and add to .gitignore
 
 ---
 
-## 1) Filesystem Safety: Snapshot Workspace
+## 1) Metadata Extraction: Safe Corpus Capture ✅ **COMPLETE**
 
-### 1.1 Real corpus workspace layout (Repo)
+### 1.1 Real corpus workspace layout (Repo) ✅
 
-* [ ] Add directory structure:
+* [x] Add directory structure:
 
   ```
   tests/real_corpus/
     README.md
-    input/                # populated by snapshot step; never committed if large
+    metadata.json         # extracted directory structure + file metadata
     expected_state.json
     expected_layout.json
     expected_tags.json
   ```
-* [ ] Add `.gitignore` rules for large local inputs:
+* [x] Store only extracted metadata (no actual audio files)
 
-  * ignore `tests/real_corpus/input/**`
-  * allow committing only small canonical sample subsets (optional)
+### 1.2 Metadata extraction helper (Non-test utility) ✅
 
-### 1.2 Snapshot helper (Non-test utility)
+**Goal:** extract directory structure and file metadata without copying files.
 
-**Goal:** easy, safe capture into `tests/real_corpus/input/` without mutating source.
-
-* [ ] Add script `scripts/snapshot_real_corpus.sh` supporting:
+* [x] Add script `scripts/extract_real_corpus.sh` supporting:
 
   * source path (e.g. `~/Music` or server mount)
-  * destination `tests/real_corpus/input/`
-  * a “subset manifest” mode (optional): copy only listed directories
-* [ ] Document: snapshot is a *copy*; tests never point at real library
+  * manifest filtering: only scan listed directories
+  * extract: directory tree, file sizes, modification times, audio metadata
+  * output: `tests/real_corpus/metadata.json` (compact, committable)
+* [x] Document: extraction reads only, never writes to source
 
 **Acceptance**
 
-* Running the script twice is idempotent (either `--delete` or deterministic merge policy)
-* Never follows symlinks unless explicitly requested (avoid pulling in unexpected trees)
+* Zero risk to source library (read-only operations)
+* Metadata file is small and committable (~KB, not GB)
+* Deterministic extraction (same library → same metadata)
+* Fast extraction (seconds, not hours)
+
+### 1.3 Filesystem Faker Middleware ✅ **COMPLETE**
+
+**Goal:** provide filesystem interface using extracted metadata.
+
+* [x] Create `tests/integration/_filesystem_faker.py`:
+
+  * implements `os.path.exists()`, `os.listdir()`, `os.stat()` etc.
+  * serves from `metadata.json` instead of real filesystem
+  * maintains same API as real filesystem calls
+* [x] Integration: faker is transparent to existing app code
+
+**Acceptance**
+
+* App code runs unchanged against faker
+* Same performance characteristics as real filesystem
+* Deterministic behavior (metadata is static)
 
 ---
 
-## 2) Test Harness: Real-World Corpus Integration Test
+## 2) Test Harness: Real-World Corpus Integration Test 🔄 **IN PROGRESS**
 
 ### 2.1 New integration test file
 
-* [ ] Add `tests/integration/test_real_world_corpus.py`
+* [x] Add `tests/integration/test_real_world_corpus.py` (basic structure created)
 
 This test should execute the workflow in a controlled way:
 
+* Load filesystem faker with `metadata.json`
 * Use temp state db + temp cache db
 * Run: `scan → resolve → prompt (scripted decisions) → plan → apply`
 * Then rerun: `scan → resolve → plan` and assert **no changes**
 
 **Important:** Prompt decisions must be non-interactive in tests. Use one of:
 
-* deterministic auto-selection policy for test harness only (e.g., “pick top candidate for PROBABLE; jail UNSURE”), or
-* a fixture “decisions file” mapping `dir_id → pinned_release_id/provider`.
+* deterministic auto-selection policy for test harness only (e.g., "pick top candidate for PROBABLE; jail UNSURE"), or
+* a fixture "decisions file" mapping `dir_id → pinned_release_id/provider`.
 
-### 2.2 Scripted prompt decisions (Test-only)
+### 2.2 Filesystem faker integration
+
+* [x] Test uses `FilesystemFaker` instead of real filesystem:
+
+  * faker loads from `tests/real_corpus/metadata.json`
+  * provides same API as `os.path`, `os.listdir`, etc.
+  * app code runs unchanged against faker
+* [x] Verify faker provides deterministic responses
+
+**Acceptance**
+
+* App code requires no changes to work with faker
+* Same file enumeration and access patterns
+* Deterministic behavior across test runs
+
+### 2.3 Scripted prompt decisions (Test-only)
 
 * [ ] Implement a **test-only prompt driver**:
 
@@ -178,7 +215,7 @@ This test should execute the workflow in a controlled way:
 
 You already have golden regen gated via `REGEN_GOLDEN` .
 
-* [ ] Add `regen_real_corpus.py`:
+* [x] Add `regen_real_corpus.py`:
 
   * sets env `REGEN_REAL_CORPUS=1`
   * runs `pytest tests/integration/test_real_world_corpus.py -q`
@@ -241,10 +278,10 @@ You already have golden regen gated via `REGEN_GOLDEN` .
 
 ### 7.1 CI safety
 
-* [ ] Mark real-world corpus tests as opt-in:
+* [x] Mark real-world corpus tests as opt-in:
 
   * skipped by default unless `RUN_REAL_CORPUS=1`
-* [ ] Ensure golden tests remain always-on
+* [x] Ensure golden tests remain always-on
 
 **Acceptance**
 
@@ -275,10 +312,11 @@ Include:
 
 V3.1 is complete when:
 
-1. A real library (or subset) can be copied into `tests/real_corpus/input/` safely.
+1. Metadata can be extracted from a real library (or subset) safely (read-only).
 2. `pytest tests/integration/test_real_world_corpus.py`:
 
    * runs offline by default,
+   * uses filesystem faker against extracted metadata,
    * produces deterministic results,
    * asserts rerun is a no-op (no provider calls, no churn).
 3. Snapshots `expected_state/layout/tags` are generated only under `REGEN_REAL_CORPUS=1`.

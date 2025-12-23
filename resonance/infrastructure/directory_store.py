@@ -69,14 +69,11 @@ class DirectoryStateStore:
 
     def _ensure_signature_version_column(self) -> None:
         columns = {
-            row[1]
-            for row in self._conn.execute("PRAGMA table_info(directories)").fetchall()
+            row[1] for row in self._conn.execute("PRAGMA table_info(directories)").fetchall()
         }
         if "signature_version" in columns:
             return
-        self._conn.execute(
-            "ALTER TABLE directories ADD COLUMN signature_version INTEGER DEFAULT 1"
-        )
+        self._conn.execute("ALTER TABLE directories ADD COLUMN signature_version INTEGER DEFAULT 1")
 
     def _ensure_schema_version(self) -> None:
         current_version = 4
@@ -84,16 +81,13 @@ class DirectoryStateStore:
         if version is None:
             row = self._conn.execute("SELECT COUNT(*) FROM directories").fetchone()
             if row and row[0] > 0:
-                raise ValueError(
-                    "State DB missing schema_version - created by old version?"
-                )
+                raise ValueError("State DB missing schema_version - created by old version?")
             self._set_metadata("schema_version", str(current_version))
             self._set_metadata("created_by_version", "0.1.0")
             return
         if int(version) > current_version:
             raise ValueError(
-                f"DB schema {version} > supported {current_version}. "
-                "Please upgrade Resonance."
+                f"DB schema {version} > supported {current_version}. Please upgrade Resonance."
             )
         if int(version) < current_version:
             self._migrate_schema(int(version), current_version)
@@ -213,9 +207,7 @@ class DirectoryStateStore:
             )
             self._conn.commit()
 
-    def record_apply_summary(
-        self, dir_id: str, status: str, errors: tuple[str, ...]
-    ) -> None:
+    def record_apply_summary(self, dir_id: str, status: str, errors: tuple[str, ...]) -> None:
         now = self._now_iso()
         with self._lock:
             self._conn.execute(

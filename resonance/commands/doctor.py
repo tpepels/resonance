@@ -7,6 +7,7 @@ from pathlib import Path
 from resonance.settings import Settings, load_settings
 from resonance.services.tag_writer import get_tag_writer
 
+
 def run_doctor(
     *, store, config_path: Path | None = None, settings: Settings | None = None
 ) -> dict[str, list[dict[str, str]]]:

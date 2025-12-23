@@ -21,8 +21,8 @@ class NonAudioPolicy(str, Enum):
     """Policy for handling non-audio files."""
 
     MOVE_WITH_ALBUM = "MOVE_WITH_ALBUM"  # Move with audio files (default)
-    LEAVE_IN_PLACE = "LEAVE_IN_PLACE"    # Don't move non-audio
-    DELETE = "DELETE"                     # Delete non-audio (requires explicit opt-in)
+    LEAVE_IN_PLACE = "LEAVE_IN_PLACE"  # Don't move non-audio
+    DELETE = "DELETE"  # Delete non-audio (requires explicit opt-in)
 
 
 @dataclass(frozen=True)
@@ -76,7 +76,6 @@ class Plan:
         from resonance.core.artifacts import load_plan
 
         return load_plan(path, allowed_roots=allowed_roots)
-
 
 
 _COMPILATION_TOKENS = frozenset(
@@ -194,9 +193,7 @@ def plan_directory(
     if source_files is not None:
         ordered_sources = sorted(source_files)
         if len(ordered_sources) != len(ordered_tracks):
-            raise ValueError(
-                "Source file count does not match release track count"
-            )
+            raise ValueError("Source file count does not match release track count")
 
     max_disc = max((track.disc_number or 1) for track in ordered_tracks) if ordered_tracks else 1
 

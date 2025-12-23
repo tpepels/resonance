@@ -12,6 +12,7 @@ from typing import Iterable, Any
 @dataclass(frozen=True)
 class AudioFileSignature:
     """Stable signature data for a single audio file."""
+
     fingerprint_id: str | None
     duration_seconds: int | None
     size_bytes: int
@@ -28,6 +29,7 @@ class AudioFileSignature:
 @dataclass(frozen=True)
 class DirectorySignature:
     """Stable directory signature computed from audio files."""
+
     audio_files: tuple[AudioFileSignature, ...]
     signature_hash: str
     signature_version: int = 1
@@ -67,9 +69,7 @@ def dir_signature(
     serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     signature_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    non_audio_entries = tuple(
-        sorted(path.as_posix() for path in (non_audio_files or []))
-    )
+    non_audio_entries = tuple(sorted(path.as_posix() for path in (non_audio_files or [])))
 
     return DirectorySignature(
         audio_files=tuple(signatures),

@@ -51,9 +51,7 @@ class AcoustIDClient(ProviderClient):
             supports_metadata=False,  # AcoustID doesn't support metadata-only search
         )
 
-    def search_by_fingerprints(
-        self, fingerprints: list[str]
-    ) -> list[ProviderRelease]:
+    def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Search for releases using audio fingerprints.
 
         Args:
@@ -95,14 +93,16 @@ class AcoustIDClient(ProviderClient):
                 fingerprint,
                 self.base_url + "/lookup",
                 self.api_key,
-                meta=["recordings", "releases"]
+                meta=["recordings", "releases"],
             )
 
             releases = self._parse_acoustid_results(results)
 
             # Cache the results if cache is available
             if self.cache and cache_key:
-                self.cache.set(cache_key, self._serialize_results(releases), namespace="acoustid:lookup")
+                self.cache.set(
+                    cache_key, self._serialize_results(releases), namespace="acoustid:lookup"
+                )
 
             return releases
 
@@ -164,7 +164,7 @@ class AcoustIDClient(ProviderClient):
                     position=1,
                     title=title,
                     duration_seconds=None,  # AcoustID doesn't provide duration in lookup
-                    fingerprint_id=None,    # We don't have the original fingerprint here
+                    fingerprint_id=None,  # We don't have the original fingerprint here
                 )
 
                 release = ProviderRelease(
@@ -260,7 +260,7 @@ class AcoustIDCache:
         # Create hash of fingerprints
         fp_hash = hashlib.sha256()
         for fp in sorted_fps:
-            fp_hash.update(fp.encode('utf-8'))
+            fp_hash.update(fp.encode("utf-8"))
 
         # Include client version for cache invalidation
         key_data = {
@@ -271,6 +271,6 @@ class AcoustIDCache:
 
         # Create final key hash
         key_hash = hashlib.sha256()
-        key_hash.update(json.dumps(key_data, sort_keys=True).encode('utf-8'))
+        key_hash.update(json.dumps(key_data, sort_keys=True).encode("utf-8"))
 
         return key_hash.hexdigest()

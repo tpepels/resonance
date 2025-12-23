@@ -127,12 +127,14 @@ def run_resolve(
 
         except Exception as exc:
             errors += 1
-            items.append({
-                "dir_id": record.dir_id,
-                "directory": str(record.last_seen_path),
-                "state": "FAILED",
-                "error": str(exc),
-            })
+            items.append(
+                {
+                    "dir_id": record.dir_id,
+                    "directory": str(record.last_seen_path),
+                    "state": "FAILED",
+                    "error": str(exc),
+                }
+            )
 
     # Build and emit output
     payload = {

@@ -11,15 +11,14 @@ from pathlib import Path
 from typing import Optional
 
 _DASH_CHARS = "\u2010\u2011\u2012\u2013\u2014\u2212"
-TRACK_PATTERN = re.compile(
-    rf"^(?P<num>\d{{1,3}})(?:[\s._\-{_DASH_CHARS}]+)(?P<title>.+)$"
-)
+TRACK_PATTERN = re.compile(rf"^(?P<num>\d{{1,3}})(?:[\s._\-{_DASH_CHARS}]+)(?P<title>.+)$")
 ARTIST_ALBUM_PATTERN = re.compile(r"^(?P<artist>[^/]+?)\s*[-–]\s*(?P<album>.+)$")
 
 
 @dataclass(slots=True)
 class PathGuess:
     """Metadata guessed from file path structure."""
+
     artist: Optional[str] = None
     album: Optional[str] = None
     title: Optional[str] = None

@@ -16,9 +16,7 @@ def _apply_component(
     if not value:
         return None
     display_value = (
-        canonicalize_display(value, category)
-        if canonicalize_display is not None
-        else value
+        canonicalize_display(value, category) if canonicalize_display is not None else value
     )
     cleaned = sanitize(display_value)
     return cleaned or None

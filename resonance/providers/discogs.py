@@ -11,7 +11,12 @@ import urllib.request
 from typing import Optional
 
 from resonance import __version__ as RESONANCE_VERSION
-from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease, ProviderTrack
+from resonance.core.identifier import (
+    ProviderCapabilities,
+    ProviderClient,
+    ProviderRelease,
+    ProviderTrack,
+)
 from resonance.core.identity import display_album, display_artist, display_work, match_key_artist
 from resonance.infrastructure.cache import MetadataCache
 
@@ -255,9 +260,7 @@ class DiscogsClient(ProviderClient):
             if isinstance(name, str):
                 tokens.append(name.casefold())
             if isinstance(descriptions, list):
-                tokens.extend(
-                    desc.casefold() for desc in descriptions if isinstance(desc, str)
-                )
+                tokens.extend(desc.casefold() for desc in descriptions if isinstance(desc, str))
             if "single" in tokens:
                 return "single"
             if "ep" in tokens:

@@ -1,0 +1,5 @@
+{
+  "_comment": "Placeholder for extracted filesystem metadata",
+  "_note": "Run scripts/extract_real_corpus.sh to populate this file",
+  "files": []
+}

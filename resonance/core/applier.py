@@ -86,9 +86,7 @@ def _resolve_source_path(source_root: Path, path: Path) -> Path:
     return source_root / path
 
 
-def _resolve_destination_path(
-    path: Path, allowed_roots: tuple[Path, ...] | None
-) -> Path:
+def _resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...] | None) -> Path:
     if ".." in path.parts:
         raise ValueError(f"Path traversal not allowed: {path}")
     if path.is_absolute():
@@ -103,9 +101,7 @@ def _collect_audio_files(source_path: Path) -> list[Path]:
     files = [
         path
         for path in source_path.rglob("*")
-        if path.is_file()
-        and not path.is_symlink()
-        and path.suffix.lower() in extensions
+        if path.is_file() and not path.is_symlink() and path.suffix.lower() in extensions
     ]
     return sorted(files)
 
@@ -143,7 +139,11 @@ def _manual_rename_detected(dest: Path) -> bool:
             continue
         if candidate == dest or candidate.suffix != dest.suffix:
             continue
-        if candidate.name.startswith(prefix + " ") or candidate.name.startswith(prefix + "-") or candidate.name.startswith(prefix + "_"):
+        if (
+            candidate.name.startswith(prefix + " ")
+            or candidate.name.startswith(prefix + "-")
+            or candidate.name.startswith(prefix + "_")
+        ):
             return True
     return False
 
@@ -263,9 +263,7 @@ def apply_plan(
         for track_patch in tag_patch.track_patches:
             operation: TrackOperation | None = by_position.get(track_patch.track_position)
             if operation is None:
-                tags_errors.append(
-                    f"Missing track position in plan: {track_patch.track_position}"
-                )
+                tags_errors.append(f"Missing track position in plan: {track_patch.track_position}")
                 continue
             try:
                 dest = _resolve_destination_path(operation.destination_path, allowed_roots)
@@ -279,14 +277,9 @@ def apply_plan(
                 for key, value in combined.items():
                     existing_value = existing.get(key)
                     is_provenance = key.startswith("resonance.prov.")
-                    has_value = (
-                        existing_value is not None
-                        and str(existing_value).strip() != ""
-                    )
+                    has_value = existing_value is not None and str(existing_value).strip() != ""
                     if has_value and not (
-                        is_provenance
-                        or tag_patch.allow_overwrite
-                        or key in overwrite_fields
+                        is_provenance or tag_patch.allow_overwrite or key in overwrite_fields
                     ):
                         planned_skipped.append(key)
                         continue
@@ -376,9 +369,7 @@ def apply_plan(
                 is_provenance = key.startswith("resonance.prov.")
                 has_value = existing_value is not None and str(existing_value).strip() != ""
                 if has_value and not (
-                    is_provenance
-                    or tag_patch.allow_overwrite
-                    or key in overwrite_fields
+                    is_provenance or tag_patch.allow_overwrite or key in overwrite_fields
                 ):
                     continue
                 if not has_value:
@@ -473,9 +464,7 @@ def apply_plan(
             dry_run=dry_run,
             file_ops=(),
             tag_ops=(),
-            errors=(
-                "Partial completion detected: inconsistent file move state",
-            ),
+            errors=("Partial completion detected: inconsistent file move state",),
             warnings=(),
             rollback_attempted=False,
             rollback_success=False,
@@ -588,9 +577,7 @@ def apply_plan(
         else:
             signature = dir_signature(audio_files).signature_hash
             if signature != plan.signature_hash:
-                errors.append(
-                    "Signature hash mismatch between plan and source directory"
-                )
+                errors.append("Signature hash mismatch between plan and source directory")
 
     if plan.non_audio_policy == "MOVE_WITH_ALBUM" and not errors:
         try:
@@ -628,9 +615,7 @@ def apply_plan(
             if dest.parent.exists():
                 for entry in dest.parent.iterdir():
                     if entry.name.lower() == dest.name.lower() and entry.name != dest.name:
-                        errors.append(
-                            f"Case-insensitive collision: {entry} vs {dest}"
-                        )
+                        errors.append(f"Case-insensitive collision: {entry} vs {dest}")
                         break
                 if errors:
                     break
@@ -666,9 +651,7 @@ def apply_plan(
     completed_moves: list[tuple[Path, Path]] = []
     if dry_run:
         for src, dest in file_moves:
-            file_ops.append(
-                FileOpResult(source_path=src, destination_path=dest, status="DRY_RUN")
-            )
+            file_ops.append(FileOpResult(source_path=src, destination_path=dest, status="DRY_RUN"))
         report = ApplyReport(
             dir_id=plan.dir_id,
             plan_version=plan.plan_version,
@@ -713,9 +696,7 @@ def apply_plan(
             target.parent.mkdir(parents=True, exist_ok=True)
             _move_file(src, target)
             completed_moves.append((src, target))
-            file_ops.append(
-                FileOpResult(source_path=src, destination_path=target, status="MOVED")
-            )
+            file_ops.append(FileOpResult(source_path=src, destination_path=target, status="MOVED"))
     except Exception as exc:  # noqa: BLE001 - surface rollback behavior
         file_ops.append(
             FileOpResult(
@@ -762,9 +743,7 @@ def apply_plan(
                 entry.unlink()
     elif plan.source_path.exists():
         if any(plan.source_path.iterdir()):
-            warnings.append(
-                f"Cleanup skipped due to non-audio policy: {plan.non_audio_policy}"
-            )
+            warnings.append(f"Cleanup skipped due to non-audio policy: {plan.non_audio_policy}")
 
     if not any(plan.source_path.iterdir()):
         plan.source_path.rmdir()

@@ -174,6 +174,7 @@ def main() -> int:
         if args.command == "scan":
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.scan import run_scan
+
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_scan(args, store=store)
@@ -182,6 +183,7 @@ def main() -> int:
         elif args.command == "resolve":
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.resolve import run_resolve
+
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_resolve(args, store=store)
@@ -190,6 +192,7 @@ def main() -> int:
         elif args.command == "prompt":
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.prompt import run_prompt
+
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_prompt(args, store=store)
@@ -197,6 +200,7 @@ def main() -> int:
                 store.close()
         elif args.command == "identify":
             from .commands.identify import run_identify
+
             # For identify command, we don't have app context yet
             # This would need to be updated when full app integration is done
             return run_identify(
@@ -209,6 +213,7 @@ def main() -> int:
                 raise ValueError("state_db is required")
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.plan import run_plan
+
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_plan(args, store=store)
@@ -220,6 +225,7 @@ def main() -> int:
                 raise ValueError("state_db is required")
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.apply import run_apply
+
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_apply(args, store=store)
@@ -243,6 +249,7 @@ def _load_dotenv_files() -> None:
     """
     try:
         from dotenv import load_dotenv
+
         # Load .env files from current directory upwards
         load_dotenv()
     except ImportError:

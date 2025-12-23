@@ -11,9 +11,11 @@ def _is_within(parent: Path, child: Path) -> bool:
     child = child.resolve()
     return parent == child or parent in child.parents
 
+
 DIR_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 SIGNATURE_HASH_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 RELEASE_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._:-]{1,128}$")
+
 
 def sanitize_filename(name: str) -> str:
     """Deterministically sanitize a filename for cross-platform safety."""

@@ -103,11 +103,8 @@ class FileService:
             return True
 
         # Check if all files are non-audio
-        audio_extensions = {'.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wav'}
-        has_audio = any(
-            f.is_file() and f.suffix.lower() in audio_extensions
-            for f in contents
-        )
+        audio_extensions = {".mp3", ".flac", ".m4a", ".ogg", ".opus", ".wav"}
+        has_audio = any(f.is_file() and f.suffix.lower() in audio_extensions for f in contents)
 
         if has_audio:
             # Has audio files, don't delete

@@ -7,7 +7,12 @@ import re
 from typing import Optional
 
 from resonance import __version__ as RESONANCE_VERSION
-from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease, ProviderTrack
+from resonance.core.identifier import (
+    ProviderCapabilities,
+    ProviderClient,
+    ProviderRelease,
+    ProviderTrack,
+)
 from resonance.core.identity import display_album, display_artist, display_work, match_key_artist
 from resonance.infrastructure.cache import MetadataCache
 
@@ -144,9 +149,7 @@ class MusicBrainzClient(ProviderClient):
             for index, track in enumerate(track_list, start=1):
                 recording = track.get("recording") or {}
                 position = (
-                    self._parse_track_number(track.get("number"))
-                    or track.get("position")
-                    or index
+                    self._parse_track_number(track.get("number")) or track.get("position") or index
                 )
                 duration_ms = track.get("length")
                 duration_seconds = int(duration_ms) // 1000 if duration_ms else None

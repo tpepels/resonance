@@ -136,7 +136,7 @@ class ResonanceApp:
         # Initialize scanner
         self.scanner = LibraryScanner(
             roots=[library_root],
-            extensions={'.mp3', '.flac', '.m4a', '.ogg', '.opus'},
+            extensions={".mp3", ".flac", ".m4a", ".ogg", ".opus"},
         )
 
     def close(self) -> None:
@@ -168,7 +168,7 @@ class ResonanceApp:
         return cls(
             library_root=library_root,
             cache_path=cache_path,
-            acoustid_api_key=os.getenv('ACOUSTID_API_KEY'),
-            discogs_token=os.getenv('DISCOGS_TOKEN'),
+            acoustid_api_key=os.getenv("ACOUSTID_API_KEY"),
+            discogs_token=os.getenv("DISCOGS_TOKEN"),
             **kwargs,
         )

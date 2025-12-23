@@ -48,16 +48,13 @@ class TagSnapshot:
 class TagWriter(Protocol):
     """Backend interface for reading and writing tags."""
 
-    def read_tags(self, path: Path) -> dict[str, str]:
-        ...
+    def read_tags(self, path: Path) -> dict[str, str]: ...
 
     def apply_patch(
         self, path: Path, set_tags: dict[str, str], allow_overwrite: bool
-    ) -> TagWriteResult:
-        ...
+    ) -> TagWriteResult: ...
 
-    def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None:
-        ...
+    def write_tags_exact(self, path: Path, tags: dict[str, str]) -> None: ...
 
 
 TagValue = str | bytes | Sequence[str | bytes]
@@ -305,8 +302,7 @@ class MutagenTagWriter:
             supported_keys = set(set_tags.keys())
         readback = self.read_tags(path)
         mismatched = sorted(
-            key for key in tags_set
-            if key in supported_keys and readback.get(key) != set_tags[key]
+            key for key in tags_set if key in supported_keys and readback.get(key) != set_tags[key]
         )
         if mismatched:
             keys = ", ".join(mismatched)

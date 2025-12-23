@@ -1,187 +1,114 @@
-# Real-World Corpus Test Harness
+# Real-World Corpus Testing
 
-This directory contains the real-world corpus test harness for V3.1. It validates
-that the full resonance workflow operates correctly on a real music library at scale.
+This directory contains infrastructure for testing Resonance against real-world music libraries at scale.
 
-## Overview
+## ⚠️ SAFETY FIRST
 
-The real-world corpus test:
-- Reads directly from your music library at `/home/tom/music`
-- Runs the complete workflow deterministically (scan → resolve → plan → apply)
-- **Never modifies** your library files (read-only, outputs to temp directory)
-- Asserts invariants on reruns (no provider calls, no layout churn, stable tags)
-- Uses the same snapshot artifact model as golden tests (state/layout/tags)
+**NEVER** point these tests at your live music library. Always use snapshots/copies.
+
+## Purpose
+
+V3 proves correctness on curated test fixtures. V3.1 proves correctness survives real-world libraries with:
+- Legacy file formats and encodings
+- Deep directory structures
+- Large file counts
+- Mixed metadata quality
+- Filesystem edge cases
 
 ## Directory Structure
 
 ```
 tests/real_corpus/
-  README.md                # This file
-  decisions.json           # Pinned resolution decisions for determinism
-  expected_state.json      # Terminal states snapshot
-  expected_layout.json     # Final paths snapshot
-  expected_tags.json       # Tag snapshot
-  cache_export.json        # Exported cache data for review (after first run)
+├── README.md              # This file - safety guidelines & usage
+├── MANIFEST.txt          # List of album directories to scan
+├── decisions.json        # Scripted prompt decisions for automation
+├── metadata.json         # Extracted filesystem metadata (committable)
+├── expected_state.json   # Terminal states snapshot
+├── expected_layout.json  # Final relative paths
+└── expected_tags.json    # Tag state snapshot
 ```
 
-## Safety
+## Workflow
 
-The test is **read-only**:
-
-1. Reads audio files and `.meta.json` files from your library
-2. All outputs (organized files, tags) written to pytest's temporary directory
-3. Your library files are **never modified**
-4. Override library path with `LIBRARY_PATH=/custom/path` if needed
-
-## Quick Start
-
-### 1. First Run: Online Mode (Populate Cache)
-
-The first run needs network access to query providers and populate the cache.
-
-**API Configuration**:
-
-The test uses **MusicBrainz metadata search** (no fingerprinting yet):
-- **MusicBrainz**: Your email required (no API key needed)
-- **AcoustID**: Not needed (fingerprinting not implemented in V3)
-- **Discogs**: Not used (would require API token)
-
+### 1. Prepare Corpus
 ```bash
-export MUSICBRAINZ_USERAGENT="your.email@example.com"
+# Edit MANIFEST.txt to list desired album directories
+# Edit decisions.json for scripted prompt responses
 
-RUN_REAL_CORPUS=1 ONLINE=1 pytest tests/integration/test_real_world_corpus.py -v
+# Extract metadata from your music library (read-only, safe)
+./scripts/extract_real_corpus.sh /path/to/your/music/library
 ```
 
-This will:
-- Read directly from `/home/tom/music` (or `LIBRARY_PATH` if set)
-- Make provider API calls (MusicBrainz)
-- Cache all responses for offline use
-- Resolve, plan, and apply for all directories
-- Show statistics: applied/jailed/failed
-
-**Note**: This may take several hours for large libraries due to API rate limiting.
-
-### 2. Export Cache for Review
-
-After the first run, export the cache data for review:
-
+### 2. Run Tests
 ```bash
-python scripts/export_real_corpus_cache.py --cache /path/to/test/cache.db
+# Run with real corpus enabled
+RUN_REAL_CORPUS=1 pytest tests/integration/test_real_world_corpus.py
+
+# First run populates cache, may make network calls
+# Second run should be offline no-op (zero provider calls)
 ```
 
-This generates `tests/real_corpus/cache_export.json` with:
-- All provider search results
-- Resolution decisions
-- Directory states
-
-### 3. Review and Curate (Optional)
-
-Review the exported cache data:
-
+### 3. Regenerate Expectations
 ```bash
-# Use an LLM to suggest improvements
-cat tests/real_corpus/cache_export.json | llm "Review this music metadata cache..."
-
-# Or manually review for errors
-less tests/real_corpus/cache_export.json
+# Only when expectations legitimately change
+REGEN_REAL_CORPUS=1 pytest tests/integration/test_real_world_corpus.py
 ```
 
-Update `decisions.json` with any corrections or explicit jailing decisions.
+## Safety Rules
 
-### 4. Regenerate Snapshots
+### ❌ NEVER
+- Point scripts at `/home/user/Music/` or similar live paths
+- Run tests with `RUN_REAL_CORPUS=1` in CI
+- Use real corpus tests for development iteration
 
-After curation, regenerate the expected snapshots:
+### ✅ ALWAYS
+- Extraction is read-only (never modifies source)
+- Keep manifest small (10-50 albums) for fast iteration
+- Verify offline rerun produces identical results
+- Check that provider calls are zero on second run
 
-```bash
-python regen_real_corpus.py
-```
+## Key Differences from File Copying
 
-This runs the test with `REGEN_REAL_CORPUS=1` to update:
-- `expected_state.json`
-- `expected_layout.json`
-- `expected_tags.json`
+### Before (File Copying - DANGEROUS):
+- Copies entire music files (GBs of data)
+- Requires massive disk space
+- Risk of accidentally committing music files
+- Slow operations (minutes/hours)
 
-### 5. Subsequent Runs: Offline Mode
+### After (Metadata Extraction - SAFE):
+- Extracts only directory structure + file metadata
+- Small, committable `metadata.json` (~KB)
+- Zero risk to source library
+- Fast extraction (seconds)
 
-All subsequent runs should work offline from cache:
+## CI Integration
 
-```bash
-RUN_REAL_CORPUS=1 pytest tests/integration/test_real_world_corpus.py -v
-```
-
-This validates:
-- No provider calls made (offline-only)
-- Results match expected snapshots
-- Workflow is deterministic
-
-## decisions.json - Deterministic Resolutions
-
-To ensure deterministic test runs, `decisions.json` maps each `dir_id` to a
-pinned resolution decision:
-
-```json
-{
-  "01234567": {
-    "provider": "musicbrainz",
-    "release_id": "mb:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  },
-  "89abcdef": {
-    "action": "JAIL"
-  }
-}
-```
-
-This file is generated during the first regen run and committed to the repo.
-
-## Offline-First
-
-The test runs **offline by default**:
-- Provider queries are served from cache
-- Cache misses result in deterministic outcomes (typically JAIL state)
-- Rerun produces **zero provider calls** (strict invariant)
-
-## CI Policy
-
-The real-world corpus test is **opt-in only** for CI:
-- Skipped unless `RUN_REAL_CORPUS=1`
-- Does not block normal CI runs
-- Developers run locally when they have a corpus snapshot
-
-## Expected Runtime
-
-- **First run (ONLINE=1)**: Several hours for large libraries (~177GB)
-- **Subsequent runs (offline)**: Minutes
+Real corpus tests are **opt-in only**:
+- Skipped by default (`RUN_REAL_CORPUS=1` required)
+- Never run in CI pipelines
+- Require manual setup but no large data transfers
 
 ## Troubleshooting
 
-### Test skipped: "Opt-in: RUN_REAL_CORPUS=1"
+### Test Skips with "Real-world corpus metadata not present"
+- Run `./scripts/extract_real_corpus.sh` to generate `metadata.json`
+- Verify `MANIFEST.txt` contains valid directories
 
-Set the environment variable:
-```bash
-RUN_REAL_CORPUS=1 pytest tests/integration/test_real_world_corpus.py
-```
+### Rerun Has Provider Calls
+- Cache may be stale - clear and regenerate metadata
+- Network config changed - verify offline mode
+- Deterministic decisions may have changed
 
-### Snapshot mismatch after code changes
+### Performance Issues
+- Reduce manifest size
+- Check for filesystem bottlenecks
+- Verify offline operation (no network timeouts)
 
-Regenerate snapshots:
-```bash
-python regen_real_corpus.py
-```
+## Implementation Notes
 
-Then review the diff to confirm expected changes.
-
-### Provider calls on rerun
-
-The test enforces zero provider calls on rerun. If this assertion fails:
-1. Check that cache is properly populated
-2. Verify offline mode is enabled
-3. Ensure no fingerprint/signature changes between runs
-
-## Notes
-
-- This test complements golden corpus tests (exact curated outcomes)
-- Real corpus tests validate invariants and scale on realistic data
-- Snapshots are deterministic (fixed clock, stable ordering, no timestamps)
-- The harness reuses machinery from golden tests (`_corpus_harness.py`)
-- **No copying required** - test reads directly from your library
-- Test is read-only and safe - your library files are never modified
+- Tests use `FilesystemFaker` against `metadata.json`
+- Tests run offline by default (cache-only)
+- Network failures produce deterministic "UNSURE" results
+- Zero provider calls on rerun = success
+- Stable snapshots enable regression detection
+- App code runs unchanged against faker

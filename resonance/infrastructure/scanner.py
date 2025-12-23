@@ -15,6 +15,7 @@ from resonance.core.identity import dir_signature, dir_id
 @dataclass
 class DirectoryBatch:
     """A directory containing audio and non-audio files."""
+
     directory: Path
     files: list[Path]
     non_audio_files: list[Path]

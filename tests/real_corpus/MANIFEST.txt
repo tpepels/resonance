@@ -1,21 +1,41 @@
-# Real-world corpus subset manifest
+# Real-World Corpus Manifest
+# List of album directories to include in corpus testing
+# One relative path per line (relative to source library root)
+# Lines starting with # are comments and ignored
 #
-# List directories (artist or album names) to include in the snapshot.
-# Each line should be a directory name relative to your library root.
-# Lines starting with # are ignored.
+# Example entries (customize for your library):
+# Artist/Album Name (2000)
+# Artist/Another Album (2001)
+# Classical/Composer/Work (1995)
 #
-# Start with a small, diverse set (10-50 albums) representing:
-# - Different genres
-# - Classical (complex metadata)
-# - Various file formats (if applicable)
-# - Edge cases you've encountered
-#
-# Example entries (uncomment and customize for your library):
+# Start with 10-20 albums for development iteration
+# Expand to 50+ for comprehensive testing
 
-# Bjork
-# Miles Davis
-# Antonio Vivaldi
-# Radiohead
-# Fela Kuti
+# Rock/Pop examples
+Rock Band/Greatest Hits (1990)
+Pop Artist/Best Of (1985)
 
-# Add your own directories below:
+# Classical examples
+Classical/Beethoven/Symphony No. 5 (1975)
+Classical/Mozart/Don Giovanni (1982)
+
+# Jazz examples
+Jazz/Artist/Cookin' (1958)
+
+# Electronic/Dance examples
+Electronic/Artist/Album (2005)
+
+# Soundtrack examples
+Soundtracks/Various Artists/Movie Soundtrack (1994)
+
+# Compilation examples
+Compilations/Various Artists/80s Hits (1989)
+
+# Live albums
+Rock Band/Live at Venue (1992)
+
+# Box sets
+Artist/The Complete Collection (1998)
+
+# Import/special editions
+Artist/Album (Deluxe Edition) (2001)

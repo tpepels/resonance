@@ -403,9 +403,7 @@ class MetadataCache:
         self.set(key, data, namespace="discogs:release")
 
     # Directory release decisions
-    def get_directory_release_by_id(
-        self, dir_id: str
-    ) -> Optional[tuple[str, str, float]]:
+    def get_directory_release_by_id(self, dir_id: str) -> Optional[tuple[str, str, float]]:
         """Get remembered release for a directory id."""
         with self._lock:
             row = self._conn.execute(
@@ -526,22 +524,16 @@ class MetadataCache:
                 "ORDER BY created_at"
             ).fetchall()
             if rows:
-                return [
-                    (row[0], Path(row[1]) if row[1] else None, row[2]) for row in rows
-                ]
+                return [(row[0], Path(row[1]) if row[1] else None, row[2]) for row in rows]
             legacy_rows = self._conn.execute(
                 "SELECT directory_path, reason FROM deferred_prompts ORDER BY created_at"
             ).fetchall()
-            return [
-                ("", Path(row[0]), row[1]) for row in legacy_rows
-            ]
+            return [("", Path(row[0]), row[1]) for row in legacy_rows]
 
     def remove_deferred_prompt_by_id(self, dir_id: str) -> None:
         """Remove directory from deferred prompts keyed by id."""
         with self._lock:
-            self._conn.execute(
-                "DELETE FROM deferred_prompts_by_id WHERE dir_id = ?", (dir_id,)
-            )
+            self._conn.execute("DELETE FROM deferred_prompts_by_id WHERE dir_id = ?", (dir_id,))
             self._conn.commit()
 
     def add_deferred_prompt(self, directory: Path, reason: str) -> None:

@@ -1,12 +1,13 @@
 {
-  "_comment": "Pinned resolution decisions for deterministic real-world corpus tests",
-  "_schema": {
-    "dir_id": {
-      "provider": "musicbrainz | discogs",
-      "release_id": "mb:uuid | dg:id"
-    },
-    "OR": {
-      "action": "JAIL"
-    }
+  "_comment": "Scripted prompt decisions for real-world corpus testing",
+  "_format": "Map dir_id -> decision. Use 'AUTO' for automatic resolution.",
+  "_decisions": {
+    "CERTAIN": "Accept top candidate (automatic for high confidence)",
+    "PROBABLE": "Accept top candidate (good confidence)",
+    "UNSURE": "JAIL (insufficient confidence for automation)"
+  },
+
+  "decisions": {
+    "_auto": "AUTO"
   }
 }

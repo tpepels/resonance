@@ -369,3 +369,95 @@ To close `Vx`:
 - [ ] Audit completed; no “Must Fix” findings
 - [ ] No unresolved critical-path placeholders
 - [ ] `TDD_TODO_Vx` DoD checkboxes complete
+
+
+## Dependency Policy (Authoritative)
+
+### Language-Agnostic Applicability
+The dependency, installation, and test-gate requirements in this document apply to **all programming languages** used in this repository. Any language-specific filenames or commands are **illustrative examples**, not constraints.
+
+### Definitions
+- **Dependency Manifest**: the authoritative, language-specific file(s) that declare third-party dependencies for a component/module.
+  - Examples: `pyproject.toml`, `requirements.in`/`requirements.txt`, `package.json`, `pnpm-lock.yaml`, `yarn.lock`, `Cargo.toml`, `Cargo.lock`, `go.mod`, `go.sum`, `pom.xml`, `build.gradle`, `build.gradle.kts`, `.csproj`, `packages.lock.json`, `Gemfile`, `Gemfile.lock`.
+- **Clean Environment**: a fresh, CI-provisioned environment (container/VM/runner) with no preinstalled project dependencies beyond the language toolchain.
+
+### Single Source of Truth
+Each component/module MUST have an explicit Dependency Manifest that is treated as authoritative. Where the ecosystem supports it, lockfiles MUST be committed and treated as authoritative for deterministic installs (e.g., `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `Cargo.lock`, `go.sum`, `packages.lock.json`).
+
+If the repository is monorepo-style, the Dependency Manifest MAY be shared at the workspace level (e.g., root `package.json`, root `Cargo.toml` workspace), but it must remain the single source of truth.
+
+### “Use Requires Declaration” Rule
+If production or test code introduces a third-party dependency (via `import`, `require`, `use`, `#include` of external libs, framework plugin, build dependency, etc.), that dependency MUST be added to the relevant Dependency Manifest **in the same PR/changeset**.
+
+Do not rely on transitive dependencies, global installs, or “it worked locally”.
+
+### Forbidden Behaviors When a Dependency Is Missing
+If a dependency is missing, a module import fails, or CI reports “package not found”, agents MUST NOT:
+
+- implement “replacement packages”, vendored copies, or “mini versions” of common libraries,
+- add workarounds that bypass functionality to avoid installation,
+- skip, xfail, quarantine, or mark tests “optional” to avoid installing dependencies,
+- weaken assertions, reduce coverage, or remove test cases to avoid dependency code paths,
+- introduce internal modules whose sole purpose is to mimic an external dependency.
+
+Required action order:
+
+1) add the dependency to the relevant Dependency Manifest,
+2) update the lockfile / compiled requirements (if applicable),
+3) ensure gates run in a Clean Environment.
+
+### Deterministic Installability Gate
+CI MUST include a gate that, on a Clean Environment:
+
+- installs the project exclusively from the Dependency Manifest (and lockfile if applicable), and
+- runs the default test tier.
+
+This gate is an enforcement mechanism. Failure is blocking and must be resolved by updating dependency declarations (not by workarounds).
+
+### Optional Dependencies and Network Features
+If a dependency is optional (e.g., provider integrations, networked features, optional codecs), it MUST be isolated behind:
+
+- explicit extras/feature flags/workspace packages (ecosystem-appropriate), and
+- explicit test markers/tags excluded from the default tier, and
+- documentation in the active version plan and closure/audit notes if it affects scope or determinism.
+
+### Non-Normative Examples (Major Ecosystems)
+These are examples of how to satisfy the rules above; they do not change the rules.
+
+- **Python**: declare in `pyproject.toml` (preferred) or `requirements.in` → compiled `requirements.txt`; validate with a clean venv install + `pytest`.
+- **JavaScript/TypeScript**: declare in `package.json`; commit lockfile (`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock`); validate with `npm ci`/`pnpm i --frozen-lockfile` + test runner.
+- **Rust**: declare in `Cargo.toml`; commit `Cargo.lock` (for apps/workspaces); validate with `cargo test`.
+- **Go**: declare in `go.mod`; commit `go.sum`; validate with `go test ./...`.
+- **Java/Kotlin**: declare in `pom.xml` (Maven) or `build.gradle(.kts)` (Gradle); validate with `mvn test` or `gradle test`.
+- **.NET**: declare in `.csproj`/`Directory.Packages.props`; commit `packages.lock.json` when used; validate with `dotnet restore` + `dotnet test`.
+## Legacy Code Retirement Policy
+
+### Version Contract Supremacy for Deletion
+If the active version plan (`TDD_TODO_Vx.md`, `PLAN.md`, or equivalent) requires removing, deprecating, or quarantining legacy code, that requirement is binding.
+
+“Legacy code still adheres to governance” is not a valid reason to retain it when the version contract calls for retirement.
+
+### Acceptable End States
+Any legacy module/feature targeted by the version plan MUST end in exactly one of these states by closure:
+
+A) **Deleted**, OR  
+B) **Quarantined** under an explicit `legacy/` (or equivalent) boundary with:
+   - no production wiring path from the composition root, and
+   - tests proving it is unreachable under closed-version behavior, OR  
+C) **Explicitly version‑gated** behind a compatibility switch with:
+   - documented behavior,
+   - tests for both sides (if supported), and
+   - audit notes explaining the rationale and risk.
+
+### No “Zombie Code”
+Unused or unreferenced production code is presumed harmful. If it is not required by the version contract, prefer deletion.
+
+### AI Compliance Rule
+Agents MUST comply with explicit deletion/retirement tasks in the active version plan.
+
+If uncertainty exists about whether something is safe to delete, the agent must proceed via the smallest safe steps:
+
+1) remove wiring/composition paths,
+2) add tests proving the behavior is unreachable or replaced,
+3) delete the implementation and any now-dead tests.
+

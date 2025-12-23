@@ -111,7 +111,11 @@ class CachedProviderClient(ProviderClient):
         releases = self._provider.search_by_fingerprints(fingerprints)
 
         # Write-through to cache
-        self._cache.set(cache_key, self._serialize_releases(releases), namespace=f"{self._config.provider_name}:search")
+        self._cache.set(
+            cache_key,
+            self._serialize_releases(releases),
+            namespace=f"{self._config.provider_name}:search",
+        )
 
         return releases
 
@@ -160,7 +164,11 @@ class CachedProviderClient(ProviderClient):
         releases = self._provider.search_by_metadata(artist, album, track_count)
 
         # Write-through to cache
-        self._cache.set(cache_key, self._serialize_releases(releases), namespace=f"{self._config.provider_name}:search")
+        self._cache.set(
+            cache_key,
+            self._serialize_releases(releases),
+            namespace=f"{self._config.provider_name}:search",
+        )
 
         return releases
 

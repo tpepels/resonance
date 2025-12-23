@@ -147,29 +147,26 @@ def test_unjail_command_smoke(tmp_path: Path) -> None:
 
 def test_env_file_loading(tmp_path: Path) -> None:
     """Test that .env files are loaded automatically (when python-dotenv is available)."""
-    # Create a test .env file
-    env_file = tmp_path / ".env"
-    env_file.write_text("TEST_ACOUSTID_KEY=loaded-from-env\n")
-
-    # Change to the temp directory to test .env loading
-    original_cwd = os.getcwd()
     try:
-        os.chdir(tmp_path)
+        import dotenv
+    except ImportError:
+        pytest.skip("python-dotenv not installed")
 
-        # Import and call the dotenv loader
-        from resonance.cli import _load_dotenv_files
-        _load_dotenv_files()
+    # Create a test .env file with just the key-value pair
+    env_file = tmp_path / ".env"
+    env_file.write_text("TEST_ACOUSTID_KEY=loaded-from-env")
 
-        # Check if the environment variable was loaded (only if dotenv is available)
-        try:
-            import dotenv
-            assert os.getenv("TEST_ACOUSTID_KEY") == "loaded-from-env"
-        except ImportError:
-            # python-dotenv not installed, skip the assertion
-            pytest.skip("python-dotenv not installed")
+    # Clear any existing env var
+    if "TEST_ACOUSTID_KEY" in os.environ:
+        del os.environ["TEST_ACOUSTID_KEY"]
 
-    finally:
-        os.chdir(original_cwd)
+    # Use dotenv.load_dotenv directly with the specific file path to avoid
+    # loading the project's .env file which has wrong format
+    dotenv.load_dotenv(env_file)
+
+    # Check if the environment variable was loaded
+    env_value = os.getenv("TEST_ACOUSTID_KEY")
+    assert env_value == "loaded-from-env", f"Expected 'loaded-from-env', got {env_value!r}"
 
 
 def test_acoustid_client_env_loading() -> None:

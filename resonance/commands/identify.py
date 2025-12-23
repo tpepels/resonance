@@ -103,8 +103,7 @@ def run_identify(
         output_sink=output_sink,
         human_lines=(
             f"identify: dir_id={payload['dir_id']} tier={payload['tier']}",
-            f"identify: candidates={len(payload['candidates'])} "
-            f"tracks={payload['track_count']}",
+            f"identify: candidates={len(payload['candidates'])} tracks={payload['track_count']}",
         ),
     )
     return 0

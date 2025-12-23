@@ -31,12 +31,10 @@ class CombinedProviderClient(ProviderClient):
     def capabilities(self) -> ProviderCapabilities:
         """Aggregate capabilities from all providers."""
         supports_fingerprints = any(
-            provider.client.capabilities.supports_fingerprints
-            for provider in self._providers
+            provider.client.capabilities.supports_fingerprints for provider in self._providers
         )
         supports_metadata = any(
-            provider.client.capabilities.supports_metadata
-            for provider in self._providers
+            provider.client.capabilities.supports_metadata for provider in self._providers
         )
         return ProviderCapabilities(
             supports_fingerprints=supports_fingerprints,
@@ -65,7 +63,9 @@ class CombinedProviderClient(ProviderClient):
             releases.extend(self._ensure_provider(name=named.name, releases=result))
         return releases
 
-    def _ensure_provider(self, *, name: str, releases: Iterable[ProviderRelease]) -> list[ProviderRelease]:
+    def _ensure_provider(
+        self, *, name: str, releases: Iterable[ProviderRelease]
+    ) -> list[ProviderRelease]:
         normalized: list[ProviderRelease] = []
         for release in releases:
             if release.provider == name:
@@ -90,9 +90,7 @@ class CombinedProviderClient(ProviderClient):
             track_key = tuple(
                 (
                     track.position,
-                    track.fingerprint_id
-                    or match_key_work(track.title)
-                    or track.title.casefold(),
+                    track.fingerprint_id or match_key_work(track.title) or track.title.casefold(),
                 )
                 for track in release.tracks
             )
@@ -105,9 +103,7 @@ class CombinedProviderClient(ProviderClient):
             if existing is None:
                 deduped[key] = release
                 continue
-            if self._priority.get(release.provider, 99) < self._priority.get(
-                existing.provider, 99
-            ):
+            if self._priority.get(release.provider, 99) < self._priority.get(existing.provider, 99):
                 deduped[key] = release
 
         def sort_key(item: ProviderRelease) -> tuple[int, str]:

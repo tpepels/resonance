@@ -8,6 +8,7 @@ from typing import Any
 
 def canonical_json(payload: Any) -> str:
     """Return canonical JSON with stable ordering."""
+
     def normalize(value: Any) -> Any:
         if isinstance(value, dict):
             return {k: normalize(value[k]) for k in sorted(value)}

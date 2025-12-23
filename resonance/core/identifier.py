@@ -15,7 +15,6 @@ import json
 from typing import Callable, Optional, Protocol
 
 
-
 class ConfidenceTier(str, Enum):
     """Confidence levels for automatic vs manual resolution."""
 
@@ -130,9 +129,7 @@ class ProviderClient(Protocol):
         """Declare what search methods this provider supports."""
         ...
 
-    def search_by_fingerprints(
-        self, fingerprints: list[str]
-    ) -> list[ProviderRelease]:
+    def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Search for releases matching the given fingerprints.
 
         Results must be deterministically ordered by the provider.
@@ -282,8 +279,7 @@ def score_release(
             for ev_track in evidence.tracks
             if ev_track.fingerprint_id
             and any(
-                pv_track.fingerprint_id == ev_track.fingerprint_id
-                for pv_track in release.tracks
+                pv_track.fingerprint_id == ev_track.fingerprint_id for pv_track in release.tracks
             )
         )
         coverage = matched / evidence.track_count if evidence.track_count > 0 else 0.0
@@ -297,11 +293,7 @@ def score_release(
         for tag in (track.existing_tags.get("discnumber"), track.existing_tags.get("disc_number"))
         if isinstance(tag, str) and tag.strip().isdigit()
     }
-    release_discs = {
-        track.disc_number
-        for track in release.tracks
-        if track.disc_number is not None
-    }
+    release_discs = {track.disc_number for track in release.tracks if track.disc_number is not None}
     disc_count_match = True
     if evidence_discs and release_discs:
         disc_count_match = len(evidence_discs) == len(release_discs)
@@ -464,10 +456,10 @@ def identify(
     # Search by fingerprints if available
     if evidence.has_fingerprints:
         if not provider_client.capabilities.supports_fingerprints:
-            raise ValueError("Evidence has fingerprints but provider does not support fingerprint search")
-        fingerprints = [
-            t.fingerprint_id for t in evidence.tracks if t.fingerprint_id
-        ]
+            raise ValueError(
+                "Evidence has fingerprints but provider does not support fingerprint search"
+            )
+        fingerprints = [t.fingerprint_id for t in evidence.tracks if t.fingerprint_id]
         candidates.extend(provider_client.search_by_fingerprints(fingerprints))
 
     # Search by metadata
@@ -484,10 +476,7 @@ def identify(
             or first_track_tags.get("ARTIST")
         )
         # Try common tag names for album
-        album_hint = (
-            first_track_tags.get("album")
-            or first_track_tags.get("ALBUM")
-        )
+        album_hint = first_track_tags.get("album") or first_track_tags.get("ALBUM")
 
     # Search by metadata (optional - skip if provider doesn't support it)
     if provider_client.capabilities.supports_metadata:
