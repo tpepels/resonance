@@ -34,6 +34,106 @@ cd resonance
 pip install -e .
 ```
 
+## Configuration
+
+Resonance uses a **hybrid configuration system**:
+
+- **Environment Variables**: For API keys and environment-specific settings
+- **JSON Config Files**: For application settings that can be version controlled
+
+### Quick Setup
+
+1. **Copy example files:**
+```bash
+cp .env.example .env
+cp settings.json.example ~/.config/resonance/settings.json
+```
+
+2. **Edit with your values:**
+```bash
+# Edit .env with your API keys
+nano .env
+
+# Edit settings.json with your preferences
+nano ~/.config/resonance/settings.json
+```
+
+3. **Optional: Auto-load .env files**
+```bash
+pip install python-dotenv
+```
+
+### Environment Variables (.env)
+
+Used for **secrets and environment-specific settings**:
+
+```bash
+# ===========================================
+# API KEYS (Required for full functionality)
+# ===========================================
+
+# AcoustID - Get from https://acoustid.org/api-key
+ACOUSTID_API_KEY=your_acoustid_api_key_here
+
+# MusicBrainz - Required user agent
+MUSICBRAINZ_USER_AGENT=Resonance/1.0.0 (your-email@example.com)
+
+# Discogs - Optional, get from https://www.discogs.com/developers
+DISCOGS_CONSUMER_KEY=your_discogs_consumer_key
+DISCOGS_CONSUMER_SECRET=your_discogs_consumer_secret
+
+# ===========================================
+# ENVIRONMENT SETTINGS
+# ===========================================
+
+# Enable offline mode (cache-only, no network calls)
+RESONANCE_OFFLINE_MODE=false
+
+# Enable debug logging
+RESONANCE_DEBUG=false
+```
+
+### JSON Config File (settings.json)
+
+Used for **application settings** (stored in `~/.config/resonance/settings.json`):
+
+```json
+{
+  "tag_writer_backend": "meta-json",
+  "identify_scoring_version": "v1",
+  "plan_conflict_policy": "FAIL"
+}
+```
+
+### Configuration Priority
+
+Settings are resolved in this priority order:
+
+1. **CLI Arguments** (highest priority)
+2. **Environment Variables**
+3. **JSON Config File**
+4. **Defaults** (lowest priority)
+
+### Complete Example
+
+**Environment Variables (.env):**
+```bash
+ACOUSTID_API_KEY=abcd1234
+MUSICBRAINZ_USER_AGENT=Resonance/1.0.0 (user@example.com)
+RESONANCE_OFFLINE_MODE=false
+```
+
+**Application Settings (~/.config/resonance/settings.json):**
+```json
+{
+  "tag_writer_backend": "mutagen",
+  "identify_scoring_version": "v1",
+  "plan_conflict_policy": "FAIL"
+}
+```
+
+This gives you secure API key management with flexible application configuration.
+
 ## Usage
 
 ### V3 Pipeline (Complete Workflow)

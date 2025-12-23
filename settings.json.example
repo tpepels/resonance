@@ -1,0 +1,5 @@
+{
+  "tag_writer_backend": "meta-json",
+  "identify_scoring_version": "v1",
+  "plan_conflict_policy": "FAIL"
+}

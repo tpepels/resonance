@@ -45,5 +45,9 @@ htmlcov/
 *.db
 *.db-journal
 
+# Environment variables (may contain API keys)
+.env
+.env.local
+
 # Real-world corpus test data (local snapshots only)
 tests/real_corpus/input/

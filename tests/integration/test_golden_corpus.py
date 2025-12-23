@@ -13,7 +13,7 @@ import shutil
 from resonance import __version__
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
-from resonance.core.identifier import DirectoryEvidence, TrackEvidence
+from resonance.core.identifier import DirectoryEvidence, ProviderCapabilities, TrackEvidence
 from resonance.core.identity.signature import dir_id, dir_signature
 from resonance.core.planner import plan_directory
 from resonance.core.resolver import resolve_directory
@@ -75,14 +75,21 @@ class FixtureProvider:
         self.search_by_fingerprints_calls: list[tuple[str, ...]] = []
         self.search_by_metadata_calls = 0
 
-    def search_by_fingerprints(self, fingerprints: list[str]):
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
+
+    def search_by_fingerprints(self, fingerprints: list[str]) -> list:
         self.search_by_fingerprints_calls.append(tuple(fingerprints))
         if not fingerprints:
             return []
         release = self._by_fingerprint.get(fingerprints[0])
         return [release] if release else []
 
-    def search_by_metadata(self, artist, album, track_count):
+    def search_by_metadata(self, artist, album, track_count) -> list:
         self.search_by_metadata_calls += 1
         return []
 

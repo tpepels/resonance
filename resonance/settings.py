@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -23,20 +24,36 @@ class Settings:
 
 
 def load_settings(path: Optional[Path]) -> Settings:
-    if not path:
-        return Settings()
-    if not path.exists():
-        return Settings()
-    data = json.loads(path.read_text())
-    backend = data.get("tag_writer_backend", _DEFAULT_BACKEND)
+    """Load settings from JSON config file, with environment variable overrides.
+
+    Priority order:
+    1. Environment variables (for appropriate settings)
+    2. JSON config file
+    3. Defaults
+
+    Args:
+        path: Path to JSON config file, or None to use defaults only
+
+    Returns:
+        Settings object with resolved values
+    """
+    # Load JSON config if available
+    json_settings = {}
+    if path and path.exists():
+        json_settings = json.loads(path.read_text())
+
+    # Resolve each setting with environment variable override
+    backend = os.getenv("RESONANCE_TAG_WRITER_BACKEND") or json_settings.get("tag_writer_backend", _DEFAULT_BACKEND)
     if backend not in _ALLOWED_BACKENDS:
         raise ValueError(f"Unsupported tag writer backend: {backend}")
+
+    scoring_version = json_settings.get("identify_scoring_version", _DEFAULT_SCORING_VERSION)
+    conflict_policy = json_settings.get("plan_conflict_policy", _DEFAULT_CONFLICT_POLICY)
+
     return Settings(
         tag_writer_backend=backend,
-        identify_scoring_version=data.get(
-            "identify_scoring_version", _DEFAULT_SCORING_VERSION
-        ),
-        plan_conflict_policy=data.get("plan_conflict_policy", _DEFAULT_CONFLICT_POLICY),
+        identify_scoring_version=scoring_version,
+        plan_conflict_policy=conflict_policy,
     )
 
 

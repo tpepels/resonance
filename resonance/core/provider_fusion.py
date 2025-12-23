@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from resonance.core.identifier import ProviderClient, ProviderRelease
+from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease
 from resonance.core.identity import match_key_album, match_key_artist, match_key_work
 
 
@@ -26,6 +26,22 @@ class CombinedProviderClient(ProviderClient):
     ) -> None:
         self._providers = tuple(providers)
         self._priority = {name: index for index, name in enumerate(provider_priority)}
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        """Aggregate capabilities from all providers."""
+        supports_fingerprints = any(
+            provider.client.capabilities.supports_fingerprints
+            for provider in self._providers
+        )
+        supports_metadata = any(
+            provider.client.capabilities.supports_metadata
+            for provider in self._providers
+        )
+        return ProviderCapabilities(
+            supports_fingerprints=supports_fingerprints,
+            supports_metadata=supports_metadata,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         releases = self._collect(lambda client: client.search_by_fingerprints(fingerprints))

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from resonance.core.identifier import DirectoryEvidence, ProviderRelease, ProviderTrack, TrackEvidence
+from resonance.core.identifier import DirectoryEvidence, ProviderCapabilities, ProviderRelease, ProviderTrack, TrackEvidence
 from resonance.core.provider_fusion import CombinedProviderClient, NamedProvider
 from resonance.core.resolver import resolve_directory
 from resonance.core.state import DirectoryState
@@ -15,6 +15,13 @@ class _StubProvider:
     def __init__(self, releases: list[ProviderRelease], *, fail: bool = False) -> None:
         self._releases = list(releases)
         self._fail = fail
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         if self._fail:

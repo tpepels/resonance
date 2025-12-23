@@ -9,7 +9,7 @@ from pathlib import Path
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
 from resonance.core.identity.signature import dir_signature
-from resonance.core.identifier import DirectoryEvidence, ProviderRelease, ProviderTrack, TrackEvidence, identify
+from resonance.core.identifier import DirectoryEvidence, ProviderCapabilities, ProviderRelease, ProviderTrack, TrackEvidence, identify
 from resonance.core.planner import plan_directory
 from resonance.core.resolver import resolve_directory
 from resonance.core.state import DirectoryState
@@ -36,6 +36,13 @@ class _FlippingProvider:
         self._flip = False
         self.search_by_fingerprints_calls = 0
         self.search_by_metadata_calls = 0
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         self.search_by_fingerprints_calls += 1

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
-from resonance.core.identifier import DirectoryEvidence, ProviderRelease, ProviderTrack, TrackEvidence, identify
+from resonance.core.identifier import DirectoryEvidence, ProviderCapabilities, ProviderRelease, ProviderTrack, TrackEvidence, identify
 from resonance.core.identity.signature import dir_signature
 from resonance.core.planner import plan_directory
 from resonance.core.resolver import resolve_directory
@@ -20,6 +20,13 @@ from tests.helpers.fs import AudioStubSpec, create_audio_stub
 class _StubMBProvider:
     def __init__(self, releases: list[ProviderRelease]) -> None:
         self._releases = list(releases)
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         releases: list[ProviderRelease] = []
@@ -327,22 +334,22 @@ def test_musicbrainz_disc_count_penalty() -> None:
             TrackEvidence(
                 fingerprint_id="fp-d1-1",
                 duration_seconds=180,
-                existing_tags={"discnumber": "1"},
+                existing_tags={"discnumber": "1", "artist": "Artist", "album": "Disc Album"},
             ),
             TrackEvidence(
                 fingerprint_id="fp-d1-2",
                 duration_seconds=181,
-                existing_tags={"discnumber": "1"},
+                existing_tags={"discnumber": "1", "artist": "Artist", "album": "Disc Album"},
             ),
             TrackEvidence(
                 fingerprint_id="fp-d2-1",
                 duration_seconds=182,
-                existing_tags={"discnumber": "2"},
+                existing_tags={"discnumber": "2", "artist": "Artist", "album": "Disc Album"},
             ),
             TrackEvidence(
                 fingerprint_id="fp-d2-2",
                 duration_seconds=183,
-                existing_tags={"discnumber": "2"},
+                existing_tags={"discnumber": "2", "artist": "Artist", "album": "Disc Album"},
             ),
         ),
         track_count=4,

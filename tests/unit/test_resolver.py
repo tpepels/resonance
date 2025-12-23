@@ -34,6 +34,14 @@ class StubProviderClient:
         self.search_by_fingerprints_calls = 0
         self.search_by_metadata_calls = 0
 
+    @property
+    def capabilities(self):
+        from resonance.core.identifier import ProviderCapabilities
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
+
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         self.search_by_fingerprints_calls += 1
         return list(self.releases)

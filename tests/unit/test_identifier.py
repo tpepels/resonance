@@ -757,3 +757,75 @@ def test_read_fingerprint_from_test_metadata_no_fingerprint(tmp_path: Path):
 
     result = read_fingerprint_from_test_metadata(file)
     assert result is None
+
+
+def test_identify_uses_fingerprints_when_present():
+    """
+    Step 4: Wire the fingerprint path *without* AcoustID logic.
+
+    When fingerprints are present and provider supports them:
+    - search_by_fingerprints() should be called with non-empty fingerprints
+    - fingerprints should be prioritized (flow through the identifier correctly)
+    """
+    release = ProviderRelease(
+        provider="acoustid",
+        release_id="ac-123",
+        title="Test Album",
+        artist="Test Artist",
+        tracks=(
+            ProviderTrack(position=1, title="Track 1", fingerprint_id="fp1"),
+            ProviderTrack(position=2, title="Track 2", fingerprint_id="fp2"),
+        ),
+    )
+
+    # Use a spy provider to track calls
+    class FingerprintSpyProviderClient:
+        def __init__(self, releases: list[ProviderRelease]):
+            self.releases = releases
+            self.fingerprint_calls = []
+            self.metadata_calls = []
+
+        @property
+        def capabilities(self) -> ProviderCapabilities:
+            return ProviderCapabilities(
+                supports_fingerprints=True,
+                supports_metadata=True,
+            )
+
+        def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
+            self.fingerprint_calls.append(fingerprints)
+            return list(self.releases)
+
+        def search_by_metadata(
+            self, artist: Optional[str], album: Optional[str], track_count: int
+        ) -> list[ProviderRelease]:
+            self.metadata_calls.append((artist, album, track_count))
+            return []
+
+    provider = FingerprintSpyProviderClient([release])
+
+    # Evidence with fingerprints present (no metadata tags)
+    evidence = DirectoryEvidence(
+        tracks=(
+            TrackEvidence(fingerprint_id="fp1", duration_seconds=180, existing_tags={}),
+            TrackEvidence(fingerprint_id="fp2", duration_seconds=200, existing_tags={}),
+        ),
+        track_count=2,
+        total_duration_seconds=380,
+    )
+
+    result = identify(evidence, provider)
+
+    # Assertions for Step 4: fingerprints flow through correctly
+    assert len(provider.fingerprint_calls) == 1
+    assert provider.fingerprint_calls[0] == ["fp1", "fp2"]  # Non-empty fingerprints passed
+
+    # Metadata search also happens (two-channel model), but with None hints since no tags
+    assert len(provider.metadata_calls) == 1
+    assert provider.metadata_calls[0] == (None, None, 2)  # No artist/album hints extracted
+
+    # Should produce a CERTAIN result since fingerprint coverage is perfect
+    assert isinstance(result, IdentificationResult)
+    assert result.tier == ConfidenceTier.CERTAIN
+    assert result.evidence == evidence
+    assert len(result.candidates) == 1  # Only one candidate from fingerprint search

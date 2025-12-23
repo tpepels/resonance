@@ -23,7 +23,7 @@ import pytest
 
 from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.enricher import build_tag_patch
-from resonance.core.identifier import DirectoryEvidence, ProviderRelease, ProviderTrack, TrackEvidence
+from resonance.core.identifier import DirectoryEvidence, ProviderCapabilities, ProviderRelease, ProviderTrack, TrackEvidence
 from resonance.core.identity.signature import dir_id, dir_signature
 from resonance.core.planner import plan_directory
 from resonance.core.resolver import resolve_directory
@@ -42,6 +42,13 @@ class InstrumentedProvider:
         self.search_by_metadata_calls: list[dict[str, Any]] = []
         self.release_by_id_calls: list[str] = []
 
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
+
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Track fingerprint search calls."""
         self.search_by_fingerprints_calls.append(tuple(fingerprints))
@@ -55,7 +62,7 @@ class InstrumentedProvider:
         return []
 
     def search_by_metadata(
-        self, artist: str, album: str, track_count: int
+        self, artist: str | None, album: str | None, track_count: int
     ) -> list[ProviderRelease]:
         """Track metadata search calls."""
         self.search_by_metadata_calls.append({

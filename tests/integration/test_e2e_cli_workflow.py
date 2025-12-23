@@ -11,6 +11,7 @@ from resonance.commands.resolve import run_resolve
 from resonance.commands.prompt import run_prompt
 from resonance.core.identifier import (
     DirectoryEvidence,
+    ProviderCapabilities,
     ProviderRelease,
     ProviderTrack,
     TrackEvidence,
@@ -25,6 +26,13 @@ class StubProviderClient:
     def __init__(self, releases: list[ProviderRelease]) -> None:
         self._releases = releases
         self.search_count = 0
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         self.search_count += 1
