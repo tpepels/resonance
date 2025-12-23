@@ -2,7 +2,7 @@
 # Safe metadata extraction script for real-world corpus testing
 # Extracts directory structure and file metadata without copying files
 
-set -euo pipefail
+set -uo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -62,11 +62,7 @@ check_safety() {
         exit 1
     fi
 
-    # Check if manifest exists
-    if [[ ! -f "$MANIFEST_FILE" ]]; then
-        log_error "Manifest file not found: $MANIFEST_FILE"
-        exit 1
-    fi
+    # Manifest is optional - if it doesn't exist or is empty, we'll scan the entire library
 }
 
 # Parse manifest file
@@ -101,10 +97,15 @@ extract_file_metadata() {
             is_audio=true
             # Extract basic audio metadata if possible
             if command -v ffprobe >/dev/null 2>&1; then
-                # Try to extract duration and other metadata
-                local probe_output
-                probe_output=$(ffprobe -v quiet -print_format json -show_format "$file_path" 2>/dev/null || echo "{}")
-                audio_info="$probe_output"
+                # Try to extract duration only (simpler and more reliable)
+                local duration_str
+                duration_str=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$file_path" 2>/dev/null || echo "")
+                if [[ -n "$duration_str" ]] && [[ "$duration_str" =~ ^[0-9]*\.?[0-9]+$ ]]; then
+                    # Convert to integer seconds (truncate decimal)
+                    local duration
+                    duration=${duration_str%.*}
+                    audio_info="{\"duration\": $duration}"
+                fi
             elif command -v mediainfo >/dev/null 2>&1; then
                 # Fallback to mediainfo
                 local duration
@@ -118,10 +119,11 @@ extract_file_metadata() {
             ;;
     esac
 
-    # Create JSON entry
+    # Create JSON entry (escape path for JSON)
+    escaped_path=$(printf '%s\n' "$rel_path" | sed 's/\\/\\\\/g; s/"/\\"/g')
     cat << EOF
 {
-  "path": "$rel_path",
+  "path": "$escaped_path",
   "size": $size,
   "mtime": $mtime,
   "permissions": "$permissions",
@@ -138,40 +140,51 @@ extract_directory_tree() {
     local manifest_entries=("$@")  # Remaining args are manifest entries
 
     log_info "Extracting metadata from: $source_path"
-    log_info "Manifest entries: ${#manifest_entries[@]}"
+
+    # If no manifest entries provided, scan the entire source directory
+    if [[ ${#manifest_entries[@]} -eq 0 ]]; then
+        log_info "No manifest entries - scanning entire library"
+        local scan_paths=("$source_path")
+    else
+        log_info "Manifest entries: ${#manifest_entries[@]}"
+        local -a scan_paths=()
+        for entry in "${manifest_entries[@]}"; do
+            local full_path="$source_path/$entry"
+            if [[ -d "$full_path" ]]; then
+                scan_paths+=("$full_path")
+            else
+                log_warn "Directory not found, skipping: $entry"
+            fi
+        done
+    fi
 
     local -a metadata_entries=()
     local scanned_count=0
     local audio_count=0
 
-    for entry in "${manifest_entries[@]}"; do
-        local full_path="$source_path/$entry"
+    for scan_path in "${scan_paths[@]}"; do
+        log_info "Scanning: ${scan_path#$source_path/}"
 
-        if [[ -d "$full_path" ]]; then
-            log_info "Scanning: $entry"
+        # Find all files in this directory tree
+        while IFS= read -r -d '' file_path; do
+            # Get relative path from source directory
+            local rel_path="${file_path#$source_path/}"
 
-            # Find all files in this directory tree
-            while IFS= read -r -d '' file_path; do
-                # Get relative path from the album directory
-                local rel_path="${file_path#$source_path/}"
+            # No need to skip long filenames - Resonance now uses hash-based metadata naming
 
-                # Extract metadata
-                local metadata
-                metadata=$(extract_file_metadata "$file_path" "$rel_path")
+            # Extract metadata
+            local metadata
+            metadata=$(extract_file_metadata "$file_path" "$rel_path")
 
-                metadata_entries+=("$metadata")
-                ((scanned_count++))
+            metadata_entries+=("$metadata")
+            ((scanned_count++))
 
-                # Count audio files
-                if [[ "$metadata" == *"\"is_audio\": true"* ]]; then
-                    ((audio_count++))
-                fi
+            # Count audio files
+            if [[ "$metadata" == *"\"is_audio\": true"* ]]; then
+                ((audio_count++))
+            fi
 
-            done < <(find "$full_path" -type f -print0)
-
-        else
-            log_warn "Directory not found, skipping: $entry"
-        fi
+        done < <(find "$scan_path" -type f -print0)
     done
 
     # Create final JSON structure
@@ -228,13 +241,19 @@ main() {
     # Safety checks
     check_safety "$source_path"
 
-    # Parse manifest
-    log_info "Parsing manifest: $MANIFEST_FILE"
-    mapfile -t manifest_entries < <(parse_manifest "$MANIFEST_FILE")
-
-    if [[ ${#manifest_entries[@]} -eq 0 ]]; then
-        log_error "No valid entries found in manifest. Add some album directories to $MANIFEST_FILE"
-        exit 1
+    # Parse manifest (optional)
+    if [[ -f "$MANIFEST_FILE" ]]; then
+        log_info "Parsing manifest: $MANIFEST_FILE"
+        mapfile -t manifest_entries < <(parse_manifest "$MANIFEST_FILE")
+        if [[ ${#manifest_entries[@]} -gt 0 ]]; then
+            log_info "Found ${#manifest_entries[@]} manifest entries"
+        else
+            log_info "Manifest exists but contains no entries - scanning entire library"
+            manifest_entries=()
+        fi
+    else
+        log_info "No manifest file found - scanning entire library"
+        manifest_entries=()
     fi
 
     # Extract metadata

@@ -1,0 +1,21 @@
+[
+  {
+    "directory": "/home/tom/music/Miles Davis/Kind of Blue",
+    "exists": true,
+    "is_dir": true,
+    "audio_files": [
+      "01 - So What.flac",
+      "02 - Freddie Freedloader.flac",
+      "03 - Ray's Idea.flac",
+      "04 - All Blues.flac",
+      "05 - Flamenco Sketches.flac",
+      "06 - Flamenco Sketches.flac"
+    ],
+    "audio_count": 6,
+    "library_root": "/home/tom/music/Miles Davis",
+    "album_name": "Kind of Blue",
+    "scan_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'scan', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance scan [-h] --state-db STATE_DB [--json] library_root\nresonance scan: error: the following arguments are required: --state-db\n",
+    "resolve_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'resolve', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance resolve [-h] --state-db STATE_DB [--cache-db CACHE_DB]\n                         [--json]\n                         library_root\nresonance resolve: error: the following arguments are required: --state-db\n",
+    "plan_output": "Command: /home/tom/Projects/resonance/.venv/bin/python -c import sys; sys.argv = ['resonance', 'plan', 'Kind of Blue']; from resonance.cli import main; main()\nExit code: 2\n\nSTDOUT:\n\n\nSTDERR:\nusage: resonance plan [-h] --dir-id DIR_ID [--state-db STATE_DB] [--json]\nresonance plan: error: the following arguments are required: --dir-id\n"
+  }
+]

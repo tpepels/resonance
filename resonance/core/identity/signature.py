@@ -104,14 +104,26 @@ def file_signature(path: Path) -> AudioFileSignature:
 
 def _read_stub_metadata(path: Path) -> dict[str, Any]:
     """Read optional stub metadata saved alongside test fixtures."""
-    metadata_path = path.with_suffix(path.suffix + ".meta.json")
-    if not metadata_path.exists():
-        return {}
+    # Try hash-based naming first (for real corpus with long filenames)
+    path_hash = hashlib.sha256(str(path).encode('utf-8')).hexdigest()[:16]
+    metadata_path = path.parent / f"{path_hash}.meta.json"
 
-    try:
-        return json.loads(metadata_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return {}
+    if metadata_path.exists():
+        try:
+            return json.loads(metadata_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Fall back to old naming scheme for test stubs (only if filename is short enough)
+    if len(str(path)) <= 200:  # Only try legacy path for reasonably short filenames
+        legacy_path = path.with_suffix(path.suffix + ".meta.json")
+        if legacy_path.exists():
+            try:
+                return json.loads(legacy_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    return {}
 
 
 def _safe_get(data: dict[str, Any], key: str) -> Any:

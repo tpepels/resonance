@@ -8,10 +8,4 @@
 # Artist/Another Album (2001)
 # Classical/Composer/Work (1995)
 #
-# Start with 10-20 albums for development iteration
-# Expand to 50+ for comprehensive testing
-
-# Real albums from /home/tom/music for V3.1 corpus testing
-# Format: Artist/Album (relative to music library root)
-# Start with just one album for testing
-Abel Selaocoe/Hymns of Bantu
+# Leave empty to scan the entire music library
