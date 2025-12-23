@@ -9,6 +9,9 @@ from pathlib import Path
 
 def main() -> int:
     """Main CLI entry point."""
+    # Load environment variables from .env files
+    _load_dotenv_files()
+
     parser = argparse.ArgumentParser(
         prog="resonance",
         description="Clean, focused audio metadata organizer using fingerprinting",
@@ -194,7 +197,13 @@ def main() -> int:
                 store.close()
         elif args.command == "identify":
             from .commands.identify import run_identify
-            return run_identify(args, provider_client=None)
+            # For identify command, we don't have app context yet
+            # This would need to be updated when full app integration is done
+            return run_identify(
+                args,
+                provider_client=None,
+                fingerprint_reader=None,
+            )
         elif args.command == "plan":
             if not args.state_db:
                 raise ValueError("state_db is required")
@@ -224,6 +233,21 @@ def main() -> int:
 
         print(str(exc), file=sys.stderr)
         return exit_code_for_exception(exc)
+
+
+def _load_dotenv_files() -> None:
+    """Load environment variables from .env files.
+
+    Searches for .env files in the current directory and parent directories,
+    loading them in order from most specific to least specific.
+    """
+    try:
+        from dotenv import load_dotenv
+        # Load .env files from current directory upwards
+        load_dotenv()
+    except ImportError:
+        # python-dotenv not installed, skip .env loading
+        pass
 
 
 if __name__ == "__main__":

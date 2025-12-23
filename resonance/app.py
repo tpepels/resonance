@@ -6,17 +6,17 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from .core.fingerprint import FingerprintReader
 from .core.identity import IdentityCanonicalizer
 from .core.provider_fusion import CombinedProviderClient, NamedProvider
 from .infrastructure.cache import MetadataCache
 from .infrastructure.scanner import LibraryScanner
+from .providers.acoustid import AcoustIDClient
 from .providers.musicbrainz import MusicBrainzClient
 from .providers.discogs import DiscogsClient
 from .providers.caching import CachedProviderClient, ProviderConfig
 from . import __version__ as RESONANCE_VERSION
 from .services.file_service import FileService
-from .services.prompt_service import PromptService
-from .services.release_search import ReleaseSearchService
 
 
 class ResonanceApp:
@@ -56,23 +56,43 @@ class ResonanceApp:
         self.cache = MetadataCache(cache_path)
 
         # Initialize providers
+        self.acoustid = None
         self.musicbrainz = None
+        self.discogs = None
+
+        # AcoustID provider (for fingerprinting)
         if acoustid_api_key:
+            self.acoustid = AcoustIDClient(
+                api_key=acoustid_api_key,
+                base_url="https://api.acoustid.org/v2",
+                cache=self.cache,
+            )
+
+        # MusicBrainz provider (for metadata)
+        if acoustid_api_key:  # Reuse AcoustID key for MB rate limits
             self.musicbrainz = MusicBrainzClient(
                 acoustid_api_key=acoustid_api_key,
                 cache=self.cache,
                 offline=offline,
             )
 
-        self.discogs = None
+        # Discogs provider (optional)
         if discogs_token:
             self.discogs = DiscogsClient(
                 token=discogs_token,
                 cache=self.cache,
                 offline=offline,
             )
+
+        # Initialize fingerprint reader if AcoustID is available
+        self.fingerprint_reader = None
+        if self.acoustid:
+            self.fingerprint_reader = FingerprintReader(acoustid_api_key=acoustid_api_key)
+
+        # Combine providers
         self.provider_client = None
         providers: list[NamedProvider] = []
+
         if self.musicbrainz:
             mb_cached = CachedProviderClient(
                 self.musicbrainz,
@@ -84,6 +104,7 @@ class ResonanceApp:
                 ),
             )
             providers.append(NamedProvider("musicbrainz", mb_cached))
+
         if self.discogs:
             discogs_cached = CachedProviderClient(
                 self.discogs,
@@ -95,6 +116,10 @@ class ResonanceApp:
                 ),
             )
             providers.append(NamedProvider("discogs", discogs_cached))
+
+        if self.acoustid:
+            # AcoustID uses different caching strategy - direct client for now
+            providers.append(NamedProvider("acoustid", self.acoustid))
         if providers:
             if len(providers) == 1:
                 self.provider_client = providers[0].client
@@ -103,7 +128,6 @@ class ResonanceApp:
 
         # Initialize services
         self.canonicalizer = IdentityCanonicalizer(cache=self.cache)
-        self.prompt_service = PromptService(interactive=interactive)
         self.file_service = FileService(
             library_root=library_root,
             dry_run=dry_run,
@@ -114,14 +138,6 @@ class ResonanceApp:
             roots=[library_root],
             extensions={'.mp3', '.flac', '.m4a', '.ogg', '.opus'},
         )
-
-        # Initialize release search service
-        self.release_search = None
-        if self.musicbrainz:
-            self.release_search = ReleaseSearchService(
-                musicbrainz=self.musicbrainz,
-                discogs=self.discogs,
-            )
 
     def close(self) -> None:
         """Clean up resources."""

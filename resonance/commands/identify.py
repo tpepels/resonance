@@ -54,6 +54,7 @@ def run_identify(
     args: Namespace,
     *,
     provider_client: ProviderClient | None = None,
+    fingerprint_reader=None,
     evidence_builder=None,
     output_sink=print,
 ) -> int:
@@ -89,7 +90,10 @@ def run_identify(
         return 2
 
     evidence_builder = evidence_builder or extract_evidence
-    evidence: DirectoryEvidence = evidence_builder(batch.files)
+    evidence: DirectoryEvidence = evidence_builder(
+        batch.files,
+        fingerprint_reader=fingerprint_reader,
+    )
     result = identify(evidence, provider_client)
     payload = _identify_payload(batch=batch, result=result)
     emit_output(

@@ -27,12 +27,15 @@ class TestAcoustIDProviderIntegration:
         assert result == []
 
     def test_acoustid_search_by_fingerprints_non_empty(self) -> None:
-        """Test that non-empty fingerprint list is accepted (returns empty for now)."""
+        """Test that non-empty fingerprint list is accepted."""
+        from unittest.mock import patch
+
         client = AcoustIDClient()
 
-        # Currently returns empty results until full AcoustID integration
-        result = client.search_by_fingerprints(["fp1", "fp2", "fp3"])
-        assert result == []
+        # Mock acoustid.lookup to return empty results (simulating no matches)
+        with patch('acoustid.lookup', return_value=[]):
+            result = client.search_by_fingerprints(["fp1", "fp2", "fp3"])
+            assert result == []
 
     def test_acoustid_search_by_metadata_not_supported(self) -> None:
         """Test that metadata search is not supported and returns empty."""
@@ -43,6 +46,8 @@ class TestAcoustIDProviderIntegration:
 
     def test_fingerprint_path_integration_with_evidence(self) -> None:
         """Integration test: fingerprints from DirectoryEvidence flow to AcoustID client."""
+        from unittest.mock import patch
+
         # Create evidence with fingerprints
         evidence = DirectoryEvidence(
             tracks=(
@@ -61,9 +66,10 @@ class TestAcoustIDProviderIntegration:
         client = AcoustIDClient()
         fingerprints = [t.fingerprint_id for t in evidence.tracks if t.fingerprint_id]
 
-        # Should accept the fingerprints (even if returning empty results for now)
-        result = client.search_by_fingerprints(fingerprints)
-        assert isinstance(result, list)
+        # Mock acoustid.lookup to avoid real API calls
+        with patch('acoustid.lookup', return_value=[]):
+            result = client.search_by_fingerprints(fingerprints)
+            assert isinstance(result, list)
 
         # Verify fingerprints were passed correctly
         assert len(fingerprints) == 3
@@ -101,20 +107,32 @@ class TestAcoustIDProviderIntegration:
 
     def test_acoustid_client_initialization(self) -> None:
         """Test AcoustID client initialization with different parameters."""
-        # Default initialization
-        client1 = AcoustIDClient()
-        assert client1.api_key is None
-        assert client1.base_url == "https://api.acoustid.org/v2"
+        import os
 
-        # With API key
-        client2 = AcoustIDClient(api_key="test-key")
-        assert client2.api_key == "test-key"
+        # Clear any existing ACOUSTID_API_KEY environment variable for this test
+        original_key = os.environ.get("ACOUSTID_API_KEY")
+        if "ACOUSTID_API_KEY" in os.environ:
+            del os.environ["ACOUSTID_API_KEY"]
 
-        # With custom base URL
-        client3 = AcoustIDClient(base_url="https://custom.api.com")
-        assert client3.base_url == "https://custom.api.com"
+        try:
+            # Default initialization (should not pick up env var since we cleared it)
+            client1 = AcoustIDClient()
+            assert client1.api_key is None
+            assert client1.base_url == "https://api.acoustid.org/v2"
 
-        # All should have same capabilities
-        for client in [client1, client2, client3]:
-            assert client.capabilities.supports_fingerprints is True
-            assert client.capabilities.supports_metadata is False
+            # With API key
+            client2 = AcoustIDClient(api_key="test-key")
+            assert client2.api_key == "test-key"
+
+            # With custom base URL
+            client3 = AcoustIDClient(base_url="https://custom.api.com")
+            assert client3.base_url == "https://custom.api.com"
+
+            # All should have same capabilities
+            for client in [client1, client2, client3]:
+                assert client.capabilities.supports_fingerprints is True
+                assert client.capabilities.supports_metadata is False
+        finally:
+            # Restore original environment variable if it existed
+            if original_key is not None:
+                os.environ["ACOUSTID_API_KEY"] = original_key

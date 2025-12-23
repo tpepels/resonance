@@ -62,6 +62,7 @@ nano ~/.config/resonance/settings.json
 ```bash
 pip install python-dotenv
 ```
+**Note:** The CLI automatically loads `.env` files from the current directory. No additional setup required!
 
 ### Environment Variables (.env)
 

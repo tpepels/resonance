@@ -653,7 +653,7 @@ def test_identify_fingerprint_guard_when_provider_does_not_support():
 
 
 def test_identify_metadata_guard_when_provider_does_not_support():
-    """Guard: if provider does not support metadata, raise ValueError."""
+    """Metadata search is optional: if provider does not support metadata, skip it gracefully."""
     provider = NoMetadataProviderClient()
 
     evidence = DirectoryEvidence(
@@ -662,8 +662,12 @@ def test_identify_metadata_guard_when_provider_does_not_support():
         total_duration_seconds=180,
     )
 
-    with pytest.raises(ValueError, match="Provider does not support metadata search"):
-        identify(evidence, provider)
+    # Should not raise an error - metadata search is optional
+    result = identify(evidence, provider)
+
+    # Should result in UNSURE tier with no candidates (no fingerprint or metadata search possible)
+    assert result.tier == ConfidenceTier.UNSURE
+    assert len(result.candidates) == 0
 
 
 def test_identify_metadata_guard_when_tags_exist_but_no_hints():

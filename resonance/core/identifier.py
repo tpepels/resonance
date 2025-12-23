@@ -15,6 +15,7 @@ import json
 from typing import Callable, Optional, Protocol
 
 
+
 class ConfidenceTier(str, Enum):
     """Confidence levels for automatic vs manual resolution."""
 
@@ -488,17 +489,16 @@ def identify(
             or first_track_tags.get("ALBUM")
         )
 
-    # Anti-placeholder guard: forbid degenerate metadata search when tags exist
-    tags_exist = any(bool(track.existing_tags) for track in evidence.tracks)
-    if artist_hint is None and album_hint is None and tags_exist:
-        raise ValueError("Tags exist but no artist/album hints extracted for metadata search")
+    # Search by metadata (optional - skip if provider doesn't support it)
+    if provider_client.capabilities.supports_metadata:
+        # Anti-placeholder guard: forbid degenerate metadata search when tags exist
+        tags_exist = any(bool(track.existing_tags) for track in evidence.tracks)
+        if artist_hint is None and album_hint is None and tags_exist:
+            raise ValueError("Tags exist but no artist/album hints extracted for metadata search")
 
-    if not provider_client.capabilities.supports_metadata:
-        raise ValueError("Provider does not support metadata search")
-
-    candidates.extend(
-        provider_client.search_by_metadata(artist_hint, album_hint, evidence.track_count)
-    )
+        candidates.extend(
+            provider_client.search_by_metadata(artist_hint, album_hint, evidence.track_count)
+        )
 
     # Score all candidates
     scored = [score_release(evidence, release, thresholds) for release in candidates]

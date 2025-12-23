@@ -8,7 +8,6 @@ import json
 from typing import Iterable
 
 from resonance.commands.output import emit_output
-from resonance.core.state import DirectoryState
 from resonance.errors import IOFailure, ValidationError, exit_code_for_exception
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.infrastructure.scanner import LibraryScanner

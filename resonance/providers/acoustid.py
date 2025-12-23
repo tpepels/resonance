@@ -14,7 +14,8 @@ import json
 import os
 from typing import Any, Optional
 
-from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease, ProviderTrack
+from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease
+from resonance.infrastructure.cache import MetadataCache
 
 
 class AcoustIDClient(ProviderClient):
@@ -29,18 +30,18 @@ class AcoustIDClient(ProviderClient):
         self,
         api_key: Optional[str] = None,
         base_url: str = "https://api.acoustid.org/v2",
-        cache: Optional[AcoustIDCache] = None,
+        cache: Optional[MetadataCache] = None,
     ) -> None:
         """Initialize the AcoustID client.
 
         Args:
             api_key: AcoustID API key. If None, reads from ACOUSTID_API_KEY env var.
             base_url: Base URL for the AcoustID API
-            cache: Cache implementation for responses
+            cache: MetadataCache for responses
         """
         self.api_key = api_key or os.getenv("ACOUSTID_API_KEY")
         self.base_url = base_url.rstrip("/")
-        self.cache = cache or AcoustIDCache()
+        self.cache = cache
 
     @property
     def capabilities(self) -> ProviderCapabilities:
@@ -64,9 +65,136 @@ class AcoustIDClient(ProviderClient):
         if not fingerprints:
             return []
 
-        # For now, return empty results until full AcoustID integration
-        # This maintains the interface while allowing the wiring to be tested
+        try:
+            # Lazy import to handle cases where pyacoustid isn't available
+            # Note: pyacoustid 1.3.0+ uses 'acoustid' as the module name
+            import acoustid as pyacoustid
+        except ImportError:
+            try:
+                # Fallback for older versions
+                import pyacoustid
+            except ImportError:
+                # Graceful degradation if pyacoustid not available
+                return []
+
+        # Check cache first if available
+        cache_key = None
+        if self.cache:
+            cache_key = AcoustIDCache.make_cache_key(fingerprints)
+            cached_result = self.cache.get(cache_key)
+            if cached_result:
+                return self._parse_cached_results(cached_result)
+
+        # Perform AcoustID lookup
+        try:
+            # pyacoustid.lookup() expects individual fingerprint strings
+            # We'll look up the first fingerprint for now (can be extended for multiple)
+            fingerprint = fingerprints[0]
+
+            results = pyacoustid.lookup(
+                fingerprint,
+                self.base_url + "/lookup",
+                self.api_key,
+                meta=["recordings", "releases"]
+            )
+
+            releases = self._parse_acoustid_results(results)
+
+            # Cache the results if cache is available
+            if self.cache and cache_key:
+                self.cache.set(cache_key, self._serialize_results(releases), namespace="acoustid:lookup")
+
+            return releases
+
+        except pyacoustid.AcoustidError:
+            # Handle AcoustID API errors gracefully
+            # Could be rate limiting, invalid API key, network issues, etc.
+            return []
+
+        except Exception:
+            # Handle unexpected errors gracefully
+            return []
+
+    def _parse_cached_results(self, cached_data: dict[str, Any]) -> list[ProviderRelease]:
+        """Parse cached AcoustID results.
+
+        Args:
+            cached_data: Cached response data
+
+        Returns:
+            List of ProviderRelease objects
+        """
+        # Placeholder implementation - would deserialize cached data
         return []
+
+    def _parse_acoustid_results(self, results: list[dict[str, Any]]) -> list[ProviderRelease]:
+        """Parse AcoustID API response into ProviderRelease objects.
+
+        Args:
+            results: Raw AcoustID API response
+
+        Returns:
+            List of ProviderRelease objects, deterministically ordered
+        """
+        from resonance.core.identifier import ProviderTrack
+
+        releases: list[ProviderRelease] = []
+
+        for result in results:
+            # Each result represents a recording match
+            score = result.get("score", 0)
+            if score < 0.5:  # Skip low-confidence matches
+                continue
+
+            recordings = result.get("recordings", [])
+            for recording in recordings:
+                # Extract basic recording information
+                title = recording.get("title", "Unknown Title")
+                artists = recording.get("artists", [])
+                artist = artists[0].get("name", "Unknown Artist") if artists else "Unknown Artist"
+
+                # For now, create a "pseudo-release" from the recording
+                # In a full implementation, we'd resolve to actual releases via MusicBrainz
+                release_id = recording.get("id", "unknown")
+                if release_id == "unknown":
+                    continue
+
+                # Create a single track for this recording
+                track = ProviderTrack(
+                    position=1,
+                    title=title,
+                    duration_seconds=None,  # AcoustID doesn't provide duration in lookup
+                    fingerprint_id=None,    # We don't have the original fingerprint here
+                )
+
+                release = ProviderRelease(
+                    provider="acoustid",
+                    release_id=f"acoustid-{release_id}",
+                    title=title,
+                    artist=artist,
+                    tracks=(track,),
+                    year=None,
+                    release_kind=None,
+                )
+
+                releases.append(release)
+
+        # Sort deterministically by score (highest first), then by release_id
+        releases.sort(key=lambda r: (-result.get("score", 0), r.release_id))
+
+        return releases
+
+    def _serialize_results(self, releases: list[ProviderRelease]) -> dict[str, Any]:
+        """Serialize ProviderRelease objects for caching.
+
+        Args:
+            releases: List of ProviderRelease objects
+
+        Returns:
+            Serializable data structure
+        """
+        # Placeholder implementation - would serialize releases for caching
+        return {"releases": [], "timestamp": None}
 
     def search_by_metadata(
         self, artist: Optional[str], album: Optional[str], track_count: int

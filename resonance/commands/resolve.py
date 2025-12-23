@@ -43,11 +43,11 @@ def _resolve_item(outcome: ResolveOutcome, directory: Path) -> dict:
     if outcome.pinned_release_id:
         item["release_id"] = outcome.pinned_release_id
     if outcome.pinned_confidence is not None:
-        item["confidence"] = round(outcome.pinned_confidence, 2)
+        item["confidence"] = round(outcome.pinned_confidence, 2)  # type: ignore
     if outcome.scoring_version:
         item["scoring_version"] = outcome.scoring_version
     if outcome.reasons:
-        item["reasons"] = list(outcome.reasons)
+        item["reasons"] = list(outcome.reasons)  # type: ignore
 
     return item
 
