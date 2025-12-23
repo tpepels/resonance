@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -21,8 +22,10 @@ from resonance.core.identifier import (
     ReleaseScore,
     TrackEvidence,
     calculate_tier,
+    extract_evidence,
     identify,
     merge_and_rank_candidates,
+    read_fingerprint_from_test_metadata,
     score_release,
 )
 
@@ -676,3 +679,81 @@ def test_identify_metadata_guard_when_tags_exist_but_no_hints():
 
     with pytest.raises(ValueError, match="Tags exist but no artist/album hints extracted for metadata search"):
         identify(evidence, provider)
+
+
+def test_extract_evidence_with_fingerprint_reader(tmp_path: Path):
+    """Test extract_evidence with fingerprint_reader."""
+    from pathlib import Path
+
+    # Create test files
+    file1 = tmp_path / "track1.flac"
+    file1.write_text("")  # Empty file
+    metadata1 = file1.with_suffix(file1.suffix + ".meta.json")
+    metadata1.write_text('{"tags": {"duration": 180}, "fingerprint": "fp-123456"}')
+
+    file2 = tmp_path / "track2.flac"
+    file2.write_text("")
+    metadata2 = file2.with_suffix(file2.suffix + ".meta.json")
+    metadata2.write_text('{"tags": {"duration": 200}, "fingerprint": "fp-789012"}')
+
+    audio_files = [file1, file2]
+    evidence = extract_evidence(audio_files, fingerprint_reader=read_fingerprint_from_test_metadata)
+
+    assert evidence.track_count == 2
+    assert evidence.total_duration_seconds == 380
+    assert evidence.has_fingerprints is True
+    assert evidence.tracks[0].fingerprint_id == "fp-123456"
+    assert evidence.tracks[0].duration_seconds == 180
+    assert evidence.tracks[1].fingerprint_id == "fp-789012"
+    assert evidence.tracks[1].duration_seconds == 200
+
+
+def test_extract_evidence_without_fingerprint_reader(tmp_path: Path):
+    """Test extract_evidence without fingerprint_reader."""
+    from pathlib import Path
+
+    # Create test files
+    file1 = tmp_path / "track1.flac"
+    file1.write_text("")
+    metadata1 = file1.with_suffix(file1.suffix + ".meta.json")
+    metadata1.write_text('{"tags": {"duration": 180}}')
+
+    audio_files = [file1]
+    evidence = extract_evidence(audio_files)
+
+    assert evidence.track_count == 1
+    assert evidence.total_duration_seconds == 180
+    assert evidence.has_fingerprints is False
+    assert evidence.tracks[0].fingerprint_id is None
+    assert evidence.tracks[0].duration_seconds == 180
+
+
+def test_read_fingerprint_from_test_metadata_success(tmp_path: Path):
+    """Test read_fingerprint_from_test_metadata succeeds."""
+    file = tmp_path / "track.flac"
+    file.write_text("")
+    metadata = file.with_suffix(file.suffix + ".meta.json")
+    metadata.write_text('{"fingerprint": "fp-test"}')
+
+    result = read_fingerprint_from_test_metadata(file)
+    assert result == "fp-test"
+
+
+def test_read_fingerprint_from_test_metadata_no_file(tmp_path: Path):
+    """Test read_fingerprint_from_test_metadata when no metadata file."""
+    file = tmp_path / "track.flac"
+    file.write_text("")
+
+    result = read_fingerprint_from_test_metadata(file)
+    assert result is None
+
+
+def test_read_fingerprint_from_test_metadata_no_fingerprint(tmp_path: Path):
+    """Test read_fingerprint_from_test_metadata when no fingerprint in metadata."""
+    file = tmp_path / "track.flac"
+    file.write_text("")
+    metadata = file.with_suffix(file.suffix + ".meta.json")
+    metadata.write_text('{"duration": 180}')
+
+    result = read_fingerprint_from_test_metadata(file)
+    assert result is None

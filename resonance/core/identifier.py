@@ -173,19 +173,34 @@ def extract_evidence(
     Returns:
         DirectoryEvidence with track information
     """
-    # Minimal evidence extraction using sidecar tags when present.
     tracks: list[TrackEvidence] = []
     total_duration = 0
 
     for audio_file in sorted(audio_files):
         existing_tags = _read_existing_tags(audio_file)
-        # Placeholder - real implementation would read from files
+        fingerprint_id = None
+        duration_seconds = None
+
+        # Try to read fingerprint if reader provided
+        if fingerprint_reader:
+            fingerprint_id = fingerprint_reader(audio_file)
+
+        # Try to read duration from metadata
+        if "duration" in existing_tags:
+            try:
+                duration_seconds = int(existing_tags["duration"])
+            except (ValueError, TypeError):
+                pass
+
         track = TrackEvidence(
-            fingerprint_id=None,
-            duration_seconds=None,
+            fingerprint_id=fingerprint_id,
+            duration_seconds=duration_seconds,
             existing_tags=existing_tags,
         )
         tracks.append(track)
+
+        if duration_seconds:
+            total_duration += duration_seconds
 
     return DirectoryEvidence(
         tracks=tuple(tracks),
@@ -211,6 +226,31 @@ def _read_existing_tags(path: Path) -> dict[str, str]:
             continue
         normalized[str(key)] = str(value)
     return normalized
+
+
+def read_fingerprint_from_test_metadata(path: Path) -> str | None:
+    """Read fingerprint from test metadata file.
+
+    For test files created with create_test_audio_file, reads the fingerprint
+    from the .meta.json file if present.
+
+    Args:
+        path: Path to audio file
+
+    Returns:
+        Fingerprint string or None if not available
+    """
+    metadata_path = path.with_suffix(path.suffix + ".meta.json")
+    if not metadata_path.exists():
+        return None
+    try:
+        data = json.loads(metadata_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    fingerprint = data.get("fingerprint")
+    if isinstance(fingerprint, str):
+        return fingerprint
+    return None
 
 
 def score_release(

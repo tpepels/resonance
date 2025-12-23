@@ -202,6 +202,8 @@ def create_test_audio_file(temp_dir: Path):
 
         # Store metadata in companion JSON for test validation
         metadata_path = path.with_suffix(path.suffix + ".meta.json")
+        # Generate a deterministic fingerprint for testing
+        fingerprint = f"fp-{hash((title or '', artist or '', album or '', track_number or 0, disc_number or 1)) % 1000000:06d}"
         metadata = {
             "title": title,
             "artist": artist,
@@ -212,6 +214,7 @@ def create_test_audio_file(temp_dir: Path):
             "composer": composer,
             "conductor": conductor,
             "performer": performer,
+            "fingerprint": fingerprint,
         }
         metadata_path.write_text(json.dumps(metadata, indent=2))
 
