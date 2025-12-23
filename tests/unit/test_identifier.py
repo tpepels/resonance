@@ -15,6 +15,7 @@ from resonance.core.identifier import (
     ConfidenceTier,
     DirectoryEvidence,
     IdentificationResult,
+    ProviderCapabilities,
     ProviderRelease,
     ProviderTrack,
     ReleaseScore,
@@ -52,6 +53,13 @@ class StubProviderClient:
     def __init__(self, releases: list[ProviderRelease]):
         self.releases = releases
 
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
+
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         return list(self.releases)
 
@@ -70,6 +78,13 @@ class FlippingOrderProviderClient:
     def __init__(self, releases: list[ProviderRelease]):
         self._releases = list(releases)
         self._flip = False
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         self._flip = not self._flip
@@ -580,3 +595,84 @@ def test_identify_output_stable_even_if_provider_order_flips_across_calls():
     r3 = identify(evidence, provider)
 
     assert _stable_json_result(r1) == _stable_json_result(r2) == _stable_json_result(r3)
+
+
+class NoFingerprintProviderClient:
+    """Stub provider that does not support fingerprints."""
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=False,
+            supports_metadata=True,
+        )
+
+    def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
+        return []
+
+    def search_by_metadata(
+        self, artist: Optional[str], album: Optional[str], track_count: int
+    ) -> list[ProviderRelease]:
+        return []
+
+
+class NoMetadataProviderClient:
+    """Stub provider that does not support metadata."""
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=True,
+            supports_metadata=False,
+        )
+
+    def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
+        return []
+
+    def search_by_metadata(
+        self, artist: Optional[str], album: Optional[str], track_count: int
+    ) -> list[ProviderRelease]:
+        return []
+
+
+def test_identify_fingerprint_guard_when_provider_does_not_support():
+    """Guard: if evidence has fingerprints but provider does not support them, raise ValueError."""
+    provider = NoFingerprintProviderClient()
+
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id="fp1", duration_seconds=180),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+
+    with pytest.raises(ValueError, match="Evidence has fingerprints but provider does not support fingerprint search"):
+        identify(evidence, provider)
+
+
+def test_identify_metadata_guard_when_provider_does_not_support():
+    """Guard: if provider does not support metadata, raise ValueError."""
+    provider = NoMetadataProviderClient()
+
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id=None, duration_seconds=180, existing_tags={}),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+
+    with pytest.raises(ValueError, match="Provider does not support metadata search"):
+        identify(evidence, provider)
+
+
+def test_identify_metadata_guard_when_tags_exist_but_no_hints():
+    """Guard: if tags exist but no artist/album hints extracted, raise ValueError for metadata search."""
+    provider = StubProviderClient([])
+
+    # Evidence with tags but no artist/album in them
+    evidence = DirectoryEvidence(
+        tracks=(TrackEvidence(fingerprint_id=None, duration_seconds=180, existing_tags={"genre": "rock"}),),
+        track_count=1,
+        total_duration_seconds=180,
+    )
+
+    with pytest.raises(ValueError, match="Tags exist but no artist/album hints extracted for metadata search"):
+        identify(evidence, provider)

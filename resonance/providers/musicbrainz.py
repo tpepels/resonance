@@ -7,7 +7,7 @@ import re
 from typing import Optional
 
 from resonance import __version__ as RESONANCE_VERSION
-from resonance.core.identifier import ProviderClient, ProviderRelease, ProviderTrack
+from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease, ProviderTrack
 from resonance.core.identity import display_album, display_artist, display_work, match_key_artist
 from resonance.infrastructure.cache import MetadataCache
 
@@ -38,6 +38,13 @@ class MusicBrainzClient(ProviderClient):
         self._offline = offline
         if musicbrainzngs is not None:
             musicbrainzngs.set_useragent("resonance", RESONANCE_VERSION, contact=useragent)
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=False,  # Not implemented yet
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Fingerprint search is not implemented in the V3 client yet."""

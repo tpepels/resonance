@@ -11,7 +11,7 @@ import urllib.request
 from typing import Optional
 
 from resonance import __version__ as RESONANCE_VERSION
-from resonance.core.identifier import ProviderClient, ProviderRelease, ProviderTrack
+from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease, ProviderTrack
 from resonance.core.identity import display_album, display_artist, display_work, match_key_artist
 from resonance.infrastructure.cache import MetadataCache
 
@@ -38,6 +38,13 @@ class DiscogsClient(ProviderClient):
         self._useragent = useragent or f"resonance/{RESONANCE_VERSION}"
         self._cache = cache
         self._offline = offline
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            supports_fingerprints=False,  # Discogs does not support fingerprint search
+            supports_metadata=True,
+        )
 
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Discogs does not support fingerprint search."""

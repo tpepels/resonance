@@ -2,6 +2,8 @@
 
 This module contains deterministic scoring and candidate ranking logic.
 Provider I/O is abstracted behind the ProviderClient interface.
+
+V3.05 integration in progress — placeholders forbidden
 """
 
 from __future__ import annotations
@@ -96,6 +98,14 @@ class ReleaseScore:
 
 
 @dataclass(frozen=True)
+class ProviderCapabilities:
+    """Capabilities declared by a provider."""
+
+    supports_fingerprints: bool
+    supports_metadata: bool
+
+
+@dataclass(frozen=True)
 class IdentificationResult:
     """Result of release identification."""
 
@@ -113,6 +123,11 @@ class IdentificationResult:
 
 class ProviderClient(Protocol):
     """Abstract interface for provider queries (MB, Discogs, etc.)."""
+
+    @property
+    def capabilities(self) -> ProviderCapabilities:
+        """Declare what search methods this provider supports."""
+        ...
 
     def search_by_fingerprints(
         self, fingerprints: list[str]
@@ -407,12 +422,14 @@ def identify(
 
     # Search by fingerprints if available
     if evidence.has_fingerprints:
+        if not provider_client.capabilities.supports_fingerprints:
+            raise ValueError("Evidence has fingerprints but provider does not support fingerprint search")
         fingerprints = [
             t.fingerprint_id for t in evidence.tracks if t.fingerprint_id
         ]
         candidates.extend(provider_client.search_by_fingerprints(fingerprints))
 
-    # Search by metadata if no fingerprints or as fallback
+    # Search by metadata
     # Extract artist/album from existing tags (use first track as representative)
     artist_hint = None
     album_hint = None
@@ -430,6 +447,14 @@ def identify(
             first_track_tags.get("album")
             or first_track_tags.get("ALBUM")
         )
+
+    # Anti-placeholder guard: forbid degenerate metadata search when tags exist
+    tags_exist = any(bool(track.existing_tags) for track in evidence.tracks)
+    if artist_hint is None and album_hint is None and tags_exist:
+        raise ValueError("Tags exist but no artist/album hints extracted for metadata search")
+
+    if not provider_client.capabilities.supports_metadata:
+        raise ValueError("Provider does not support metadata search")
 
     candidates.extend(
         provider_client.search_by_metadata(artist_hint, album_hint, evidence.track_count)
