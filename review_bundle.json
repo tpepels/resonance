@@ -1,6 +1,6 @@
 {
   "_format": "corpus_review_bundle_v1",
-  "_generated_at": "2025-12-24T10:43:22.029742+00:00",
+  "_generated_at": "2025-12-24T11:09:29.582253+00:00",
   "_generation_info": {
     "generator": "scripts/generate_review_bundle.py",
     "purpose": "Human review interface for V4 corpus validation",

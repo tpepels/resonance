@@ -1,6 +1,6 @@
 {
   "format": "resonance_prompt_replay_v1",
-  "created_at": "2025-12-24T12:00:00.000000+00:00",
+  "created_at": "2025-12-24T11:26:55.824995+00:00",
   "app_version": "3.1.0",
   "corpus_input_hashes": {
     "metadata.json": "f088e40434c94ad2dc0a83550f5888b25bd5e1a9d04cadcf325f7e6a70fa2640",
@@ -8,5 +8,166 @@
     "expected_layout.json": "4bebbd4fbd57ee19cba027c1b4738fa81bd6624c301c49c1359af9b8acfa2fe1",
     "expected_tags.json": "aed286fb143f373c1cf4131a8820b847d598ae65a0518724acf85edb31e1fd1c"
   },
-  "decisions": []
+  "decisions": [
+    {
+      "dir_id": "309cc7e7139ad2fc6dbf0e0e3121ae2ef6e97b98227c8ed826293cecb6f2065b",
+      "prompt_fingerprint": "0f953a78ab2167c8add103fd52788600023b071094fe3a6c38c3a6d5ecd49a4b",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.826618+00:00"
+    },
+    {
+      "dir_id": "331785acb7e9cb0d29c9a8c1f5f232a79de34850c83c1ca2df9f84f1c5d883a7",
+      "prompt_fingerprint": "c958d4f6018d158d68c296fb8d3da785c0275a84711e9a1bdb094407189f3239",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.827976+00:00"
+    },
+    {
+      "dir_id": "8543a9871d9461d33248835116b471ec02aa9bd3c8554a719bc7b6ad063394f0",
+      "prompt_fingerprint": "67f0cd2a2e151e35b96503475441908e47551767f159171a00660494e71a3645",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.828758+00:00"
+    },
+    {
+      "dir_id": "d9009540cdf02af97c65f6664a3d6388d6f7b1db01a80c179eff94a4a4ad3b1b",
+      "prompt_fingerprint": "0db815102ba3cc3b4bc62367e32578ca8fc990a5772a3f6ec57114c03044e6c8",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.829800+00:00"
+    },
+    {
+      "dir_id": "68fca52565462848fa4b4e168d1acc21b1237f214e986ec5214d4a834499daf5",
+      "prompt_fingerprint": "c27ed665e2ad03abed9f36ab001ba26047b28dfff3af99a37b3e9261a4bef992",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.830749+00:00"
+    },
+    {
+      "dir_id": "60e40977f832b93b882c070e9a15d8a9b2d3bf773b55ad3996514850eefed5c9",
+      "prompt_fingerprint": "7fb44c2d6f0ab9f5a0d566cae49ea7bcfee385c89857ad23b243be38ce744f04",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.831539+00:00"
+    },
+    {
+      "dir_id": "a91285d1ea9a7446af0108a6f55ca8546c6642e87ccd18cb74a7a459ac933a7c",
+      "prompt_fingerprint": "dcca5eee0b98a250c5b4c100a6ab30ebe40bb9f4b653a5d5c87e114cfdb004c6",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.832854+00:00"
+    },
+    {
+      "dir_id": "2cec716210283268b4768ebe46b9ba33ce75cbe92b67529dfd7519f5acde42cb",
+      "prompt_fingerprint": "15962336c1dc146617aedb433b20f47607154b35d30aa8e6696b02d228448f6a",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.834005+00:00"
+    },
+    {
+      "dir_id": "57fb556e8f012e3379e79ed23bc179ba54bf285ceffe33ad864da3ef94f41904",
+      "prompt_fingerprint": "7da3287f4ea9ee38265e991f51a33a35abe64d5088868e6be119b6420e6821ed",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.834555+00:00"
+    },
+    {
+      "dir_id": "90337aa9ebf18bb13d98dabd07b60c6fe9f8763919c0ae02e0cf9acd620954ed",
+      "prompt_fingerprint": "cea00be41e23c6a1c81326102d4f4945f305d982d2cf90ecbfc1c1db32ea67f5",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.835372+00:00"
+    },
+    {
+      "dir_id": "b82068637a898bba41d2ea6b6d059eff9db10f334c2a1fa1645c09ee346397bf",
+      "prompt_fingerprint": "e85dc0111848b47def1c1a0b13027d6ce9b95457b2d50c4817f78fbe83ef6262",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.836159+00:00"
+    },
+    {
+      "dir_id": "2f247cdb903fa0c7717ef338defe5245053f3f60c759af7f684e1fc6f39f10ab",
+      "prompt_fingerprint": "8f8d08aa1c1ab64d91198ffb4794175b89c6ae0a3cc8911f31f763e6f107174a",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.837563+00:00"
+    },
+    {
+      "dir_id": "f4754f1c338d40a5cb532d65e97a337809ebc11d642c9d3e68d4152b6d21c493",
+      "prompt_fingerprint": "7db29be3a531cb2e7282e70e6a38fbfd8685ba2184cffc4ebbcfa613f443f874",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.838150+00:00"
+    },
+    {
+      "dir_id": "838c5b19b4dff9b62bce7fbd301707eb920cf65044381205885be33afcb94c08",
+      "prompt_fingerprint": "96dad7970f88c555b65e78484d880ffdccf67d870812a420f14255a43f702f79",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.838700+00:00"
+    },
+    {
+      "dir_id": "5ac1469593fb9bea3509c937091ffe82b253a93891e9d2888b0854bc001af16d",
+      "prompt_fingerprint": "d61c08827d9e7220bd68fa13dbe535827676abc54360252122996346e0890ad8",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.839197+00:00"
+    },
+    {
+      "dir_id": "e4d88ee4bd4a811147eb4b9dfc66b6649b87bf935050db7c4d7da3ac7ac55e34",
+      "prompt_fingerprint": "101c35ec6ec9ff9e4fd29cdb27f1405bf8ebcbe73ea86d6bcc6fb471568c9653",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.839589+00:00"
+    },
+    {
+      "dir_id": "b5f328ac1c80160aee65484a408e169774284d9a8c72297c984e78cb3097c42f",
+      "prompt_fingerprint": "0277df50ae8f10247f791506d34a0b6e5a9d0bbeb86dcbcc3063accb9e0ea909",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.840578+00:00"
+    },
+    {
+      "dir_id": "3704c190be8c412021493d28f40a8f5c68fe329c31c8f3bac0387e207ddd4a43",
+      "prompt_fingerprint": "636e7d3c9446d2d02a95b40e3184beec9f26e80f10f67298cc30945c7a59ec3a",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.841038+00:00"
+    },
+    {
+      "dir_id": "06ab7e47cab722c89ed0e2251a9d289935c45ee2bf2d7c124113d1341f3301d9",
+      "prompt_fingerprint": "711f80e652a940e8c055cbbc14de8454f7e656d774775f6e7e44693244ae592a",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.841446+00:00"
+    },
+    {
+      "dir_id": "538d64601b3322de4a38e77e93f5809bf71a7b4836ba95e1ea30df2d2d55dfdd",
+      "prompt_fingerprint": "8c22006f6620d5e8899c2ed0fad9d167fc34a977cc855d5951d9b0a4bf63220d",
+      "chosen_option": "jail",
+      "chosen_provider": null,
+      "chosen_release_id": null,
+      "timestamp": "2025-12-24T11:26:55.841935+00:00"
+    }
+  ]
 }

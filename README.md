@@ -137,6 +137,27 @@ This gives you secure API key management with flexible application configuration
 
 ## Usage
 
+### V3.1 Corpus Processing & Review (Recommended)
+
+For comprehensive music library processing with human review and decision replay:
+
+```bash
+# Process entire corpus with live APIs and record decisions
+make corpus-decide
+
+# Review results in interactive HTML interface
+make corpus-review  # Opens http://localhost:8080/real_corpus_review.html
+```
+
+**Features:**
+- Interactive decision recording with cryptographic validation
+- Full corpus processing (no batch limits)
+- Deterministic replay for regression testing
+- 3-column HTML review interface with search/filtering
+- Agent-safe: No multi-MB files in context
+
+See [V3.1_REAL_CORPUS_MANUAL.md](docs/process/V3.1_REAL_CORPUS_MANUAL.md) for complete workflow documentation.
+
 ### V3 Pipeline (Complete Workflow)
 
 The V3 pipeline uses a deterministic state machine with explicit state transitions:
