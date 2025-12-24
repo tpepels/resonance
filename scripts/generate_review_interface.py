@@ -30,28 +30,71 @@ def create_stable_id(text: str) -> str:
     return hashlib.sha256(text.encode('utf-8')).hexdigest()[:8]
 
 def build_directory_tree(bundle: Dict[str, Any]) -> Dict[str, Any]:
-    """Build a hierarchical directory tree structure."""
-    tree = {"directories": [], "summary": bundle["corpus_summary"]}
+    """Build a hierarchical directory tree structure organized by artists."""
+    tree = {"nodes": [], "summary": bundle["corpus_summary"]}
+
+    # Group directories by artist (first part of path)
+    artist_map = {}
+    standalone_albums = []
 
     for dir_info in bundle["directory_tree"]:
         dir_path = dir_info["dir_path"]
+        path_parts = dir_path.split('/')
         dir_id = create_stable_id(dir_path)
 
-        # Get directory state
+        # Get directory state - use exact path matching
         expected_states = bundle.get("expected_outcomes", {}).get("states", {})
         state_info = expected_states.get(dir_path, {})
-        state = state_info.get("state", "PENDING") if state_info else "PENDING"
+        state = state_info.get("state", "JAILED") if state_info else "JAILED"
 
-        tree["directories"].append({
+        node = {
             "id": dir_id,
             "path": dir_path,
+            "name": path_parts[-1],  # Album name
+            "full_path": dir_path,
             "state": state,
             "audio_files": dir_info["audio_files"],
             "total_files": dir_info["total_files"],
             "total_size": dir_info["total_size"],
             "has_cover_art": dir_info.get("has_cover_art", False),
-            "has_extras": dir_info.get("has_extras", False)
-        })
+            "has_extras": dir_info.get("has_extras", False),
+        }
+
+        # Check if this is Artist/Album format
+        if len(path_parts) == 2:
+            artist_name = path_parts[0]
+            if artist_name not in artist_map:
+                artist_map[artist_name] = {
+                    "name": artist_name,
+                    "path": artist_name,
+                    "id": create_stable_id(artist_name),
+                    "state": "ARTIST",  # Special state for artist nodes
+                    "audio_files": 0,
+                    "total_files": 0,
+                    "total_size": 0,
+                    "children": [],
+                    "is_expanded": False  # Collapsed by default
+                }
+            artist_map[artist_name]["children"].append(node)
+            # Aggregate stats to artist level
+            artist_map[artist_name]["audio_files"] += node["audio_files"]
+            artist_map[artist_name]["total_files"] += node["total_files"]
+            artist_map[artist_name]["total_size"] += node["total_size"]
+        else:
+            # Standalone album (no artist prefix)
+            node["is_expanded"] = False  # Collapsed by default
+            standalone_albums.append(node)
+
+    # Sort children within each artist
+    for artist in artist_map.values():
+        artist["children"].sort(key=lambda x: x["name"].lower())
+
+    # Convert to final format: artists first, then standalone albums
+    root_directories = list(artist_map.values()) + standalone_albums
+    root_directories.sort(key=lambda x: x["name"].lower())
+
+    tree["root_directories"] = root_directories
+    tree["all_directories"] = list(artist_map.values()) + standalone_albums
 
     return tree
 
@@ -95,7 +138,7 @@ def build_directory_details(bundle: Dict[str, Any], dir_path: str) -> Dict[str, 
 
     return {
         "path": dir_path,
-        "state": state_info.get("state", "PENDING") if state_info else "PENDING",
+        "state": state_info.get("state", "JAILED") if state_info else "JAILED",
         "state_info": state_info,
         "tags_info": tags_info,
         "decisions": decisions.get(dir_path, {}),
@@ -207,18 +250,32 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             padding: 10px;
         }}
         .tree-node {{
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }}
         .tree-item {{
             display: flex;
             align-items: center;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s;
+            user-select: none;
         }}
         .tree-item:hover {{ background: #f8f9fa; }}
         .tree-item.selected {{ background: #e3f2fd; border-left: 3px solid #2196f3; }}
+        .tree-toggle {{
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 0.8em;
+            text-align: center;
+            line-height: 16px;
+        }}
+        .tree-toggle.expanded::before {{ content: '▼'; }}
+        .tree-toggle.collapsed::before {{ content: '▶'; }}
+        .tree-toggle.empty::before {{ content: ' '; }}
         .tree-item-icon {{
             width: 16px;
             height: 16px;
@@ -238,8 +295,8 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             margin-left: 8px;
         }}
         .tree-item-state {{
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
             font-size: 0.7em;
             font-weight: 600;
             text-transform: uppercase;
@@ -248,6 +305,13 @@ def generate_html(bundle: Dict[str, Any]) -> str:
         .state-applied {{ background: #d4edda; color: #155724; }}
         .state-jailed {{ background: #fff3cd; color: #856404; }}
         .state-pending {{ background: #d1ecf1; color: #0c5460; }}
+        .state-artist {{ background: #e9ecef; color: #495057; font-weight: bold; }}
+        .tree-children {{
+            margin-left: 20px;
+        }}
+        .tree-children.collapsed {{
+            display: none;
+        }}
 
         /* Directory Contents */
         .content-panel {{
@@ -406,7 +470,8 @@ def generate_html(bundle: Dict[str, Any]) -> str:
                 Total Files: {bundle["corpus_summary"]["total_files"]} |
                 Audio Tracks: {bundle["corpus_summary"]["audio_files"]} |
                 Directories: {bundle["corpus_summary"]["total_directories"]} |
-                Max Depth: 2
+                Max Depth: 2 |
+                Cache Buster: {hashlib.sha256(bundle["_generated_at"].encode()).hexdigest()[:8]}
             </div>
         </div>
 
@@ -502,53 +567,128 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
             const stateFilter = document.getElementById('stateFilter').value;
 
-            filteredDirectories = directoryTree.directories.filter(dir => {{
-                // State filter
-                if (stateFilter && dir.state !== stateFilter) return false;
+            // Filter root directories and their children
+            function filterDirectoryTree(nodes) {{
+                return nodes.filter(node => {{
+                    // Check if this node matches filters
+                    const nodeMatches = (!stateFilter || node.state === stateFilter) &&
+                                      (!searchTerm || node.path.toLowerCase().includes(searchTerm));
 
-                // Search filter
-                if (searchTerm && !dir.path.toLowerCase().includes(searchTerm)) return false;
+                    // Recursively filter children
+                    if (node.children && node.children.length > 0) {{
+                        node.filteredChildren = filterDirectoryTree(node.children);
+                        // Include parent if it matches or has matching children
+                        return nodeMatches || node.filteredChildren.length > 0;
+                    }}
 
-                return true;
-            }});
+                    return nodeMatches;
+                }});
+            }}
 
+            filteredDirectories = filterDirectoryTree(directoryTree.root_directories);
             renderDirectoryTree();
         }}
 
-        // Render directory tree
+        // Render directory tree with hierarchy
         function renderDirectoryTree() {{
             const container = document.getElementById('directoryTree');
 
-            if (filteredDirectories.length === 0) {{
+            if (!filteredDirectories || filteredDirectories.length === 0) {{
                 container.innerHTML = '<div class="empty-state">No directories match the current filters</div>';
                 return;
             }}
 
-            let html = '';
-            filteredDirectories.forEach(dir => {{
-                const isSelected = currentDirectory && currentDirectory.path === dir.path;
-                const stateClass = `state-${{dir.state.toLowerCase()}}`;
+            function renderNode(node, level = 0) {{
+                const isSelected = currentDirectory && currentDirectory.path === node.path;
+                const stateClass = `state-${{node.state.toLowerCase()}}`;
+                const hasChildren = node.children && node.children.length > 0;
+                const isExpanded = node.expanded === true; // Default to collapsed
+                const toggleClass = hasChildren ?
+                    (isExpanded ? 'expanded' : 'collapsed') : 'empty';
 
-                html += `<div class="tree-node">
-                    <div class="tree-item ${{isSelected ? 'selected' : ''}}" onclick="selectDirectory('${{dir.id}}')">
+                let html = `<div class="tree-node">
+                    <div class="tree-item ${{isSelected ? 'selected' : ''}}" onclick="selectDirectory('${{node.id}}')">
+                        <div class="tree-toggle ${{toggleClass}}" onclick="toggleDirectory(event, '${{node.id}}')"></div>
                         <div class="tree-item-icon">📁</div>
-                        <div class="tree-item-text" title="${{dir.path}}">${{dir.path.split('/').pop()}}</div>
-                        <div class="tree-item-count">${{dir.audio_files}}</div>
-                        <div class="tree-item-state ${{stateClass}}">${{dir.state}}</div>
-                    </div>
-                </div>`;
+                        <div class="tree-item-text" title="${{node.path}}">${{node.name}}</div>
+                        <div class="tree-item-count">${{node.audio_files}}</div>
+                        <div class="tree-item-state ${{stateClass}}">${{node.state}}</div>
+                    </div>`;
+
+                if (hasChildren && isExpanded) {{
+                    html += `<div class="tree-children">`;
+                    const childrenToShow = node.filteredChildren || node.children;
+                    childrenToShow.forEach(child => {{
+                        html += renderNode(child, level + 1);
+                    }});
+                    html += `</div>`;
+                }}
+
+                html += `</div>`;
+                return html;
+            }}
+
+            let html = '';
+            filteredDirectories.forEach(node => {{
+                html += renderNode(node);
             }});
 
             container.innerHTML = html;
         }}
 
+        // Toggle directory expansion
+        function toggleDirectory(event, dirId) {{
+            event.stopPropagation();
+
+            // Find the directory in the tree
+            function findAndToggle(nodes) {{
+                for (const node of nodes) {{
+                    if (node.id === dirId) {{
+                        node.expanded = !node.expanded;
+                        return true;
+                    }}
+                    if (node.children && findAndToggle(node.children)) {{
+                        return true;
+                    }}
+                }}
+                return false;
+            }}
+
+            findAndToggle(directoryTree.root_directories);
+            renderDirectoryTree();
+        }}
+
         // Select a directory
         async function selectDirectory(dirId) {{
             try {{
-                const dir = directoryTree.directories.find(d => d.id === dirId);
+                // Find directory in the hierarchical tree
+                function findDirectory(nodes) {{
+                    for (const node of nodes) {{
+                        if (node.id === dirId) {{
+                            return node;
+                        }}
+                        if (node.children) {{
+                            const found = findDirectory(node.children);
+                            if (found) return found;
+                        }}
+                    }}
+                    return null;
+                }}
+
+                const dir = findDirectory(directoryTree.root_directories);
                 if (!dir) return;
 
-                // Fetch directory details
+                // If this is an artist node (no path in the directory tree), don't try to load details
+                if (dir.state === 'ARTIST') {{
+                    // Just update selection for artist nodes
+                    document.querySelectorAll('.tree-item').forEach(item => {{
+                        item.classList.remove('selected');
+                    }});
+                    event.currentTarget.classList.add('selected');
+                    return;
+                }}
+
+                // Fetch directory details for album nodes
                 const response = await fetch(`dir/${{dirId}}.json`);
                 const details = await response.json();
 

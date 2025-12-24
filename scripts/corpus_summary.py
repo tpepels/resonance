@@ -1,239 +1,264 @@
 #!/usr/bin/env python3
 """
-Corpus summary script for debugging and validation.
+Safe corpus summary script - provides <200KB summary without loading large files.
 
-This script provides a small summary (<200KB) of corpus data without
-opening large files, suitable for agent-side validation and debugging.
+This script analyzes the corpus processing artifacts without loading multi-MB
+JSON files into memory, ensuring agent stability.
 """
 
 import json
-import hashlib
+import os
 from pathlib import Path
-from typing import Dict, Any
+from datetime import datetime
 
-def compute_sha256(file_path: Path) -> str:
-    """Compute SHA256 hash of a file."""
-    hash_sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_sha256.update(chunk)
-    return hash_sha256.hexdigest()
+def safe_read_json(path: Path, max_size_kb: int = 200) -> dict:
+    """Read JSON file safely, rejecting files over max_size_kb."""
+    if not path.exists():
+        return {}
 
-def get_file_info(file_path: Path) -> Dict[str, Any]:
-    """Get file size and hash without reading content."""
-    stat = file_path.stat()
+    size_kb = path.stat().st_size / 1024
+    if size_kb > max_size_kb:
+        return {"error": f"File too large ({size_kb:.1f}KB > {max_size_kb}KB limit)"}
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        return {"error": str(e)}
+
+def analyze_metadata(metadata_file: Path) -> dict:
+    """Analyze metadata.json without loading full file."""
+    if not metadata_file.exists():
+        return {"status": "missing", "file_size": 0}
+
+    size_mb = metadata_file.stat().st_size / (1024 * 1024)
+
+    # Read just the header info safely
+    try:
+        with open(metadata_file, 'r', encoding='utf-8') as f:
+            # Read first 2KB to get structure
+            header = f.read(2048)
+            if '"files"' in header:
+                has_files = True
+            else:
+                has_files = False
+            if '"directories"' in header:
+                has_directories = True
+            else:
+                has_directories = False
+    except Exception as e:
+        return {"status": "error", "error": str(e), "file_size": size_mb}
+
     return {
-        "size": stat.st_size,
-        "size_human": format_size(stat.st_size),
-        "sha256": compute_sha256(file_path)
+        "status": "ok",
+        "file_size_mb": round(size_mb, 1),
+        "has_files": has_files,
+        "has_directories": has_directories,
+        "extraction_time": "unknown"  # Would need to parse JSON to get this
     }
 
-def format_size(bytes_size: int | float) -> str:
-    """Format bytes to human readable."""
-    if bytes_size == 0:
-        return '0 B'
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if bytes_size < 1024.0:
-            return ".1f"
-        bytes_size /= 1024.0
-    return ".1f"
+def analyze_expected_state(state_file: Path) -> dict:
+    """Analyze expected_state.json safely."""
+    data = safe_read_json(state_file, 50)  # 50KB limit for state file
 
-def analyze_metadata(metadata_path: Path) -> Dict[str, Any]:
-    """Analyze metadata.json structure without loading full file."""
-    with open(metadata_path, 'r', encoding='utf-8') as f:
-        # Read just enough to get structure
-        content = f.read(2048)  # Read first 2KB
-        first_brace = content.find('{')
-        if first_brace >= 0:
-            # Find the end of the files array start
-            files_start = content.find('"files": [', first_brace)
-            if files_start >= 0:
-                # Extract header info before files array
-                header = content[:files_start]
-                try:
-                    # Parse header as JSON
-                    header_json = json.loads(header[:-1] + '}}')  # Close the object
-                    return {
-                        "total_files": header_json.get("_total_files", 0),
-                        "audio_files": header_json.get("_audio_files", 0),
-                        "extraction_time": header_json.get("_extraction_time", "unknown"),
-                        "source_path": header_json.get("_source_path", "unknown"),
-                        "files_array_start": files_start
-                    }
-                except json.JSONDecodeError:
-                    pass
+    if "error" in data:
+        return {"status": "error", "error": data["error"]}
 
-    return {"error": "Could not parse metadata header"}
+    states = data.get("states", {})
+    directories_count = len(states)
 
-def analyze_review_bundle(bundle_path: Path) -> Dict[str, Any]:
+    state_counts = {}
+    for dir_state in states.values():
+        state = dir_state.get("state", "unknown")
+        state_counts[state] = state_counts.get(state, 0) + 1
+
+    return {
+        "status": "ok",
+        "directories_count": directories_count,
+        "state_distribution": state_counts
+    }
+
+def analyze_review_bundle(bundle_file: Path) -> dict:
     """Analyze review_bundle.json structure."""
-    with open(bundle_path, 'r', encoding='utf-8') as f:
-        bundle = json.load(f)
+    if not bundle_file.exists():
+        return {"status": "missing", "file_size": 0}
+
+    size_mb = bundle_file.stat().st_size / (1024 * 1024)
+
+    # Read just enough to get basic structure
+    try:
+        with open(bundle_file, 'r', encoding='utf-8') as f:
+            # Read first 4KB to get structure
+            header = f.read(4096)
+
+            format_match = '"_format":' in header
+            generated_match = '"_generated_at":' in header
+
+            # Count directories by finding directory entries
+            dir_count = header.count('"dir_path":')
+
+    except Exception as e:
+        return {"status": "error", "error": str(e), "file_size": size_mb}
 
     return {
-        "format": bundle.get("_format", "unknown"),
-        "generated_at": bundle.get("_generated_at", "unknown"),
-        "total_directories": bundle["corpus_summary"]["total_directories"],
-        "total_files": bundle["corpus_summary"]["total_files"],
-        "audio_files": bundle["corpus_summary"]["audio_files"],
-        "directory_tree_count": len(bundle.get("directory_tree", [])),
-        "tracks_count": len(bundle.get("tracks", [])),
-        "input_file_hashes": bundle.get("input_file_hashes", {}),
-        "expected_states_count": len(bundle.get("expected_outcomes", {}).get("states", {})),
-        "expected_tags_count": len(bundle.get("expected_outcomes", {}).get("tags", [])),
-        "decisions_count": len(bundle.get("expected_outcomes", {}).get("decisions", {}))
+        "status": "ok",
+        "file_size_mb": round(size_mb, 1),
+        "format_detected": format_match,
+        "generated_at_detected": generated_match,
+        "directory_count_estimate": dir_count
     }
 
-def analyze_directory_depths(bundle_path: Path) -> Dict[str, Any]:
-    """Analyze directory depth statistics."""
-    with open(bundle_path, 'r', encoding='utf-8') as f:
-        bundle = json.load(f)
+def analyze_interface_files(dist_dir: Path) -> dict:
+    """Analyze generated interface files."""
+    if not dist_dir.exists():
+        return {"status": "missing"}
 
-    depths = []
-    for dir_info in bundle.get("directory_tree", []):
-        path = dir_info["dir_path"]
-        depth = len(path.split('/'))
-        depths.append(depth)
+    files = {}
+    for file_path in dist_dir.rglob("*"):
+        if file_path.is_file():
+            rel_path = file_path.relative_to(dist_dir)
+            size_kb = file_path.stat().st_size / 1024
+            files[str(rel_path)] = round(size_kb, 1)
 
-    if depths:
-        return {
-            "min_depth": min(depths),
-            "max_depth": max(depths),
-            "avg_depth": sum(depths) / len(depths),
-            "depth_distribution": {
-                f"depth_{d}": depths.count(d) for d in sorted(set(depths))
-            }
-        }
-    return {"error": "No directories found"}
+    # Special analysis of key files
+    index_file = dist_dir / "index.json"
+    html_file = dist_dir / "real_corpus_review.html"
 
-def sample_directories(bundle_path: Path, count: int = 5) -> list:
-    """Get sample directory information."""
-    with open(bundle_path, 'r', encoding='utf-8') as f:
-        bundle = json.load(f)
+    index_size = index_file.stat().st_size / 1024 if index_file.exists() else 0
+    html_size = html_file.stat().st_size / 1024 if html_file.exists() else 0
 
-    directories = bundle.get("directory_tree", [])
-    if len(directories) <= count:
-        return directories
+    # Count dir/*.json files
+    dir_count = len(list(dist_dir.glob("dir/*.json")))
 
-    # Sample from different positions
-    samples = []
-    step = len(directories) // count
-    for i in range(0, len(directories), step):
-        if len(samples) < count:
-            samples.append(directories[i])
-
-    return samples
-
-def sample_tracks(bundle_path: Path, count: int = 5) -> list:
-    """Get sample track information."""
-    with open(bundle_path, 'r', encoding='utf-8') as f:
-        bundle = json.load(f)
-
-    tracks = bundle.get("tracks", [])
-    if len(tracks) <= count:
-        return tracks
-
-    # Sample from different positions
-    samples = []
-    step = len(tracks) // count
-    for i in range(0, len(tracks), step):
-        if len(samples) < count:
-            samples.append(tracks[i])
-
-    return samples
+    return {
+        "status": "ok",
+        "total_files": len(files),
+        "index_json_kb": round(index_size, 1),
+        "html_kb": round(html_size, 1),
+        "directory_detail_files": dir_count,
+        "total_size_kb": round(sum(files.values()), 1)
+    }
 
 def main():
-    """Main entry point."""
+    """Main analysis function."""
+    repo_root = Path(__file__).parent.parent
+    corpus_dir = repo_root / "tests" / "real_corpus"
+    dist_dir = repo_root / "dist"
+
     print("Corpus Summary Analysis")
     print("=" * 50)
 
-    # File paths
-    metadata_path = Path("tests/real_corpus/metadata.json")
-    bundle_path = Path("review_bundle.json")
-    expected_state_path = Path("tests/real_corpus/expected_state.json")
-    expected_layout_path = Path("tests/real_corpus/expected_layout.json")
-    expected_tags_path = Path("tests/real_corpus/expected_tags.json")
-    decisions_path = Path("tests/real_corpus/decisions.json")
-
-    # Analyze file sizes
+    # 1. File sizes
     print("\n1. FILE SIZES:")
+    metadata_file = corpus_dir / "metadata.json"
+    review_file = repo_root / "review_bundle.json"
+    expected_state_file = corpus_dir / "expected_state.json"
+
     files_to_check = [
-        ("metadata.json", metadata_path),
-        ("review_bundle.json", bundle_path),
-        ("expected_state.json", expected_state_path),
-        ("expected_layout.json", expected_layout_path),
-        ("expected_tags.json", expected_tags_path),
-        ("decisions.json", decisions_path),
+        ("metadata.json", metadata_file),
+        ("review_bundle.json", review_file),
+        ("expected_state.json", expected_state_file),
     ]
 
     for name, path in files_to_check:
         if path.exists():
-            info = get_file_info(path)
+            size_mb = path.stat().st_size / (1024 * 1024)
             print(".1f")
         else:
-            print(f"  {name}: NOT FOUND")
+            print(f"  {name}: MISSING")
 
-    # Analyze metadata structure
+    # 2. Metadata analysis
     print("\n2. METADATA ANALYSIS:")
-    if metadata_path.exists():
-        meta_info = analyze_metadata(metadata_path)
-        for key, value in meta_info.items():
-            print(f"  {key}: {value}")
+    meta_analysis = analyze_metadata(metadata_file)
+    if meta_analysis["status"] == "ok":
+        print(f"  Status: OK ({meta_analysis['file_size_mb']}MB)")
+        print(f"  Has files array: {meta_analysis['has_files']}")
+        print(f"  Has directories array: {meta_analysis['has_directories']}")
+    else:
+        print(f"  Status: {meta_analysis['status']}")
 
-    # Analyze review bundle
+    # 3. Review bundle analysis
     print("\n3. REVIEW BUNDLE ANALYSIS:")
-    if bundle_path.exists():
-        bundle_info = analyze_review_bundle(bundle_path)
-        for key, value in bundle_info.items():
-            if isinstance(value, dict):
-                print(f"  {key}: {len(value)} items")
-            else:
-                print(f"  {key}: {value}")
+    bundle_analysis = analyze_review_bundle(review_file)
+    if bundle_analysis["status"] == "ok":
+        print(f"  Status: OK ({bundle_analysis['file_size_mb']}MB)")
+        print(f"  Format detected: {bundle_analysis['format_detected']}")
+        print(f"  Directories estimated: {bundle_analysis['directory_count_estimate']}")
+    else:
+        print(f"  Status: {bundle_analysis['status']}")
 
-    # Directory depth analysis
+    # 4. Directory depth analysis (from review bundle if available)
     print("\n4. DIRECTORY DEPTH ANALYSIS:")
-    if bundle_path.exists():
-        depth_info = analyze_directory_depths(bundle_path)
-        for key, value in depth_info.items():
-            print(f"  {key}: {value}")
+    if review_file.exists() and review_file.stat().st_size < 1024 * 1024:  # < 1MB
+        try:
+            with open(review_file, 'r', encoding='utf-8') as f:
+                bundle = json.load(f)
 
-    # Sample directories
+            directories = bundle.get("directory_tree", [])
+            depths = {}
+            for d in directories:
+                path_parts = d["dir_path"].split('/')
+                depth = len(path_parts)
+                depths[depth] = depths.get(depth, 0) + 1
+
+            print(f"  Min depth: {min(depths.keys()) if depths else 'N/A'}")
+            print(f"  Max depth: {max(depths.keys()) if depths else 'N/A'}")
+            print(f"  Total directories: {len(directories)}")
+            print(f"  Depth distribution: {dict(sorted(depths.items()))}")
+        except Exception as e:
+            print(f"  Error reading bundle: {e}")
+    else:
+        print("  Review bundle too large or missing for depth analysis")
+
+    # 5. Sample directories (from interface index if available)
     print("\n5. SAMPLE DIRECTORIES:")
-    if bundle_path.exists():
-        samples = sample_directories(bundle_path, 3)
-        for i, sample in enumerate(samples):
-            print(f"  [{i+1}] {sample['dir_path']}")
-            print(f"      Audio files: {sample['audio_files']}")
-            print(f"      Total size: {format_size(sample['total_size'])}")
+    index_file = dist_dir / "index.json"
+    if index_file.exists() and index_file.stat().st_size < 100 * 1024:  # < 100KB
+        try:
+            with open(index_file, 'r', encoding='utf-8') as f:
+                index_data = json.load(f)
 
-    # Sample tracks
+            root_dirs = index_data.get("root_directories", [])
+            if root_dirs:
+                for i, d in enumerate(root_dirs[:5], 1):
+                    name = d.get("name", "unknown")
+                    audio_files = d.get("audio_files", 0)
+                    state = d.get("state", "unknown")
+                    print(f"  [{i}] {name} (files: {audio_files}, state: {state})")
+            else:
+                print("  No root directories found in index")
+        except Exception as e:
+            print(f"  Error reading index: {e}")
+    else:
+        print("  Index file missing or too large")
+
+    # 6. Sample tracks (would need to load individual dir files - skip for safety)
     print("\n6. SAMPLE TRACKS:")
-    if bundle_path.exists():
-        samples = sample_tracks(bundle_path, 3)
-        for i, sample in enumerate(samples):
-            print(f"  [{i+1}] {sample['original_path']}")
-            print(f"      Size: {format_size(sample['file_size'])}")
-            print(f"      Duration: {sample['audio_info']['duration']}s")
+    print("  (Skipped - would require loading individual directory files)")
 
-    # Schema keys summary
+    # 7. Schema summary
     print("\n7. SCHEMA SUMMARY:")
     schemas = {
-        "metadata.json": ["_comment", "_extraction_time", "_source_path", "_total_files", "_audio_files", "files"],
+        "metadata.json": ["_comment", "_extraction_time", "_source_path", "_total_files", "_audio_files", "files", "directories"],
         "review_bundle.json": ["_format", "_generated_at", "_generation_info", "input_file_hashes", "corpus_summary", "directory_tree", "tracks", "expected_outcomes", "review_metadata"],
         "expected_state.json": ["_comment", "_format", "summary", "states"],
         "expected_tags.json": ["_comment", "_format", "tracks"],
         "decisions.json": ["_comment", "_format", "_decisions", "decisions"]
     }
 
-    for filename, keys in schemas.items():
-        print(f"  {filename}: {len(keys)} top-level keys")
+    for file_name, keys in schemas.items():
+        print(f"  {file_name}: {len(keys)} top-level keys")
         print(f"    Keys: {', '.join(keys)}")
 
+    # 8. Determinism notes
     print("\n8. DETERMINISM NOTES:")
     print("  - Directory IDs use stable SHA256-based identifiers")
     print("  - File ordering is deterministic (sorted by filename)")
     print("  - Hashes computed for all inputs and outputs")
     print("  - Generation timestamp included for audit trail")
+    print("  - Agent stability: <200KB summaries, no large file loading")
+
+    print(f"\nAnalysis completed at {datetime.now().isoformat()}")
 
 if __name__ == "__main__":
     main()

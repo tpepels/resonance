@@ -15,7 +15,11 @@ from resonance.infrastructure.scanner import LibraryScanner
 
 def _read_duration_seconds(path: Path) -> int | None:
     meta_path = path.with_suffix(path.suffix + ".meta.json")
-    if not meta_path.exists():
+    try:
+        if not meta_path.exists():
+            return None
+    except OSError:
+        # Handle filesystem faker issues with long paths
         return None
     try:
         data = json.loads(meta_path.read_text())

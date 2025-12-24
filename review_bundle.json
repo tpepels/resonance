@@ -1,17 +1,17 @@
 {
   "_format": "corpus_review_bundle_v1",
-  "_generated_at": "2025-12-23T22:36:14.295081+00:00",
+  "_generated_at": "2025-12-24T10:43:22.029742+00:00",
   "_generation_info": {
     "generator": "scripts/generate_review_bundle.py",
     "purpose": "Human review interface for V4 corpus validation",
     "governance": "V3.1 release gate artifact - do not modify V3.1 snapshots"
   },
   "input_file_hashes": {
-    "tests/real_corpus/metadata.json": "5bb2ce6783508473a42f6c418356ea2128a923f84b331a494717143bdf9c70fe",
-    "tests/real_corpus/expected_state.json": "7ca1c8cb91b137177b46b64cd62f262fdcd6af007b6008fcb2c645b37a743c5e",
+    "tests/real_corpus/metadata.json": "f088e40434c94ad2dc0a83550f5888b25bd5e1a9d04cadcf325f7e6a70fa2640",
+    "tests/real_corpus/expected_state.json": "a6084f632274cc1581aba1bfeb1e9242163d0d86aeaa880cf226e1b85fca83f1",
     "tests/real_corpus/expected_layout.json": "4bebbd4fbd57ee19cba027c1b4738fa81bd6624c301c49c1359af9b8acfa2fe1",
     "tests/real_corpus/expected_tags.json": "aed286fb143f373c1cf4131a8820b847d598ae65a0518724acf85edb31e1fd1c",
-    "tests/real_corpus/decisions.json": "5eb0d06337779964e6f1c011f74a68ba73a310ca818239749d394a6542d24613"
+    "tests/real_corpus/decisions.json": "056e7208afd50c1e52498da5ee6d2030734bd9b962a04bc44752f8f8dc50298a"
   },
   "corpus_summary": {
     "total_files": 5088,
@@ -100718,17 +100718,89 @@
     }
   ],
   "expected_outcomes": {
-    "states": {},
+    "states": {
+      "(2022) Biosphere - Shortwave Memories [FLAC]": {
+        "state": "APPLIED",
+        "pinned_provider": "musicbrainz",
+        "pinned_release_id": "sample-release-1"
+      },
+      "Abel Selaocoe/Hymns of Bantu": {
+        "state": "APPLIED",
+        "pinned_provider": "musicbrainz",
+        "pinned_release_id": "sample-release-2"
+      },
+      "Africa 70/Afrodisiac": {
+        "state": "APPLIED",
+        "pinned_provider": "discogs",
+        "pinned_release_id": "sample-release-3"
+      },
+      "Agnes Obel/Aventine": {
+        "state": "JAILED"
+      },
+      "Ahmad Jamal/Midnite Jazz & Blues: Waltz for Debby": {
+        "state": "PENDING"
+      },
+      "Alanis Morissette/The Best Collection": {
+        "state": "JAILED"
+      },
+      "Alanis Morissette/The Collection": {
+        "state": "JAILED"
+      },
+      "Alice Sara Ott/Echoes of Life": {
+        "state": "JAILED"
+      },
+      "alt‐J/An Awesome Wave": {
+        "state": "PENDING"
+      },
+      "alt‐J/Reduxer": {
+        "state": "PENDING"
+      },
+      "alt‐J/This Is All Yours": {
+        "state": "PENDING"
+      },
+      "Anna Netrebko/Opera Arias": {
+        "state": "PENDING"
+      },
+      "Anne Sofie von Otter - Musica Antiqua Köln - Reinhard Goebel/Lamenti": {
+        "state": "PENDING"
+      },
+      "Anne Sofie von Otter/Lamenti": {
+        "state": "PENDING"
+      },
+      "Antonio Vivaldi/Concerti Alla Rustica": {
+        "state": "PENDING"
+      },
+      "Antonio Vivaldi/Concertos for Violin, Strings and Continuo": {
+        "state": "PENDING"
+      },
+      "Antony and the Johnsons/For Today I Am a Boy": {
+        "state": "PENDING"
+      },
+      "Antony and the Johnsons/I Am a Bird Now": {
+        "state": "PENDING"
+      },
+      "Antonín Dvořák/Symphonien Nos. 8 & 9 Aus der Neuen Welt": {
+        "state": "PENDING"
+      },
+      "Aretha Franklin/Original Album Series": {
+        "state": "PENDING"
+      }
+    },
     "summary": {
-      "total_directories": 0,
-      "applied": 0,
-      "jailed": 0,
+      "total_directories": 20,
+      "applied": 3,
+      "jailed": 4,
       "failed": 0
     },
     "layout": [],
     "tags": [],
     "decisions": {
-      "_auto": "AUTO"
+      "_auto": "AUTO",
+      "bfa835a1463c3f41151479e445d5acc27c460f2d431b96dec99b0818a53c5bd8": "APPLIED",
+      "5cd7b0aa52608fb69315a0f824e15167f52a94613050db6e85a12b6c929237a2": "APPLIED",
+      "a8efd46767c4e37f4da58cd4718566a04fb1c39d3daafa64de20de721dd04242": "APPLIED",
+      "cb4fe89b0a8d5225aad195b67395e87cf1b4077db0e167174f728e6ff9d9140b": "JAILED",
+      "78ed854fbf42622b9b6cf43ab76b4192ccb2123bdeb4c1d8515df7b4b1a16b0a": "APPLIED"
     }
   },
   "review_metadata": {

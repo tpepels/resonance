@@ -1,0 +1,12 @@
+{
+  "format": "resonance_prompt_replay_v1",
+  "created_at": "2025-12-24T11:00:00.000000+00:00",
+  "app_version": "3.1.0",
+  "corpus_input_hashes": {
+    "metadata.json": "f088e40434c94ad2dc0a83550f5888b25bd5e1a9d04cadcf325f7e6a70fa2640",
+    "expected_state.json": "a6084f632274cc1581aba1bfeb1e9242163d0d86aeaa880cf226e1b85fca83f1",
+    "expected_layout.json": "4bebbd4fbd57ee19cba027c1b4738fa81bd6624c301c49c1359af9b8acfa2fe1",
+    "expected_tags.json": "aed286fb143f373c1cf4131a8820b847d598ae65a0518724acf85edb31e1fd1c"
+  },
+  "decisions": []
+}

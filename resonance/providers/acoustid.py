@@ -206,6 +206,14 @@ class AcoustIDClient(ProviderClient):
         """
         return []
 
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """AcoustID does not support release lookups by ID.
+
+        This method exists to satisfy the ProviderClient interface but always
+        returns None since AcoustID only supports fingerprint-based lookups.
+        """
+        return None
+
 
 class AcoustIDCache:
     """Cache for AcoustID API responses."""

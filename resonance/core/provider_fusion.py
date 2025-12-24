@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Optional
 
 from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease
 from resonance.core.identity import match_key_album, match_key_artist, match_key_work
@@ -52,6 +52,16 @@ class CombinedProviderClient(ProviderClient):
             lambda client: client.search_by_metadata(artist, album, track_count)
         )
         return self._dedupe_and_sort(releases)
+
+    def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
+        """Fetch a specific release by provider and release_id."""
+        for named in self._providers:
+            if named.name == provider:
+                try:
+                    return named.client.release_by_id(provider, release_id)
+                except Exception:
+                    continue
+        return None
 
     def _collect(self, fn) -> list[ProviderRelease]:
         releases: list[ProviderRelease] = []

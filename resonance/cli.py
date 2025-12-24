@@ -67,6 +67,11 @@ def main() -> int:
         help="Provider cache DB path",
     )
     resolve_parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Run in offline mode (cached responses only)",
+    )
+    resolve_parser.add_argument(
         "--json",
         action="store_true",
         help="Emit machine-readable JSON output",
@@ -86,6 +91,21 @@ def main() -> int:
         "--cache-db",
         type=Path,
         help="Provider cache DB path",
+    )
+    prompt_parser.add_argument(
+        "--decisions-file",
+        type=Path,
+        help="JSON file with scripted decisions (non-interactive mode)",
+    )
+    prompt_parser.add_argument(
+        "--record-replay",
+        type=Path,
+        help="Record prompt decisions to replay file (interactive mode)",
+    )
+    prompt_parser.add_argument(
+        "--replay-file",
+        type=Path,
+        help="Replay decisions from recorded replay file",
     )
     prompt_parser.add_argument(
         "--json",

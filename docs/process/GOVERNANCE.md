@@ -252,6 +252,17 @@ Silent invariant erosion is forbidden.
 
 ---
 
+## 7.5 Real Corpus Artifact Governance
+
+**Corpus input metadata may only be extracted via `make corpus-extract`. Resonance decisions may only be regenerated via `make corpus-run`. Review is observational only and must never modify expected state.**
+
+This rule prevents:
+- Silent regeneration that invalidates review decisions
+- Agent drift from conflating input capture with decision computation
+- Coupling between observation (review) and mutation (extraction/processing)
+
+---
+
 ## 8. Audit Policy (Required for Each Version Closure)
 
 A version may not close until an audit has been performed using
@@ -460,4 +471,3 @@ If uncertainty exists about whether something is safe to delete, the agent must 
 1) remove wiring/composition paths,
 2) add tests proving the behavior is unreachable or replaced,
 3) delete the implementation and any now-dead tests.
-

@@ -11,6 +11,7 @@ This wrapper provides:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
@@ -18,6 +19,15 @@ from resonance.core.identifier import ProviderClient, ProviderRelease
 from resonance.errors import RuntimeFailure
 from resonance.infrastructure.cache import MetadataCache
 from resonance.infrastructure.provider_cache import provider_cache_key
+
+logger = logging.getLogger(__name__)
+
+# Global counters for tracking provider usage (for testing/verification)
+PROVIDER_CALL_COUNTS = {
+    "musicbrainz": {"http_calls": 0, "cache_hits": 0},
+    "discogs": {"http_calls": 0, "cache_hits": 0},
+    "acoustid": {"http_calls": 0, "cache_hits": 0},
+}
 
 
 @dataclass(frozen=True)
@@ -102,6 +112,8 @@ class CachedProviderClient(ProviderClient):
         cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:search")
         if cached is not None:
             # Cache hit - deserialize to ProviderRelease objects
+            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
+            logger.debug("Provider %s cache hit for fingerprint search", self._config.provider_name)
             return self._deserialize_releases(cached)
 
         # Cache miss
@@ -113,6 +125,8 @@ class CachedProviderClient(ProviderClient):
             )
 
         # Online mode: call provider
+        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
+        logger.debug("Provider %s making HTTP call for fingerprint search", self._config.provider_name)
         releases = self._provider.search_by_fingerprints(fingerprints)
 
         # Write-through to cache
@@ -154,6 +168,8 @@ class CachedProviderClient(ProviderClient):
         cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:search")
         if cached is not None:
             # Cache hit - deserialize to ProviderRelease objects
+            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
+            logger.debug("Provider %s cache hit for metadata search", self._config.provider_name)
             return self._deserialize_releases(cached)
 
         # Cache miss
@@ -166,6 +182,8 @@ class CachedProviderClient(ProviderClient):
             )
 
         # Online mode: call provider
+        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
+        logger.debug("Provider %s making HTTP call for metadata search", self._config.provider_name)
         releases = self._provider.search_by_metadata(artist, album, track_count)
 
         # Write-through to cache
@@ -198,6 +216,8 @@ class CachedProviderClient(ProviderClient):
         cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:release")
         if cached is not None:
             # Cache hit - deserialize to ProviderRelease
+            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
+            logger.debug("Provider %s cache hit for release_by_id", self._config.provider_name)
             if cached:
                 releases = self._deserialize_releases(cached)
                 return releases[0] if releases else None
@@ -213,6 +233,8 @@ class CachedProviderClient(ProviderClient):
             )
 
         # Online mode: call provider
+        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
+        logger.debug("Provider %s making HTTP call for release_by_id", self._config.provider_name)
         release = self._provider.release_by_id(provider, release_id)
 
         # Write-through to cache (serialize as list for consistency)
