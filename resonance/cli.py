@@ -95,17 +95,17 @@ def main() -> int:
     prompt_parser.add_argument(
         "--decisions-file",
         type=Path,
-        help="JSON file with scripted decisions (non-interactive mode)",
+        help="[ADVANCED] JSON file with scripted decisions (non-interactive mode)",
     )
     prompt_parser.add_argument(
         "--record-replay",
         type=Path,
-        help="Record prompt decisions to replay file (interactive mode)",
+        help="[ADVANCED] Record prompt decisions to replay file (interactive mode)",
     )
     prompt_parser.add_argument(
         "--replay-file",
         type=Path,
-        help="Replay decisions from recorded replay file",
+        help="[ADVANCED] Replay decisions from recorded replay file",
     )
     prompt_parser.add_argument(
         "--json",
