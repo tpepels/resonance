@@ -168,6 +168,38 @@
       "chosen_provider": null,
       "chosen_release_id": null,
       "timestamp": "2025-12-24T11:26:55.841935+00:00"
+    },
+    {
+      "dir_id": "a2eb245d601868d01c48ecf7265f1a350213b805a41455b1296ab54a0c2ea53e",
+      "prompt_fingerprint": "96e69da331ec661f9d791ce26baf2315095681d98cd3c9d5035f66de6235cd1c",
+      "chosen_option": "choice_1",
+      "chosen_provider": "discogs",
+      "chosen_release_id": "14926288",
+      "timestamp": "2026-04-03T19:07:50.916578+00:00"
+    },
+    {
+      "dir_id": "7dfff94e35a1966a0ddb4f333521f0e4811bd2a614e909367b856e2e9a063792",
+      "prompt_fingerprint": "c8a76f3f88dbfe7b1c4b388fb48a317fc3f0823a7d9625a0c16974331fde5489",
+      "chosen_option": "choice_1",
+      "chosen_provider": "discogs",
+      "chosen_release_id": "4345204",
+      "timestamp": "2026-04-03T19:07:50.916804+00:00"
+    },
+    {
+      "dir_id": "db5a47f2fceea8cb427f1b7048f711e7d529eaddc247a5400c61e2910d015f5e",
+      "prompt_fingerprint": "f90a980dc166cc7f27b70e3205e0e37f17651c663ecd1651e0d3bc42d5b61f37",
+      "chosen_option": "choice_1",
+      "chosen_provider": "discogs",
+      "chosen_release_id": "1891889",
+      "timestamp": "2026-04-03T19:07:50.916963+00:00"
+    },
+    {
+      "dir_id": "fb561e6c8427efed1e15ed5a7cdda96d310eac6cc39c0ea55b1111dc1a1a4b03",
+      "prompt_fingerprint": "09cf14fddef2652282387f0ff1f81cdc0a40361b7edffcad82c27a5b661ce698",
+      "chosen_option": "choice_1",
+      "chosen_provider": "musicbrainz",
+      "chosen_release_id": "7cdff346-3e2f-4f02-9e76-d1db1f9f0256",
+      "timestamp": "2026-04-03T19:07:50.917121+00:00"
     }
   ]
 }

@@ -1,7 +1,7 @@
-"""Integration tests for real-world corpus using filesystem faker.
+"""Integration tests for real-world corpus.
 
 Tests Resonance against real-world music library structures by using
-extracted metadata and a filesystem faker instead of actual files.
+extracted metadata with real `.meta.json` sidecars instead of FakerContext.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from resonance.infrastructure.directory_store import DirectoryStateStore
     from resonance.services.tag_writer import MetaJsonTagWriter
 
-from tests.integration._filesystem_faker import FakerContext, create_faker_for_corpus
 from tests.integration._corpus_harness import (
     assert_or_write_snapshot,
     assert_valid_plan_hash,
@@ -30,6 +29,11 @@ from tests.integration._corpus_harness import (
     is_regen_enabled,
     snapshot_path,
 )
+
+# Shared helper to build library tree with real sidecars (no FakerContext)
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts._corpus_library import build_library_from_metadata
 
 
 @pytest.mark.skipif(
@@ -69,18 +73,8 @@ def test_real_world_corpus_deterministic_workflow():
     # Create temporary directory structure from metadata
     fake_library_root = temp_dir / "fake_library"
 
-    # Create directory structure and empty files based on metadata
-    for file_info in metadata['files']:
-        file_path = file_info['path']
-        full_path = fake_library_root / file_path
-
-        # Create parent directories
-        full_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Create empty file with correct size (if we want to test file operations)
-        # For now, just create empty files since we only care about directory structure
-        if not full_path.exists():
-            full_path.touch()
+    # Create directory structure and sidecar metadata from corpus metadata
+    build_library_from_metadata(metadata, fake_library_root)
 
     # Load scripted decisions if available
     decisions_file = corpus_root / 'decisions.json'
@@ -102,6 +96,7 @@ def test_real_world_corpus_deterministic_workflow():
     state_db_path = temp_dir / "state.db"
     cache_db_path = temp_dir / "cache.db"
     output_root = temp_dir / "organized"
+    store = None
 
     try:
         # 2. Set up Resonance app with proper provider fusion (like real CLI)
@@ -113,7 +108,7 @@ def test_real_world_corpus_deterministic_workflow():
         from resonance.core.planner import plan_directory
         from resonance.core.resolver import resolve_directory
         from resonance.core.state import DirectoryState
-        from resonance.core.identifier import DirectoryEvidence, TrackEvidence, ConfidenceTier
+        from resonance.core.identifier import DirectoryEvidence, TrackEvidence, ConfidenceTier, extract_evidence
         from resonance.core.identity.signature import dir_id, dir_signature
         from datetime import datetime, timezone
 
@@ -161,21 +156,8 @@ def test_real_world_corpus_deterministic_workflow():
             scenario_name = batch.directory.name or f"dir_{batch.dir_id[:8]}"
             print(f"PROGRESS: Processing directory {i}/{total_batches}: {scenario_name}", flush=True)
 
-            # Create directory evidence from files
-            tracks = []
-            for file_path in sorted(batch.files):
-                # For real corpus, we don't have .meta.json files, so create minimal evidence
-                tracks.append(TrackEvidence(
-                    fingerprint_id=None,  # No fingerprints in real corpus
-                    duration_seconds=None,  # No duration data
-                    existing_tags={},  # No existing tags
-                ))
-
-            evidence = DirectoryEvidence(
-                tracks=tuple(tracks),
-                track_count=len(tracks),
-                total_duration_seconds=0,
-            )
+            # Build evidence from sidecar metadata (real durations and tags)
+            evidence = extract_evidence(sorted(batch.files))
 
             # Resolve directory using app's provider_client (with provider fusion)
             outcome = resolve_directory(
@@ -397,56 +379,57 @@ def test_real_world_corpus_deterministic_workflow():
         import shutil
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
-        store.close()
+        if store is not None:
+            store.close()
 
 
 @pytest.mark.skipif(
     not (Path(__file__).parent.parent / 'real_corpus' / 'metadata.json').exists(),
     reason="Real-world corpus metadata not found"
 )
-@pytest.mark.skipif(
-    os.environ.get("RUN_REAL_CORPUS") != "1",
-    reason="Opt-in: set RUN_REAL_CORPUS=1 to enable"
-)
-def test_real_world_corpus_faker_transparency():
-    """Test that filesystem faker is transparent to Resonance code.
+def test_real_world_corpus_sidecar_evidence():
+    """Test that build_library_from_metadata creates sidecars with real data.
 
-    Verifies that existing Resonance code works unchanged when
-    filesystem operations are served by the faker instead of
-    the real filesystem.
+    Verifies that the sidecar-based approach provides non-null duration
+    and tag evidence to the Resonance pipeline without FakerContext.
     """
     corpus_root = Path(__file__).parent.parent / 'real_corpus'
-    faker = create_faker_for_corpus(corpus_root)
 
-    with FakerContext(faker) as faker_ctx:
-        # Test that standard filesystem operations work through faker
-        import os.path
+    import json
+    metadata_file = corpus_root / 'metadata.json'
+    with open(metadata_file, 'r', encoding='utf-8') as f:
+        metadata = json.load(f)
 
-        # These should work identically whether faker is active or not
-        # (though they'll return different results based on metadata vs real fs)
+    temp_dir = Path(tempfile.mkdtemp())
+    library_root = temp_dir / "lib"
+    try:
+        build_library_from_metadata(metadata, library_root)
 
-        # Test exists
-        assert callable(os.path.exists)
-        result = os.path.exists("nonexistent")
-        assert isinstance(result, bool)
+        # Pick a known audio file and check its sidecar
+        first_audio = next(f for f in metadata['files'] if f.get('is_audio'))
+        stub_path = library_root / first_audio['path']
+        assert stub_path.exists(), "Stub file should exist"
 
-        # Test isfile/isdir
-        assert callable(os.path.isfile)
-        assert callable(os.path.isdir)
+        sidecar = stub_path.with_suffix(stub_path.suffix + ".meta.json")
+        assert sidecar.exists(), "Suffix-based sidecar should exist"
 
-        # Test listdir (may work on current dir or specific dirs from metadata)
-        assert callable(os.listdir)
+        data = json.loads(sidecar.read_text())
+        assert "duration_seconds" in data, "Sidecar should have duration_seconds"
+        assert isinstance(data["duration_seconds"], int)
+        assert data["duration_seconds"] > 0
 
-        # Test getsize/getmtime (may fail on non-existent paths, but callable)
-        assert callable(os.path.getsize)
-        assert callable(os.path.getmtime)
+        assert "tags" in data, "Sidecar should have tags"
+        assert "duration" in data["tags"]
 
-        # Test stat
-        import os
-        assert callable(os.stat)
-
-        # Verify faker context is working
-        assert faker_ctx is faker
+        # Verify extract_evidence picks up the data
+        from resonance.core.identifier import extract_evidence
+        evidence = extract_evidence([stub_path])
+        assert evidence.track_count == 1
+        assert evidence.tracks[0].duration_seconds is not None
+        assert evidence.total_duration_seconds > 0
+    finally:
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.mark.skipif(

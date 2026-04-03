@@ -77,8 +77,8 @@ def run_resolve(
         )
         return exit_code_for_exception(exc)
 
-    # Create provider client if cache_db is provided
-    if hasattr(args, 'cache_db') and args.cache_db:
+    # Create provider client if not already provided
+    if provider_client is None and hasattr(args, 'cache_db') and args.cache_db:
         from resonance.app import ResonanceApp
         # Create app in offline mode if requested, otherwise use env credentials
         offline = getattr(args, 'offline', False)
@@ -92,16 +92,9 @@ def run_resolve(
 
         if provider_client is None:
             if offline:
-                # In offline mode, missing providers is expected
                 raise ValidationError("No cached provider data available. Run with real credentials first.")
             else:
-                # In real mode, missing providers is a hard failure
                 raise ValidationError("Provider credentials required for real workflow. Set ACOUSTID_API_KEY and DISCOGS_TOKEN.")
-    else:
-        raise ValidationError("cache_db is required for resolve command")
-
-    # Provider client is guaranteed to be non-None here
-    assert provider_client is not None
 
     # Get directories that need resolution
     to_process = store.list_by_state(DirectoryState.NEW)

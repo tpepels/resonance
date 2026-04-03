@@ -158,14 +158,55 @@ def run_prompt_uncertain(
 
         # Handle recording/replay modes
         if replay_data is not None:
-            # REPLAY MODE: Use recorded decision
+            # REPLAY MODE: Use recorded decision, apply directly
             prompt_fingerprint = compute_prompt_fingerprint(record.dir_id, candidates, result.reasons)
             recorded_decision = replay_data.find_decision(record.dir_id, prompt_fingerprint)
-            response = recorded_decision["chosen_option"]
-            output_sink(f"REPLAY: Using recorded choice '{response}'")
-        else:
-            # INTERACTIVE MODE: Get user input
-            response = input_provider("Choice: ").strip().lower()
+            chosen = recorded_decision["chosen_option"]
+            output_sink(f"REPLAY: Using recorded choice '{chosen}'")
+
+            if chosen == "jail":
+                store.set_state(record.dir_id, DirectoryState.JAILED)
+            elif chosen == "skip":
+                pass
+            elif chosen.startswith("choice_"):
+                choice_num = int(chosen.split("_", 1)[1])
+                if 1 <= choice_num <= len(candidates):
+                    selected = candidates[choice_num - 1].release
+                    store.set_state(
+                        record.dir_id,
+                        DirectoryState.RESOLVED_USER,
+                        pinned_provider=selected.provider,
+                        pinned_release_id=selected.release_id,
+                    )
+                else:
+                    raise ValidationError(
+                        f"Replay choice_num {choice_num} out of range "
+                        f"(1..{len(candidates)}) for {record.dir_id}"
+                    )
+            elif chosen.startswith("mb:"):
+                release_id = chosen[3:]
+                store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_USER,
+                    pinned_provider="musicbrainz",
+                    pinned_release_id=release_id,
+                )
+            elif chosen.startswith("dg:"):
+                release_id = chosen[3:]
+                store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_USER,
+                    pinned_provider="discogs",
+                    pinned_release_id=release_id,
+                )
+            else:
+                raise ValidationError(
+                    f"Unknown replay chosen_option '{chosen}' for {record.dir_id}"
+                )
+            continue
+
+        # INTERACTIVE MODE: Get user input
+        response = input_provider("Choice: ").strip().lower()
 
         if not response:
             if replay_recorder:
@@ -447,6 +488,7 @@ def run_prompt_record(args: Namespace, *, store, provider_client=None,
         return extract_evidence(audio_files)
 
     # Run interactive prompt with recording
+    save_failed = False
     try:
         run_prompt_uncertain(
             store=store,
@@ -470,8 +512,10 @@ def run_prompt_record(args: Namespace, *, store, provider_client=None,
             output_sink(f"Failed to save replay file: {exc}")
             if temp_file.exists():
                 temp_file.unlink()
-            return 1
+            save_failed = True
 
+    if save_failed:
+        return 1
     return 0
 
 

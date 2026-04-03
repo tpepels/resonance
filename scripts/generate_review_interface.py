@@ -142,6 +142,13 @@ def build_directory_details(bundle: Dict[str, Any], dir_path: str) -> Dict[str, 
         "state_info": state_info,
         "tags_info": tags_info,
         "decisions": decisions.get(dir_path, {}),
+        "decision": dir_info.get("decision", {
+            "confidence_tier": None,
+            "candidates": [],
+            "reasoning": None,
+            "resolution_state": None,
+            "resolution_source": None,
+        }),
         "tracks": sorted(tracks, key=lambda t: t["filename"]),
         "summary": {
             "audio_files": dir_info["audio_files"],
@@ -444,6 +451,44 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             font-style: italic;
             padding: 20px;
         }}
+
+        /* Decision panel */
+        .confidence-badge {{
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .confidence-certain {{ background: #d4edda; color: #155724; }}
+        .confidence-probable {{ background: #fff3cd; color: #856404; }}
+        .confidence-unsure {{ background: #f8d7da; color: #721c24; }}
+        .confidence-none {{ background: #e9ecef; color: #495057; }}
+        .candidate-card {{
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            font-size: 0.88em;
+        }}
+        .candidate-card .provider-label {{
+            font-size: 0.75em;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+        }}
+        .reasoning-list {{
+            margin: 0; padding-left: 18px;
+            font-size: 0.9em; color: #555;
+        }}
+        .resolution-row {{
+            display: flex; gap: 12px; font-size: 0.9em; margin-bottom: 4px;
+        }}
+        .resolution-row .label {{ color: #666; min-width: 90px; }}
+        .resolution-row .value {{ font-weight: 500; }}
 
         /* Loading and error states */
         .loading {{ text-align: center; padding: 20px; color: #666; }}
@@ -801,44 +846,46 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             const header = document.getElementById('detailHeader');
             const container = document.getElementById('detailContent');
 
-            if (!currentTrack) {{
+            if (!currentDirectory) {{
                 header.textContent = 'Detail Inspector';
-                container.innerHTML = '<div class="empty-state">Select a track to view details</div>';
+                container.innerHTML = '<div class="empty-state">Select a directory to view details</div>';
                 return;
             }}
 
-            header.textContent = `Track Details: ${{currentTrack.filename}}`;
+            // Always show directory-level Decision section
+            header.textContent = currentTrack
+                ? `Track Details: ${{currentTrack.filename}}`
+                : `Directory: ${{currentDirectory.path.split('/').pop()}}`;
 
-            let html = `<div class="detail-section">
-                <h4>Original Path</h4>
-                <div class="detail-path">${{currentTrack.path}}</div>
-            </div>`;
+            let html = '';
 
-            if (currentTrack.expected_tags && Object.keys(currentTrack.expected_tags).length > 0) {{
+            // ── Decision Section (always shown for directories) ──
+            const decision = currentDirectory.decision || {{}};
+            html += renderDecisionSection(decision);
+
+            // ── Track details (when a track is selected) ──
+            if (currentTrack) {{
                 html += `<div class="detail-section">
-                    <h4>Expected Tags</h4>
-                    <table class="tag-table">
-                        <thead>
-                            <tr>
-                                <th>Key</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-
-                for (const [key, value] of Object.entries(currentTrack.expected_tags)) {{
-                    html += `<tr>
-                        <td class="tag-key">${{key}}</td>
-                        <td class="tag-value">${{value}}</td>
-                    </tr>`;
-                }}
-
-                html += `</tbody></table></div>`;
-            }} else {{
-                html += `<div class="detail-section">
-                    <h4>Expected Tags</h4>
-                    <div class="empty-state">No expected tags available</div>
+                    <h4>Original Path</h4>
+                    <div class="detail-path">${{currentTrack.path}}</div>
                 </div>`;
+
+                if (currentTrack.expected_tags && Object.keys(currentTrack.expected_tags).length > 0) {{
+                    html += `<div class="detail-section">
+                        <h4>Expected Tags</h4>
+                        <table class="tag-table">
+                            <thead><tr><th>Key</th><th>Value</th></tr></thead>
+                            <tbody>`;
+                    for (const [key, value] of Object.entries(currentTrack.expected_tags)) {{
+                        html += `<tr><td class="tag-key">${{key}}</td><td class="tag-value">${{value}}</td></tr>`;
+                    }}
+                    html += `</tbody></table></div>`;
+                }} else {{
+                    html += `<div class="detail-section">
+                        <h4>Expected Tags</h4>
+                        <div class="empty-state">No expected tags available</div>
+                    </div>`;
+                }}
             }}
 
             html += `<div class="detail-section">
@@ -849,6 +896,68 @@ def generate_html(bundle: Dict[str, Any]) -> str:
             </div>`;
 
             container.innerHTML = html;
+        }}
+
+        function renderDecisionSection(decision) {{
+            const tier = decision.confidence_tier;
+            const candidates = decision.candidates || [];
+            const reasoning = decision.reasoning;
+            const resState = decision.resolution_state;
+            const resSource = decision.resolution_source;
+            const hasData = tier || candidates.length > 0 || resState;
+
+            let html = '<div class="detail-section"><h4>Decision</h4>';
+
+            if (!hasData) {{
+                html += '<div class="empty-state">Not yet processed</div></div>';
+                return html;
+            }}
+
+            // Confidence tier badge
+            if (tier) {{
+                const badgeClass = 'confidence-' + tier.toLowerCase();
+                html += `<div style="margin-bottom:10px"><span class="confidence-badge ${{badgeClass}}">${{tier}}</span></div>`;
+            }}
+
+            // Candidates
+            if (candidates.length > 0) {{
+                html += '<div style="margin-bottom:10px">';
+                candidates.forEach(c => {{
+                    const title = c.title || '(title pending)';
+                    const artist = c.artist || '(artist pending)';
+                    const score = c.score != null ? ` — score ${{c.score.toFixed(2)}}` : '';
+                    html += `<div class="candidate-card">
+                        <div class="provider-label">${{c.provider}}</div>
+                        <div>${{artist}} — ${{title}}${{score}}</div>
+                        <div style="font-family:monospace;font-size:0.8em;color:#888">${{c.release_id}}</div>
+                    </div>`;
+                }});
+                html += '</div>';
+            }} else {{
+                html += '<div style="color:#999;font-size:0.9em;margin-bottom:10px">No candidates</div>';
+            }}
+
+            // Resolution state + source
+            if (resState) {{
+                html += '<div style="margin-bottom:10px">';
+                html += `<div class="resolution-row"><span class="label">State:</span><span class="value">${{resState}}</span></div>`;
+                if (resSource) {{
+                    html += `<div class="resolution-row"><span class="label">Source:</span><span class="value">${{resSource}}</span></div>`;
+                }}
+                html += '</div>';
+            }}
+
+            // Reasoning
+            if (reasoning && reasoning.length > 0) {{
+                html += '<ul class="reasoning-list">';
+                reasoning.forEach(r => {{ html += `<li>${{r}}</li>`; }});
+                html += '</ul>';
+            }} else {{
+                html += '<div style="color:#999;font-size:0.9em">No reasoning recorded</div>';
+            }}
+
+            html += '</div>';
+            return html;
         }}
 
         // Utility functions

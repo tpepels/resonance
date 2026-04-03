@@ -83,6 +83,9 @@ class CachedProviderClient(ProviderClient):
         self._provider = provider
         self._cache = cache
         self._config = config
+        # Initialize call counters for this provider name
+        if config.provider_name not in PROVIDER_CALL_COUNTS:
+            PROVIDER_CALL_COUNTS[config.provider_name] = {"http_calls": 0, "cache_hits": 0}
 
     @property
     def capabilities(self):

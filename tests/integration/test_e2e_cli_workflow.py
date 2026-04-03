@@ -154,7 +154,7 @@ def test_cli_workflow_scan_resolve_prompt(tmp_path: Path) -> None:
         ]
         provider = StubProviderClient(releases)
 
-        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False)
+        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False, cache_db=None)
         resolve_output: list[str] = []
         resolve_exit = run_resolve(
             resolve_args, store=store, provider_client=provider, output_sink=resolve_output.append
@@ -174,7 +174,7 @@ def test_cli_workflow_scan_resolve_prompt(tmp_path: Path) -> None:
 
         # Step 3: If there are queued prompts, test the prompt command
         if queued_prompt:
-            prompt_args = Namespace(state_db=state_db_path)
+            prompt_args = Namespace(state_db=state_db_path, cache_db=None)
             prompt_output: list[str] = []
 
             # Mock user selecting the first candidate for all prompts
@@ -244,7 +244,7 @@ def test_cli_idempotency_rerun_is_noop(tmp_path: Path) -> None:
         )
         provider = StubProviderClient([release])
 
-        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False)
+        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False, cache_db=None)
         run_resolve(
             resolve_args, store=store, provider_client=provider, output_sink=lambda x: None
         )
@@ -329,7 +329,7 @@ def test_cli_json_mode_all_commands(tmp_path: Path) -> None:
         )
         provider = StubProviderClient([release])
 
-        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=True)
+        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=True, cache_db=None)
         resolve_output: list[str] = []
         run_resolve(
             resolve_args, store=store, provider_client=provider, output_sink=resolve_output.append

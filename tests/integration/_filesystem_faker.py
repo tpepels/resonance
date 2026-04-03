@@ -1,5 +1,10 @@
 """Filesystem faker for real-world corpus testing.
 
+TEST-ONLY INFRASTRUCTURE — This module must NOT be imported by production
+code or scripts that ``make corpus-decide`` invokes.  It exists solely for
+unit/integration tests that need to exercise Resonance against a virtual
+filesystem backed by extracted metadata.
+
 Provides filesystem operations using extracted metadata instead of real disk access.
 Transparent to existing Resonance code - implements the same APIs.
 """

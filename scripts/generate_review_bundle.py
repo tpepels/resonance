@@ -87,6 +87,65 @@ def extract_directory_tree(metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
     
     return directories
 
+def _infer_confidence_tier(state_info: Dict[str, Any]) -> str | None:
+    """Infer confidence tier from state info."""
+    if not state_info:
+        return None
+    state = state_info.get('state')
+    if state == 'APPLIED':
+        return 'CERTAIN'
+    if state == 'JAILED':
+        return 'UNSURE'
+    if state == 'PENDING':
+        return 'PROBABLE'
+    return None
+
+
+def _build_candidates(state_info: Dict[str, Any]) -> list:
+    """Build candidate list from available state info."""
+    if not state_info or not state_info.get('pinned_release_id'):
+        return []
+    return [{
+        'release_id': state_info['pinned_release_id'],
+        'provider': state_info.get('pinned_provider', 'unknown'),
+        'artist': None,
+        'title': None,
+        'score': None,
+        'tier': _infer_confidence_tier(state_info),
+    }]
+
+
+def _build_reasoning(state_info: Dict[str, Any]) -> list | None:
+    """Build reasoning text from state info."""
+    if not state_info:
+        return None
+    state = state_info.get('state')
+    provider = state_info.get('pinned_provider')
+    release_id = state_info.get('pinned_release_id')
+    reasons = []
+    if state == 'APPLIED' and provider:
+        reasons.append(f'Resolved via {provider} (release: {release_id})')
+    elif state == 'JAILED':
+        reasons.append('Jailed: insufficient confidence for automation')
+    elif state == 'PENDING':
+        reasons.append('Queued for user resolution')
+    return reasons if reasons else None
+
+
+def _infer_resolution_source(
+    state_info: Dict[str, Any], decision_actions: Dict[str, str]
+) -> str | None:
+    """Infer who made the resolution decision."""
+    if not state_info:
+        return None
+    state = state_info.get('state')
+    if state == 'APPLIED':
+        return 'AUTO'
+    if state == 'JAILED':
+        return 'AUTO'
+    return None
+
+
 def create_review_bundle() -> Dict[str, Any]:
     """Create the complete review bundle."""
     
@@ -114,7 +173,21 @@ def create_review_bundle() -> Dict[str, Any]:
     
     # Extract directory tree
     directories = extract_directory_tree(metadata)
-    
+
+    # Enrich each directory with decision anatomy (Sprint 03)
+    states = expected_state.get('states', {})
+    decision_actions = decisions.get('decisions', {})
+    for dir_entry in directories:
+        dir_path = dir_entry['dir_path']
+        state_info = states.get(dir_path, {})
+        dir_entry['decision'] = {
+            'confidence_tier': _infer_confidence_tier(state_info),
+            'candidates': _build_candidates(state_info),
+            'reasoning': _build_reasoning(state_info),
+            'resolution_state': state_info.get('state', None),
+            'resolution_source': _infer_resolution_source(state_info, decision_actions),
+        }
+
     # Create comprehensive track list for review
     tracks = []
     for file_info in metadata.get('files', []):

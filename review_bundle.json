@@ -1,6 +1,6 @@
 {
   "_format": "corpus_review_bundle_v1",
-  "_generated_at": "2025-12-24T11:09:29.582253+00:00",
+  "_generated_at": "2026-04-03T14:43:51.244518+00:00",
   "_generation_info": {
     "generator": "scripts/generate_review_bundle.py",
     "purpose": "Human review interface for V4 corpus validation",
@@ -133,7 +133,25 @@
       "audio_files": 8,
       "total_size": 304094718,
       "has_cover_art": true,
-      "has_extras": true
+      "has_extras": true,
+      "decision": {
+        "confidence_tier": "CERTAIN",
+        "candidates": [
+          {
+            "release_id": "sample-release-1",
+            "provider": "musicbrainz",
+            "artist": null,
+            "title": null,
+            "score": null,
+            "tier": "CERTAIN"
+          }
+        ],
+        "reasoning": [
+          "Resolved via musicbrainz (release: sample-release-1)"
+        ],
+        "resolution_state": "APPLIED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Abel Selaocoe/Hymns of Bantu",
@@ -263,7 +281,25 @@
       "audio_files": 12,
       "total_size": 928344557,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "CERTAIN",
+        "candidates": [
+          {
+            "release_id": "sample-release-2",
+            "provider": "musicbrainz",
+            "artist": null,
+            "title": null,
+            "score": null,
+            "tier": "CERTAIN"
+          }
+        ],
+        "reasoning": [
+          "Resolved via musicbrainz (release: sample-release-2)"
+        ],
+        "resolution_state": "APPLIED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Africa 70/Afrodisiac",
@@ -313,7 +349,25 @@
       "audio_files": 4,
       "total_size": 284484163,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "CERTAIN",
+        "candidates": [
+          {
+            "release_id": "sample-release-3",
+            "provider": "discogs",
+            "artist": null,
+            "title": null,
+            "score": null,
+            "tier": "CERTAIN"
+          }
+        ],
+        "reasoning": [
+          "Resolved via discogs (release: sample-release-3)"
+        ],
+        "resolution_state": "APPLIED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Agnes Obel/Aventine",
@@ -533,7 +587,16 @@
       "audio_files": 21,
       "total_size": 444069688,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "UNSURE",
+        "candidates": [],
+        "reasoning": [
+          "Jailed: insufficient confidence for automation"
+        ],
+        "resolution_state": "JAILED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Ahmad Jamal/Midnite Jazz & Blues: Waltz for Debby",
@@ -603,7 +666,16 @@
       "audio_files": 6,
       "total_size": 210044943,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Alanis Morissette/The Best Collection",
@@ -623,7 +695,16 @@
       "audio_files": 1,
       "total_size": 33363963,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "UNSURE",
+        "candidates": [],
+        "reasoning": [
+          "Jailed: insufficient confidence for automation"
+        ],
+        "resolution_state": "JAILED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Alanis Morissette/The Collection",
@@ -803,7 +884,16 @@
       "audio_files": 17,
       "total_size": 508139076,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "UNSURE",
+        "candidates": [],
+        "reasoning": [
+          "Jailed: insufficient confidence for automation"
+        ],
+        "resolution_state": "JAILED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "Alice Sara Ott/Echoes of Life",
@@ -1123,7 +1213,16 @@
       "audio_files": 31,
       "total_size": 158876211,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "UNSURE",
+        "candidates": [],
+        "reasoning": [
+          "Jailed: insufficient confidence for automation"
+        ],
+        "resolution_state": "JAILED",
+        "resolution_source": "AUTO"
+      }
     },
     {
       "dir_path": "alt‐J/An Awesome Wave",
@@ -1253,7 +1352,16 @@
       "audio_files": 12,
       "total_size": 804425426,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "alt‐J/Reduxer",
@@ -1373,7 +1481,16 @@
       "audio_files": 11,
       "total_size": 260493463,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "alt‐J/This Is All Yours",
@@ -1523,7 +1640,16 @@
       "audio_files": 14,
       "total_size": 313007460,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Anna Netrebko/Opera Arias",
@@ -1623,7 +1749,16 @@
       "audio_files": 9,
       "total_size": 270136348,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Anne Sofie von Otter - Musica Antiqua Köln - Reinhard Goebel/Lamenti",
@@ -1643,7 +1778,16 @@
       "audio_files": 1,
       "total_size": 5052187,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Anne Sofie von Otter/Lamenti",
@@ -1713,7 +1857,16 @@
       "audio_files": 6,
       "total_size": 198538112,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Antonio Vivaldi/Concerti Alla Rustica",
@@ -1893,7 +2046,16 @@
       "audio_files": 17,
       "total_size": 284261436,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Antonio Vivaldi/Concertos for Violin, Strings and Continuo",
@@ -2053,7 +2215,16 @@
       "audio_files": 15,
       "total_size": 285058506,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Antony and the Johnsons/For Today I Am a Boy",
@@ -2073,7 +2244,16 @@
       "audio_files": 1,
       "total_size": 16410839,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Antony and the Johnsons/I Am a Bird Now",
@@ -2173,7 +2353,16 @@
       "audio_files": 9,
       "total_size": 172211651,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Antonín Dvořák/Symphonien Nos. 8 & 9 Aus der Neuen Welt",
@@ -2263,7 +2452,16 @@
       "audio_files": 8,
       "total_size": 366512008,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Aretha Franklin/Original Album Series",
@@ -2783,7 +2981,16 @@
       "audio_files": 51,
       "total_size": 1096450653,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": "PROBABLE",
+        "candidates": [],
+        "reasoning": [
+          "Queued for user resolution"
+        ],
+        "resolution_state": "PENDING",
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Arjan Dhillon/Jalwa",
@@ -2803,7 +3010,14 @@
       "audio_files": 1,
       "total_size": 162744074,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Arnett Cobb/Show Time",
@@ -2903,7 +3117,14 @@
       "audio_files": 9,
       "total_size": 504162152,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Art Blakey & The Jazz Messengers/Album of the Year",
@@ -2993,7 +3214,14 @@
       "audio_files": 8,
       "total_size": 376220949,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Art Blakey & The Jazz Messengers/Moanin'",
@@ -3083,7 +3311,14 @@
       "audio_files": 8,
       "total_size": 355202297,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Art Blakey and The Jazz Messengers/Art Blakey and The Jazz Messengers",
@@ -3133,7 +3368,14 @@
       "audio_files": 4,
       "total_size": 603120397,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Art Blakey and The Jazz Messengers/Moanin’",
@@ -3203,7 +3445,14 @@
       "audio_files": 6,
       "total_size": 266604722,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Arturo Benedetti Michelangeli/Klavier Kaiser: 14 groe Pianisten (set 09: Arturo Benedetti Michelangeli)",
@@ -3223,7 +3472,14 @@
       "audio_files": 1,
       "total_size": 101676048,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bach/Six Suites for Unaccompanied Cello",
@@ -3413,7 +3669,14 @@
       "audio_files": 18,
       "total_size": 273889917,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bach/Solo",
@@ -3603,7 +3866,14 @@
       "audio_files": 18,
       "total_size": 1600270265,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bach/The Art of Fugue",
@@ -3813,7 +4083,14 @@
       "audio_files": 20,
       "total_size": 353691223,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bach/Violin Concertos",
@@ -3943,7 +4220,14 @@
       "audio_files": 12,
       "total_size": 315573889,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Complete String Quartets",
@@ -3963,7 +4247,14 @@
       "audio_files": 1,
       "total_size": 319684921,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Historic Russian Archives: Sviatoslav Richter in Concert",
@@ -4073,7 +4364,14 @@
       "audio_files": 10,
       "total_size": 386135311,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Klavierkonzerte Nos. 4 & 5",
@@ -4143,7 +4441,14 @@
       "audio_files": 6,
       "total_size": 316244307,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Piano Sonatas: Moonlight, Appassionata, Waldstein",
@@ -4243,7 +4548,14 @@
       "audio_files": 9,
       "total_size": 195729318,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Sonaten: Waldstein - Les Adieux - Appassionata",
@@ -4353,7 +4665,14 @@
       "audio_files": 10,
       "total_size": 222635707,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Sviatoslav Richter, Vol. 6",
@@ -4463,7 +4782,14 @@
       "audio_files": 10,
       "total_size": 339138512,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Symphonie no. 9 - Ouverture Coriolan",
@@ -4533,7 +4859,14 @@
       "audio_files": 6,
       "total_size": 390461045,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Beethoven/Symphonien nos. 5 & 7",
@@ -4623,7 +4956,14 @@
       "audio_files": 8,
       "total_size": 341854655,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bertrand Chamayou Ravel/Fragments",
@@ -4653,7 +4993,14 @@
       "audio_files": 2,
       "total_size": 461832941,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans Trio/Sunday at the Village Vanguard",
@@ -4723,7 +5070,14 @@
       "audio_files": 6,
       "total_size": 1846609681,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans Trio/Sunday at the Village Vanguard [Keepnews Collection]",
@@ -4833,7 +5187,14 @@
       "audio_files": 10,
       "total_size": 460099057,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans Trio/Waltz for Debby",
@@ -4943,7 +5304,14 @@
       "audio_files": 10,
       "total_size": 2432062826,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans/Blue in Green, The Best of the Early Years 1955 - 1960",
@@ -5763,7 +6131,14 @@
       "audio_files": 81,
       "total_size": 2201834935,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans/Haunted Heart: The Legendary Riverside Studio Recordings",
@@ -6203,7 +6578,14 @@
       "audio_files": 43,
       "total_size": 8948010675,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans/The Definitive Rare Albums Collection 1960-1966",
@@ -6793,7 +7175,14 @@
       "audio_files": 58,
       "total_size": 1686619036,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bill Evans/Undercurrent",
@@ -6903,7 +7292,14 @@
       "audio_files": 10,
       "total_size": 212967416,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Biosphere - Compilation 1991-2004 (2012) FLAC",
@@ -7071,7 +7467,14 @@
       "audio_files": 15,
       "total_size": 427155095,
       "has_cover_art": false,
-      "has_extras": true
+      "has_extras": true,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Biosphere - Compilation 1991-2004 (2012) FLAC/Biosphere - Compilation",
@@ -7229,7 +7632,14 @@
       "audio_files": 14,
       "total_size": 184504418,
       "has_cover_art": false,
-      "has_extras": true
+      "has_extras": true,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Biosphere/Dropsonde",
@@ -7349,7 +7759,14 @@
       "audio_files": 11,
       "total_size": 348462461,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brahms/Centenary Collection 1954: Violin Concerto - Navarra - Etudes-caprices",
@@ -7399,7 +7816,14 @@
       "audio_files": 4,
       "total_size": 56568204,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brahms/Works for Solo Piano",
@@ -8029,7 +8453,14 @@
       "audio_files": 62,
       "total_size": 239015370,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Ambient 1: Music for Airports",
@@ -8079,7 +8510,14 @@
       "audio_files": 4,
       "total_size": 207134013,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Ambient 4: On Land",
@@ -8169,7 +8607,14 @@
       "audio_files": 8,
       "total_size": 185625869,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Another Day on Earth",
@@ -8289,7 +8734,14 @@
       "audio_files": 11,
       "total_size": 269325751,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Apollo: Atmospheres & Soundtracks",
@@ -8419,7 +8871,14 @@
       "audio_files": 12,
       "total_size": 187561451,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Before and After Science",
@@ -8529,7 +8988,14 @@
       "audio_files": 10,
       "total_size": 237977596,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Compact Forest Proposal",
@@ -8589,7 +9055,14 @@
       "audio_files": 5,
       "total_size": 199862282,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Curiosities, Volume II",
@@ -8719,7 +9192,14 @@
       "audio_files": 12,
       "total_size": 258024230,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Discreet Music",
@@ -8769,7 +9249,14 @@
       "audio_files": 4,
       "total_size": 270009642,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Drawn From Life",
@@ -8889,7 +9376,14 @@
       "audio_files": 11,
       "total_size": 379073525,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Film Music 19762020",
@@ -9069,7 +9563,14 @@
       "audio_files": 17,
       "total_size": 322578975,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/I dormienti",
@@ -9089,7 +9590,14 @@
       "audio_files": 1,
       "total_size": 207619174,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/I: Instrumental",
@@ -9649,7 +10157,14 @@
       "audio_files": 55,
       "total_size": 1118117361,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/II: Vocal",
@@ -10189,7 +10704,14 @@
       "audio_files": 53,
       "total_size": 1258260745,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/January 07003: Bell Studies for the Clock of the Long Now",
@@ -10349,7 +10871,14 @@
       "audio_files": 15,
       "total_size": 187927867,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Kite Stories",
@@ -10389,7 +10918,14 @@
       "audio_files": 3,
       "total_size": 100591878,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Lateral",
@@ -10479,7 +11015,14 @@
       "audio_files": 8,
       "total_size": 564543347,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Long Now",
@@ -10539,7 +11082,14 @@
       "audio_files": 5,
       "total_size": 77053510,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Luminal",
@@ -10659,7 +11209,14 @@
       "audio_files": 11,
       "total_size": 845876838,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/LUX",
@@ -10709,7 +11266,14 @@
       "audio_files": 4,
       "total_size": 226644778,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Making Space",
@@ -10809,7 +11373,14 @@
       "audio_files": 9,
       "total_size": 198541657,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/More Music for Films",
@@ -11029,7 +11600,14 @@
       "audio_files": 21,
       "total_size": 199420632,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Music for Civic Recovery Centre",
@@ -11049,7 +11627,14 @@
       "audio_files": 1,
       "total_size": 174723123,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Music for Films",
@@ -11239,7 +11824,14 @@
       "audio_files": 18,
       "total_size": 153307798,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Music for Installations",
@@ -11379,7 +11971,14 @@
       "audio_files": 13,
       "total_size": 988740622,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Music for White Cube: London, 1997",
@@ -11479,7 +12078,14 @@
       "audio_files": 9,
       "total_size": 309073086,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/My Life In The Bush Of Ghosts",
@@ -11679,7 +12285,14 @@
       "audio_files": 19,
       "total_size": 404042827,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Nerve Net",
@@ -11829,7 +12442,14 @@
       "audio_files": 14,
       "total_size": 411132143,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Reflection",
@@ -11849,7 +12469,14 @@
       "audio_files": 1,
       "total_size": 187180849,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Small Craft on a Milk Sea",
@@ -12019,7 +12646,14 @@
       "audio_files": 16,
       "total_size": 287118467,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Taking Tiger Mountain (by Strategy)",
@@ -12129,7 +12763,14 @@
       "audio_files": 10,
       "total_size": 324729725,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Textures",
@@ -12349,7 +12990,14 @@
       "audio_files": 21,
       "total_size": 318821954,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/The Drop",
@@ -12549,7 +13197,14 @@
       "audio_files": 19,
       "total_size": 383325506,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/The Ship",
@@ -12609,7 +13264,14 @@
       "audio_files": 5,
       "total_size": 277270282,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/The Shutov Assembly",
@@ -12719,7 +13381,14 @@
       "audio_files": 10,
       "total_size": 249393329,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Brian Eno/Thursday Afternoon",
@@ -12739,7 +13408,14 @@
       "audio_files": 1,
       "total_size": 247961016,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bryn Terfel - Malcolm Martineau/The Vagabond",
@@ -12799,7 +13475,14 @@
       "audio_files": 5,
       "total_size": 27776409,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Bryn Terfel/The Vagabond",
@@ -13029,7 +13712,14 @@
       "audio_files": 22,
       "total_size": 197620939,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Buena Vista Social Club/Buena Vista Social Club",
@@ -13179,7 +13869,14 @@
       "audio_files": 14,
       "total_size": 377615517,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Buena Vista Social Club/Lost and Found",
@@ -13329,7 +14026,14 @@
       "audio_files": 14,
       "total_size": 300892383,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Carl Friedrich Abel/Solo",
@@ -13349,7 +14053,14 @@
       "audio_files": 1,
       "total_size": 60044154,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Carl Orff/Carmina Burana",
@@ -13509,7 +14220,14 @@
       "audio_files": 15,
       "total_size": 204132163,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Cat Power Sings Dylan: The 1966 Royal Albert Hall Concert",
@@ -13669,7 +14387,14 @@
       "audio_files": 15,
       "total_size": 517201766,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Dear Sir",
@@ -13769,7 +14494,14 @@
       "audio_files": 9,
       "total_size": 176060421,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Jukebox",
@@ -13949,7 +14681,14 @@
       "audio_files": 17,
       "total_size": 386582813,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Moon Pix",
@@ -14069,7 +14808,14 @@
       "audio_files": 11,
       "total_size": 239762481,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Myra Lee",
@@ -14189,7 +14935,14 @@
       "audio_files": 11,
       "total_size": 229578339,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Speaking for Trees",
@@ -14209,7 +14962,14 @@
       "audio_files": 1,
       "total_size": 87308127,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/Sun",
@@ -14329,7 +15089,14 @@
       "audio_files": 11,
       "total_size": 343184163,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/The Covers Record",
@@ -14599,7 +15366,14 @@
       "audio_files": 26,
       "total_size": 624272010,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/The Greatest",
@@ -14749,7 +15523,14 @@
       "audio_files": 14,
       "total_size": 277705740,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/What Would the Community Think",
@@ -14879,7 +15660,14 @@
       "audio_files": 12,
       "total_size": 250515520,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cat Power/You Are Free",
@@ -15029,7 +15817,14 @@
       "audio_files": 14,
       "total_size": 289780524,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cello/Cello Suite Classical Relaxation Music  Ambient & Classics Soothing Cello Music with Nature",
@@ -15049,7 +15844,14 @@
       "audio_files": 1,
       "total_size": 327647013,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Bitter",
@@ -15079,7 +15881,14 @@
       "audio_files": 2,
       "total_size": 44652452,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/California",
@@ -15099,7 +15908,14 @@
       "audio_files": 1,
       "total_size": 18561125,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Chappell Roan: City Sessions (Amazon Music Live)",
@@ -15149,7 +15965,14 @@
       "audio_files": 4,
       "total_size": 122320179,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Good Luck, Babe!",
@@ -15179,7 +16002,14 @@
       "audio_files": 2,
       "total_size": 272409446,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/HOT TO GO!",
@@ -15199,7 +16029,14 @@
       "audio_files": 1,
       "total_size": 40311972,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Kaleidoscope",
@@ -15219,7 +16056,14 @@
       "audio_files": 1,
       "total_size": 22351197,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Love Me Anyway",
@@ -15239,7 +16083,14 @@
       "audio_files": 1,
       "total_size": 49000994,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/My Kink Is Karma",
@@ -15259,7 +16110,14 @@
       "audio_files": 1,
       "total_size": 27440145,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Naked in Manhattan",
@@ -15279,7 +16137,14 @@
       "audio_files": 1,
       "total_size": 25150367,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/Pink Pony Club",
@@ -15299,7 +16164,14 @@
       "audio_files": 1,
       "total_size": 28860381,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/School Nights",
@@ -15369,7 +16241,14 @@
       "audio_files": 6,
       "total_size": 216732022,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/The Giver",
@@ -15389,7 +16268,14 @@
       "audio_files": 1,
       "total_size": 47447375,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chappell Roan/The Rise and Fall of a Midwest Princess",
@@ -15549,7 +16435,14 @@
       "audio_files": 15,
       "total_size": 1039067068,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chet Baker/Chet Baker Sings",
@@ -15699,7 +16592,14 @@
       "audio_files": 14,
       "total_size": 395528233,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chet Baker/Sings Again",
@@ -15789,7 +16689,14 @@
       "audio_files": 8,
       "total_size": 237045468,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chet Baker/Sings and Plays for Lovers, Vol. 3",
@@ -15959,7 +16866,14 @@
       "audio_files": 16,
       "total_size": 763091683,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chopin/Nocturnes",
@@ -16079,7 +16993,14 @@
       "audio_files": 11,
       "total_size": 180751284,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Chopin/The Nocturnes",
@@ -16179,7 +17100,14 @@
       "audio_files": 9,
       "total_size": 138679603,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/Coda: Piano Works",
@@ -17129,7 +18057,14 @@
       "audio_files": 94,
       "total_size": 472947661,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/Images - Childrens Corner - Suite Bergamasque - Lisle joyeuse",
@@ -17309,7 +18244,14 @@
       "audio_files": 17,
       "total_size": 1141263175,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/Images 1 & 2 - Children's Corner",
@@ -17439,7 +18381,14 @@
       "audio_files": 12,
       "total_size": 171704166,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/Preludes, Vol. I - Images",
@@ -17629,7 +18578,14 @@
       "audio_files": 18,
       "total_size": 273699979,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/Richter plays Debussy",
@@ -17669,7 +18625,14 @@
       "audio_files": 3,
       "total_size": 42268864,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claude Debussy/The Complete Works for Piano",
@@ -17839,7 +18802,14 @@
       "audio_files": 16,
       "total_size": 176644832,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claudio Monteverdi/Lamenti",
@@ -17859,7 +18829,14 @@
       "audio_files": 1,
       "total_size": 38597929,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Claudio Monteverdi/Vespro della Beata Vergine",
@@ -18009,7 +18986,14 @@
       "audio_files": 14,
       "total_size": 420796103,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Cluster/Cluster & Eno",
@@ -18109,7 +19093,14 @@
       "audio_files": 9,
       "total_size": 167652443,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dave Brubeck/Dave Brubeck's Greatest Hits",
@@ -18229,7 +19220,14 @@
       "audio_files": 11,
       "total_size": 956361886,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "David Achenberg/Bleu Ebene",
@@ -18249,7 +19247,14 @@
       "audio_files": 1,
       "total_size": 384708357,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "David Byrne/Everything That Happens Will Happen Today",
@@ -18369,7 +19374,14 @@
       "audio_files": 11,
       "total_size": 330362043,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Debussy/The Complete Piano Works",
@@ -18989,7 +20001,14 @@
       "audio_files": 61,
       "total_size": 490554060,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dietrich Fischer-Dieskau - Gerald Moore/Winterreise",
@@ -19039,7 +20058,14 @@
       "audio_files": 4,
       "total_size": 24778094,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dizzy Gillespie Quintet/Oscar Peterson & Dizzy Gillespie",
@@ -19129,7 +20155,14 @@
       "audio_files": 8,
       "total_size": 1089395594,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dizzy Gillespie/Dizzy Gillespie and Stuff Smith",
@@ -19189,7 +20222,14 @@
       "audio_files": 5,
       "total_size": 862047889,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dizzy Gillespie/Have Trumpet, Will Excite!",
@@ -19339,7 +20379,14 @@
       "audio_files": 14,
       "total_size": 451482409,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dizzy Gillespie/Night In Tunisia",
@@ -19569,7 +20616,14 @@
       "audio_files": 22,
       "total_size": 263655796,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dizzy Gillespie/Sonny Side Up",
@@ -19619,7 +20673,14 @@
       "audio_files": 4,
       "total_size": 240707520,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dmitri Shostakovich/Shostakovich Discoveries: World Premiere Recordings & Rarities",
@@ -19819,7 +20880,14 @@
       "audio_files": 19,
       "total_size": 1246621205,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Domenico Scarlatti/Sonaten",
@@ -19979,7 +21047,14 @@
       "audio_files": 15,
       "total_size": 175329708,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Duke Ellington & His Orchestra/Ellington at Newport",
@@ -20089,7 +21164,14 @@
       "audio_files": 10,
       "total_size": 738905260,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Duke Ellington/Piano in the Foreground",
@@ -20279,7 +21361,14 @@
       "audio_files": 18,
       "total_size": 363544376,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Dvořák/Dvorak: Cellokonzert - Tschaikowsky: RokokoVariationen",
@@ -20399,7 +21488,14 @@
       "audio_files": 11,
       "total_size": 269182774,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ella Fitzgerald/Ella Fitzgerald und Billie Holiday",
@@ -20539,7 +21635,14 @@
       "audio_files": 13,
       "total_size": 2421775479,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ella Fitzgerald/Jazz Legends: Ella & Louis",
@@ -20849,7 +21952,14 @@
       "audio_files": 30,
       "total_size": 636670689,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Emerson String Quartet/The Art of Fugue",
@@ -20879,7 +21989,14 @@
       "audio_files": 2,
       "total_size": 16560401,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/After the Heat",
@@ -20989,7 +22106,14 @@
       "audio_files": 10,
       "total_size": 156074984,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Another Green World",
@@ -21079,7 +22203,14 @@
       "audio_files": 8,
       "total_size": 118838292,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Begegnungen",
@@ -21159,7 +22290,14 @@
       "audio_files": 7,
       "total_size": 193843199,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Begegnungen II",
@@ -21249,7 +22387,14 @@
       "audio_files": 8,
       "total_size": 226963993,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Here Come the Warm Jets",
@@ -21349,7 +22494,14 @@
       "audio_files": 9,
       "total_size": 261380861,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/High Life",
@@ -21419,7 +22571,14 @@
       "audio_files": 6,
       "total_size": 280762625,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Someday World",
@@ -21519,7 +22678,14 @@
       "audio_files": 9,
       "total_size": 545003232,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Spinner",
@@ -21629,7 +22795,14 @@
       "audio_files": 10,
       "total_size": 267608989,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eno/Wrong Way Up",
@@ -21759,7 +22932,14 @@
       "audio_files": 12,
       "total_size": 297331777,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eric Clapton/Unplugged",
@@ -21909,7 +23089,14 @@
       "audio_files": 14,
       "total_size": 425892642,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Eric Clapton/Unplugged (deluxe + DVD)",
@@ -21979,7 +23166,14 @@
       "audio_files": 6,
       "total_size": 221727737,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 1",
@@ -22159,7 +23353,14 @@
       "audio_files": 17,
       "total_size": 237981281,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 10",
@@ -22229,7 +23430,14 @@
       "audio_files": 6,
       "total_size": 245669137,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 2",
@@ -22359,7 +23567,14 @@
       "audio_files": 12,
       "total_size": 228260244,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 3",
@@ -22519,7 +23734,14 @@
       "audio_files": 15,
       "total_size": 235618636,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 4",
@@ -22839,7 +24061,14 @@
       "audio_files": 31,
       "total_size": 270863669,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 5",
@@ -23379,7 +24608,14 @@
       "audio_files": 53,
       "total_size": 262828939,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 6",
@@ -23929,7 +25165,14 @@
       "audio_files": 54,
       "total_size": 241272381,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 7",
@@ -24199,7 +25442,14 @@
       "audio_files": 26,
       "total_size": 212765848,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 8",
@@ -24699,7 +25949,14 @@
       "audio_files": 49,
       "total_size": 218473452,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Erik Satie/Complete Piano Works, Volume 9",
@@ -25029,7 +26286,14 @@
       "audio_files": 32,
       "total_size": 282832291,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fela Kuti/The Best of Fela Kuti: The Black President",
@@ -25169,7 +26433,14 @@
       "audio_files": 13,
       "total_size": 1079504228,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fela Ransome‐Kuti/Fela Fela Fela",
@@ -25279,7 +26550,14 @@
       "audio_files": 10,
       "total_size": 309799849,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fela/Zombie",
@@ -25329,7 +26607,14 @@
       "audio_files": 4,
       "total_size": 369624385,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Felix Mendelssohn/Mendelssohn: Symphonies Nos. 4 Italian & 5 Reformation",
@@ -25419,7 +26704,14 @@
       "audio_files": 8,
       "total_size": 260153713,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fleetwood Mac/The Very Best of Fleetwood Mac",
@@ -25789,7 +27081,14 @@
       "audio_files": 36,
       "total_size": 980147917,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Franz Liszt/Liszt: Piano Concertos Nos. 1 & 2 - Totentanz",
@@ -25879,7 +27178,14 @@
       "audio_files": 8,
       "total_size": 220317661,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Franz Schubert/A Classical Winter, Vol. 1",
@@ -26939,7 +28245,14 @@
       "audio_files": 105,
       "total_size": 698969648,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Franz Schubert/Franz Schubert - A Monument of Classics",
@@ -26969,7 +28282,14 @@
       "audio_files": 2,
       "total_size": 355099644,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Franz Schubert/Winterreise",
@@ -26989,7 +28309,14 @@
       "audio_files": 1,
       "total_size": 12670643,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fred Lerdahl/Lerdahl: First String Quartet - Martino: String Quartet",
@@ -27009,7 +28336,14 @@
       "audio_files": 1,
       "total_size": 266979143,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fripp & Eno/(No Pussyfooting)",
@@ -27039,7 +28373,14 @@
       "audio_files": 2,
       "total_size": 320826702,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fripp & Eno/Beyond Even (19922006)",
@@ -27179,7 +28520,14 @@
       "audio_files": 13,
       "total_size": 244353292,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fripp & Eno/Evening Star",
@@ -27239,7 +28587,14 @@
       "audio_files": 5,
       "total_size": 206336374,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fripp & Eno/The Equatorial Stars",
@@ -27319,7 +28674,14 @@
       "audio_files": 7,
       "total_size": 171938845,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fripp & Eno/The Essential Fripp and Eno",
@@ -27409,7 +28771,14 @@
       "audio_files": 8,
       "total_size": 396375747,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fritz Wunderlich - Hubert Giesen/Schumann: Dichterliebe - Schubert, Beethoven: Lieder",
@@ -27439,7 +28808,14 @@
       "audio_files": 2,
       "total_size": 14710902,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fryderyk Chopin/24 Preludes - Ballade in F minor",
@@ -27529,7 +28905,14 @@
       "audio_files": 8,
       "total_size": 144221708,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Fryderyk Chopin/Chopin: Nocturnes",
@@ -27549,7 +28932,14 @@
       "audio_files": 1,
       "total_size": 13417550,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Frédéric Chopin/Chopin Piano Concerto, Sonata In G Minor For Piano And Cello",
@@ -27639,7 +29029,14 @@
       "audio_files": 8,
       "total_size": 338827684,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Frédéric Chopin/Etude op. 10 - op. 25",
@@ -27889,7 +29286,14 @@
       "audio_files": 24,
       "total_size": 191697310,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Frédéric Chopin/Preludes - Piano Sonata no. 2",
@@ -28199,7 +29603,14 @@
       "audio_files": 30,
       "total_size": 2085332866,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Frédéric Chopin/The Chopin Masters",
@@ -28509,7 +29920,14 @@
       "audio_files": 30,
       "total_size": 218526026,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "George Frideric Handel/Ah! mio cor: Handel Arias",
@@ -28629,7 +30047,14 @@
       "audio_files": 11,
       "total_size": 316406125,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Georges Bizet/Opern-Gala",
@@ -28649,7 +30074,14 @@
       "audio_files": 1,
       "total_size": 17574207,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Giuseppe Verdi/Requiem",
@@ -28809,7 +30241,14 @@
       "audio_files": 15,
       "total_size": 257620804,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Gundula Janowitz - Gerhard Stolze - Dietrich Fischer-Dieskau - Schöneberger Sängerknaben - Chor und Orchester der Deutschen Oper Berlin - Eugen Jochum/Carmina Burana",
@@ -28919,7 +30358,14 @@
       "audio_files": 10,
       "total_size": 70498737,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hania Rani/Esja",
@@ -29029,7 +30475,14 @@
       "audio_files": 10,
       "total_size": 152245224,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hania Rani/Ghosts",
@@ -29169,7 +30622,14 @@
       "audio_files": 13,
       "total_size": 741470718,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hania Rani/Home",
@@ -29309,7 +30769,14 @@
       "audio_files": 13,
       "total_size": 257711309,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hania Rani/On Giacometti",
@@ -29449,7 +30916,14 @@
       "audio_files": 13,
       "total_size": 752776980,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hank Mobley/Soul Station",
@@ -29519,7 +30993,14 @@
       "audio_files": 6,
       "total_size": 263480854,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hank Mobley/Tenor Conclave",
@@ -29569,7 +31050,14 @@
       "audio_files": 4,
       "total_size": 1092322715,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Harmonia & Eno '76/Tracks & Traces",
@@ -29699,7 +31187,14 @@
       "audio_files": 12,
       "total_size": 1235441631,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Harold Budd/Ambient 2: The Plateaux of Mirror",
@@ -29809,7 +31304,14 @@
       "audio_files": 10,
       "total_size": 167331940,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Harold Budd/The Pearl",
@@ -29929,7 +31431,14 @@
       "audio_files": 11,
       "total_size": 169545609,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Haydn/Wilhelm Furtwangler conducts Haydn: Symphonie no. 88 - Schumann: Symphonie no. 4 - Manfred-Ouverture",
@@ -30019,7 +31528,14 @@
       "audio_files": 8,
       "total_size": 188043536,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hector Berlioz/Symphonie fantastique",
@@ -30099,7 +31615,14 @@
       "audio_files": 7,
       "total_size": 351585508,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Henry Purcell/Fantasias",
@@ -30289,7 +31812,14 @@
       "audio_files": 18,
       "total_size": 63974147,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hermanos Gutiérrez/Sonido cosmico",
@@ -30419,7 +31949,14 @@
       "audio_files": 12,
       "total_size": 98246229,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Hélène Grimaud/Credo",
@@ -30499,7 +32036,14 @@
       "audio_files": 7,
       "total_size": 266592429,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ibrahim Maalouf/Wind",
@@ -30629,7 +32173,14 @@
       "audio_files": 12,
       "total_size": 359702227,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ivan Moravec/24 Preludes - Ballade in F minor",
@@ -30809,7 +32360,14 @@
       "audio_files": 17,
       "total_size": 72323370,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "J.S. Bach/The 6 Cello Suites",
@@ -31169,7 +32727,14 @@
       "audio_files": 35,
       "total_size": 639459590,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "James/Wah Wah",
@@ -31409,7 +32974,14 @@
       "audio_files": 23,
       "total_size": 401504737,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Jamie xx/In Colour",
@@ -31529,7 +33101,14 @@
       "audio_files": 11,
       "total_size": 241187500,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Jean-Philippe Rameau/111 Years of Deutsche Grammophon",
@@ -31579,7 +33158,14 @@
       "audio_files": 4,
       "total_size": 51789108,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Jean-Philippe Rameau/111 Years of Deutsche Grammophon: The Collectors Edition",
@@ -31609,7 +33195,14 @@
       "audio_files": 2,
       "total_size": 12586846,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joe Henderson/Forces of Nature: Live at Slugs'",
@@ -31669,7 +33262,14 @@
       "audio_files": 5,
       "total_size": 3560520501,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joep Beving/Henosis",
@@ -31949,7 +33549,14 @@
       "audio_files": 27,
       "total_size": 563819314,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joep Beving/Hermetism",
@@ -32079,7 +33686,14 @@
       "audio_files": 12,
       "total_size": 1130419077,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joep Beving/Prehension",
@@ -32239,7 +33853,14 @@
       "audio_files": 15,
       "total_size": 149872343,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johann Sebastian Bach/6 Suiten fur Violoncello solo, BWV 10071012",
@@ -32599,7 +34220,14 @@
       "audio_files": 35,
       "total_size": 683090696,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johann Sebastian Bach/Mass in B minor",
@@ -32729,7 +34357,14 @@
       "audio_files": 12,
       "total_size": 306577902,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johann Sebastian Bach/Mass in B minor, BWV 232",
@@ -32889,7 +34524,14 @@
       "audio_files": 15,
       "total_size": 302284261,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johann Sebastian Bach/Orgelwerke BWV 525, 552, 565, 645650, 768",
@@ -33039,7 +34681,14 @@
       "audio_files": 14,
       "total_size": 432853661,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johann Sebastian Bach/Solo",
@@ -33059,7 +34708,14 @@
       "audio_files": 1,
       "total_size": 42648196,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johannes Brahms/21 Ungarische Tanze  Hungarian Dances",
@@ -33269,7 +34925,14 @@
       "audio_files": 20,
       "total_size": 211801703,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johannes Brahms/Violinkonzert - Doppelkonzert",
@@ -33339,7 +35002,14 @@
       "audio_files": 6,
       "total_size": 343744832,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Coltrane/A Love Supreme",
@@ -33379,7 +35049,14 @@
       "audio_files": 3,
       "total_size": 721965523,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Coltrane/Coltrane '58: The Prestige Recordings",
@@ -33759,7 +35436,14 @@
       "audio_files": 37,
       "total_size": 12885614754,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Coltrane/Giant Steps",
@@ -33839,7 +35523,14 @@
       "audio_files": 7,
       "total_size": 689773662,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Coltrane/John Coltrane and Johnny Hartman",
@@ -33909,7 +35600,14 @@
       "audio_files": 6,
       "total_size": 178712118,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Coltrane/Thelonious Monk with John Coltrane",
@@ -33979,7 +35677,14 @@
       "audio_files": 6,
       "total_size": 1067919524,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Field/Complete Nocturnes",
@@ -34169,7 +35874,14 @@
       "audio_files": 18,
       "total_size": 2745351509,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "John Ireland/The Vagabond",
@@ -34189,7 +35901,14 @@
       "audio_files": 1,
       "total_size": 7258045,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johnny Cash/The Best of Johnny Cash",
@@ -34539,7 +36258,14 @@
       "audio_files": 34,
       "total_size": 772597165,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johnny Hartman/And I Thought About You",
@@ -34659,7 +36385,14 @@
       "audio_files": 11,
       "total_size": 74133876,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johnny Hartman/Live at Sometime",
@@ -34919,7 +36652,14 @@
       "audio_files": 25,
       "total_size": 451421062,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Johnny Hartman/The Tokyo Albums",
@@ -35079,7 +36819,14 @@
       "audio_files": 15,
       "total_size": 175749491,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Jon Hassell/Fourth World, Vol. 1: Possible Musics",
@@ -35149,7 +36896,14 @@
       "audio_files": 6,
       "total_size": 211679655,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joni Mitchell/Joni Mitchell at Newport (Live)",
@@ -35279,7 +37033,14 @@
       "audio_files": 12,
       "total_size": 343689476,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/An Ideal for Living",
@@ -35329,7 +37090,14 @@
       "audio_files": 4,
       "total_size": 83197730,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Closer",
@@ -35429,7 +37197,14 @@
       "audio_files": 9,
       "total_size": 285696276,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Heart and Soul",
@@ -36229,7 +38004,14 @@
       "audio_files": 79,
       "total_size": 1986043095,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Im Not Afraid Anymore",
@@ -36429,7 +38211,14 @@
       "audio_files": 19,
       "total_size": 488223189,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Leftovers",
@@ -36479,7 +38268,14 @@
       "audio_files": 4,
       "total_size": 89372160,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Love Will Tear Us Apart",
@@ -36519,7 +38315,14 @@
       "audio_files": 3,
       "total_size": 80520097,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Love Will Tear Us Apart : Joy Division 1995",
@@ -36589,7 +38392,14 @@
       "audio_files": 6,
       "total_size": 145280576,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Permanent",
@@ -36759,7 +38569,14 @@
       "audio_files": 16,
       "total_size": 511061056,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Shes Lost Control - Atmosphere",
@@ -36789,7 +38606,14 @@
       "audio_files": 2,
       "total_size": 195674213,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Still",
@@ -36809,7 +38633,14 @@
       "audio_files": 1,
       "total_size": 522029638,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Substance",
@@ -36989,7 +38820,14 @@
       "audio_files": 17,
       "total_size": 403084535,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Transmission - Novelty",
@@ -37019,7 +38857,14 @@
       "audio_files": 2,
       "total_size": 51753524,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Joy Division/Unknown Pleasures",
@@ -37129,7 +38974,14 @@
       "audio_files": 10,
       "total_size": 222546428,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Kate Bush/Best of the Other Sides",
@@ -37249,7 +39101,14 @@
       "audio_files": 11,
       "total_size": 927783902,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "KAYTRANADA/99.9%",
@@ -37409,7 +39268,14 @@
       "audio_files": 15,
       "total_size": 393119909,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Keith Jarrett/The Koln Concert",
@@ -37459,7 +39325,14 @@
       "audio_files": 4,
       "total_size": 1258266390,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Kenny Burrell/At The Five Spot Cafe",
@@ -37519,7 +39392,14 @@
       "audio_files": 5,
       "total_size": 966035288,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Kevin Ayers/June 1, 1974",
@@ -37619,7 +39499,14 @@
       "audio_files": 9,
       "total_size": 232655276,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/A LA SALA",
@@ -37749,7 +39636,14 @@
       "audio_files": 12,
       "total_size": 453893316,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Ali",
@@ -37839,7 +39733,14 @@
       "audio_files": 8,
       "total_size": 88931967,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Con todo el mundo",
@@ -37949,7 +39850,14 @@
       "audio_files": 10,
       "total_size": 101534982,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Live at The Fillmore Miami",
@@ -38049,7 +39957,14 @@
       "audio_files": 9,
       "total_size": 804327646,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Mordechai",
@@ -38159,7 +40074,14 @@
       "audio_files": 10,
       "total_size": 108042182,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Texas Moon",
@@ -38219,7 +40141,14 @@
       "audio_files": 5,
       "total_size": 128227853,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/Texas Sun",
@@ -38239,7 +40168,14 @@
       "audio_files": 1,
       "total_size": 31494193,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/The Universe Smiles Upon You",
@@ -38349,7 +40285,14 @@
       "audio_files": 10,
       "total_size": 225585544,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Khruangbin/The Universe Smiles Upon You ii",
@@ -38459,7 +40402,14 @@
       "audio_files": 10,
       "total_size": 625444488,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "King Curtis/Live at Fillmore West",
@@ -38609,7 +40559,14 @@
       "audio_files": 14,
       "total_size": 128938240,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lady June/Lady June's Linguistic Leprosy",
@@ -38739,7 +40696,14 @@
       "audio_files": 12,
       "total_size": 169847699,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lang Lang",
@@ -38773,7 +40737,14 @@
       "audio_files": 0,
       "total_size": 596391,
       "has_cover_art": false,
-      "has_extras": true
+      "has_extras": true,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lang Lang/Best of Lang Lang",
@@ -39063,7 +41034,14 @@
       "audio_files": 28,
       "total_size": 513007544,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Laraaji/Ambient 3: Day of Radiance",
@@ -39123,7 +41101,14 @@
       "audio_files": 5,
       "total_size": 268188002,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lee Morgan/The Sidewinder",
@@ -39193,7 +41178,14 @@
       "audio_files": 6,
       "total_size": 1018801748,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Leon Bridges/Texas Sun",
@@ -39233,7 +41225,14 @@
       "audio_files": 3,
       "total_size": 101512582,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Leonard Bernstein/Leonard Bernstein Conducts West Side Story",
@@ -39503,7 +41502,14 @@
       "audio_files": 26,
       "total_size": 339254199,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Library Tapes/Library Tapes - Nils Frahm",
@@ -39543,7 +41549,14 @@
       "audio_files": 3,
       "total_size": 41324148,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Library Tapes/Like Green Grass Against a Blue Sky",
@@ -39643,7 +41656,14 @@
       "audio_files": 9,
       "total_size": 153523665,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Library Tapes/Live at NBI",
@@ -39673,7 +41693,14 @@
       "audio_files": 2,
       "total_size": 143610112,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lisa Hannigan/Passenger",
@@ -39783,7 +41810,14 @@
       "audio_files": 10,
       "total_size": 243588383,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Liszt/The Liszt Recordings",
@@ -39943,7 +41977,14 @@
       "audio_files": 15,
       "total_size": 483275011,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Baby It's You",
@@ -39963,7 +42004,14 @@
       "audio_files": 1,
       "total_size": 47120785,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Big Picture (remixes)",
@@ -40013,7 +42061,14 @@
       "audio_files": 4,
       "total_size": 165619392,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Californian Soil",
@@ -40143,7 +42198,14 @@
       "audio_files": 12,
       "total_size": 500072638,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Devil Inside",
@@ -40163,7 +42225,14 @@
       "audio_files": 1,
       "total_size": 20171909,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Hell to the Liars (Kolsch remix)",
@@ -40183,7 +42252,14 @@
       "audio_files": 1,
       "total_size": 80887587,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/How Does It Feel (Paul Woolford remix)",
@@ -40203,7 +42279,14 @@
       "audio_files": 1,
       "total_size": 25169712,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/If You Wait",
@@ -40323,7 +42406,14 @@
       "audio_files": 11,
       "total_size": 452730454,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/If You Wait (Remixes 2)",
@@ -40393,7 +42483,14 @@
       "audio_files": 6,
       "total_size": 245982669,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/If You Wait (Remixes)",
@@ -40463,7 +42560,14 @@
       "audio_files": 6,
       "total_size": 254751159,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Lord Its a Feeling (High Contrast remix)",
@@ -40483,7 +42587,14 @@
       "audio_files": 1,
       "total_size": 27860017,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Lose Your Head (CamelPhat Extended Remix)",
@@ -40503,7 +42614,14 @@
       "audio_files": 1,
       "total_size": 26887848,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Metal & Dust",
@@ -40523,7 +42641,14 @@
       "audio_files": 1,
       "total_size": 32714779,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Nightcall (Joe Goddard remix)",
@@ -40543,7 +42668,14 @@
       "audio_files": 1,
       "total_size": 46163654,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Non Believer (remixes)",
@@ -40573,7 +42705,14 @@
       "audio_files": 2,
       "total_size": 80375155,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "London Grammar/Oh Woman Oh Man (Remix EP)",
@@ -40623,7 +42762,14 @@
       "audio_files": 4,
       "total_size": 164467074,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Los Angeles Philharmonic/Opern-Gala",
@@ -40713,7 +42859,14 @@
       "audio_files": 8,
       "total_size": 177134756,
       "has_cover_art": true,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Louis Armstrong/What a Wonderful World",
@@ -40803,7 +42956,14 @@
       "audio_files": 8,
       "total_size": 205250718,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Low/Trust",
@@ -40943,7 +43103,14 @@
       "audio_files": 13,
       "total_size": 62301449,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Lucile Boulanger/Solo",
@@ -40973,7 +43140,14 @@
       "audio_files": 2,
       "total_size": 69041611,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ludwig van Beethoven/Beethoven Edition: Streicherquartette - Streicherquintett",
@@ -41093,7 +43267,14 @@
       "audio_files": 11,
       "total_size": 398473354,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mahler/Symphony no. 5",
@@ -41153,7 +43334,14 @@
       "audio_files": 5,
       "total_size": 260376845,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Marilyn Horne/Leonard Bernstein Conducts West Side Story",
@@ -41173,7 +43361,14 @@
       "audio_files": 1,
       "total_size": 4638603,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Marin Marais/Suitte dun gout etranger: Pieces de viole du IV livre, 1717",
@@ -41503,7 +43698,14 @@
       "audio_files": 32,
       "total_size": 177940281,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Matthew Halsall/Changing Earth",
@@ -41553,7 +43755,14 @@
       "audio_files": 4,
       "total_size": 583756110,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Matthew Halsall/Colour Yes",
@@ -41643,7 +43852,14 @@
       "audio_files": 8,
       "total_size": 372606277,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Maurice Ravel/Concerto en sol - La Valse - Ma mere l'Oye - Rapsodie espagnole - Daphnis et Chloe",
@@ -41773,7 +43989,14 @@
       "audio_files": 12,
       "total_size": 169534360,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Maurice Ravel/The Complete Solo Piano Music",
@@ -42113,7 +44336,14 @@
       "audio_files": 33,
       "total_size": 365419371,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mazzy Star/Seasons of Your Day",
@@ -42223,7 +44453,14 @@
       "audio_files": 10,
       "total_size": 284255088,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mazzy Star/So Tonight That I Might See",
@@ -42333,7 +44570,14 @@
       "audio_files": 10,
       "total_size": 1029323786,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "McCoy Tyner/Enlightenment",
@@ -42353,7 +44597,14 @@
       "audio_files": 1,
       "total_size": 265718744,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "McCoy Tyner/Nights of Ballads & Blues",
@@ -42443,7 +44694,14 @@
       "audio_files": 8,
       "total_size": 815587117,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "McCoy Tyner/The Real McCoy",
@@ -42503,7 +44761,14 @@
       "audio_files": 5,
       "total_size": 238512553,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mendelssohn/Mendelssohn: Andante and Rondo capriccioso - Schubert: Piano Sonata D959 - Schumann: Carnaval, op. 9 - Der Kontrabandiste - Tchaikovsky: Cradle Song",
@@ -42523,7 +44788,14 @@
       "audio_files": 1,
       "total_size": 330672242,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mendelssohn/The Complete String Quartets",
@@ -42893,7 +45165,14 @@
       "audio_files": 36,
       "total_size": 1071152096,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Michael Praetorius/Christmette",
@@ -43133,7 +45412,14 @@
       "audio_files": 23,
       "total_size": 325699491,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Miles Davis/55 (The Prestige Recordings)",
@@ -43303,7 +45589,14 @@
       "audio_files": 16,
       "total_size": 2420599832,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Miles Davis/Kind of Blue",
@@ -43373,7 +45666,14 @@
       "audio_files": 6,
       "total_size": 647819648,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Milt Jackson/Bags Meets Wes!",
@@ -43483,7 +45783,14 @@
       "audio_files": 10,
       "total_size": 328407433,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Milt Jackson/Soul Brothers",
@@ -43543,7 +45850,14 @@
       "audio_files": 5,
       "total_size": 1620428124,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mischa Maisky/Adagio",
@@ -43633,7 +45947,14 @@
       "audio_files": 8,
       "total_size": 248971402,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Morton Feldman/Rothko Chapel",
@@ -43743,7 +46064,14 @@
       "audio_files": 10,
       "total_size": 224803112,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Mstislav Rostropovich - Berliner Philharmoniker - Herbert von Karajan/Divertimenti KV 247 - KV 251 - KV 287 - KV 334",
@@ -43763,7 +46091,14 @@
       "audio_files": 1,
       "total_size": 7431145,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Musica Antiqua Köln/Pachelbel: Kanon & Gigue - J.S. Bach - Handel - Vivaldi",
@@ -43913,7 +46248,14 @@
       "audio_files": 14,
       "total_size": 285365754,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "New Order/Total",
@@ -44103,7 +46445,14 @@
       "audio_files": 18,
       "total_size": 561297378,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm",
@@ -44121,7 +46470,14 @@
       "audio_files": 0,
       "total_size": 194902,
       "has_cover_art": false,
-      "has_extras": true
+      "has_extras": true,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/7fingers",
@@ -44231,7 +46587,14 @@
       "audio_files": 10,
       "total_size": 109475321,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Electric Piano",
@@ -44341,7 +46704,14 @@
       "audio_files": 10,
       "total_size": 135212863,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Felt",
@@ -44551,7 +46921,14 @@
       "audio_files": 20,
       "total_size": 368875568,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Juno Reworked",
@@ -44621,7 +46998,14 @@
       "audio_files": 6,
       "total_size": 104597147,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/More Bells for You",
@@ -44651,7 +47035,14 @@
       "audio_files": 2,
       "total_size": 16703742,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Music for Lovers, Music Versus Time",
@@ -44751,7 +47142,14 @@
       "audio_files": 9,
       "total_size": 90002784,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Music for Wobbling Music Versus Gravity",
@@ -44911,7 +47309,14 @@
       "audio_files": 15,
       "total_size": 106475392,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Perform 'Dauw'",
@@ -44941,7 +47346,14 @@
       "audio_files": 2,
       "total_size": 21370791,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Spaces",
@@ -45071,7 +47483,14 @@
       "audio_files": 12,
       "total_size": 196854959,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Streichelfisch",
@@ -45171,7 +47590,14 @@
       "audio_files": 9,
       "total_size": 94825128,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/The Bells",
@@ -45291,7 +47717,14 @@
       "audio_files": 11,
       "total_size": 97454080,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Unter - Uber",
@@ -45331,7 +47764,14 @@
       "audio_files": 3,
       "total_size": 14172379,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nils Frahm/Wintermusik",
@@ -45371,7 +47811,14 @@
       "audio_files": 3,
       "total_size": 72161664,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nina Simone/Golden Hits",
@@ -45581,7 +48028,14 @@
       "audio_files": 20,
       "total_size": 165544912,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nina Simone/Great Women of Song: Nina Simone",
@@ -45621,7 +48075,14 @@
       "audio_files": 3,
       "total_size": 420674966,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nina Simone/I Put a Spell on You",
@@ -45721,7 +48182,14 @@
       "audio_files": 9,
       "total_size": 1128219305,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nina Simone/Little Girl Blue",
@@ -45841,7 +48309,14 @@
       "audio_files": 11,
       "total_size": 943785073,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Nirvana/MTV Unplugged in New York",
@@ -45991,7 +48466,14 @@
       "audio_files": 14,
       "total_size": 344300737,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Olafur Arnalds & Nils Frahm/Stare",
@@ -46041,7 +48523,14 @@
       "audio_files": 4,
       "total_size": 84050905,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oophoi L.E.M./Substrata",
@@ -46061,7 +48550,14 @@
       "audio_files": 1,
       "total_size": 255000519,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oscar Peterson/Most Famous Hits",
@@ -46151,7 +48647,14 @@
       "audio_files": 8,
       "total_size": 86899619,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oscar Peterson/Most Famous Hits: The Album",
@@ -46401,7 +48904,14 @@
       "audio_files": 24,
       "total_size": 328863372,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oscar Peterson/Oscar Peterson & Dizzy Gillespie",
@@ -46491,7 +49001,14 @@
       "audio_files": 8,
       "total_size": 995345833,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oscar Peterson/Reunion Blues",
@@ -46571,7 +49088,14 @@
       "audio_files": 7,
       "total_size": 788843586,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Oscar Peterson/Supreme Jazz: Oscar Peterson",
@@ -46721,7 +49245,14 @@
       "audio_files": 14,
       "total_size": 1059036310,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Passengers/Original Soundtracks 1",
@@ -46871,7 +49402,14 @@
       "audio_files": 14,
       "total_size": 325046737,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Paul Hindemith/The String Quartets",
@@ -46911,7 +49449,14 @@
       "audio_files": 3,
       "total_size": 735362043,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Paul Simon/Acoustic & Unplugged",
@@ -47091,7 +49636,14 @@
       "audio_files": 17,
       "total_size": 478538879,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Peter Broderick/Mort aux vaches",
@@ -47131,7 +49683,14 @@
       "audio_files": 3,
       "total_size": 135230889,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Peter Schwalm/Music for Onmyo-Ji",
@@ -47351,7 +49910,14 @@
       "audio_files": 21,
       "total_size": 524477298,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Peter Tchaikovsky/Piano Concerto no. 1",
@@ -47371,7 +49937,14 @@
       "audio_files": 1,
       "total_size": 33123055,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Portishead/Dummy",
@@ -47481,7 +50054,14 @@
       "audio_files": 10,
       "total_size": 920105142,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Pyotr Ilyich Tchaikovsky/The Sleeping Beauty; Children's Album; Piano Sonata, op. 80; Theme and Variations, op. 19-6",
@@ -48021,7 +50601,14 @@
       "audio_files": 53,
       "total_size": 1306725973,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ravel/Bolero - La Valse - Pavane pour une infante defunte - Daphnis et Chloe: Suite no. 2",
@@ -48091,7 +50678,14 @@
       "audio_files": 6,
       "total_size": 234184775,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Richard Strauss/Arioso: Die schonsten Arien - Die groten Stars",
@@ -48111,7 +50705,14 @@
       "audio_files": 1,
       "total_size": 14525342,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Richter/The 100th Anniversary Edition",
@@ -48141,7 +50742,14 @@
       "audio_files": 2,
       "total_size": 53721745,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Rick Holland/Drums Between the Bells",
@@ -48301,7 +50909,14 @@
       "audio_files": 15,
       "total_size": 239638833,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Rick Holland/Panic of Looking",
@@ -48371,7 +50986,14 @@
       "audio_files": 6,
       "total_size": 72137276,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Robert Schumann/Diaries Schumann",
@@ -48701,7 +51323,14 @@
       "audio_files": 32,
       "total_size": 949221151,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Robert Schumann/Musique de chambre",
@@ -49171,7 +51800,14 @@
       "audio_files": 46,
       "total_size": 946310912,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Rolando Villazón/Cielo e mar",
@@ -49321,7 +51957,14 @@
       "audio_files": 14,
       "total_size": 263809931,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Rory Bremner/Nineteen Ninety Four",
@@ -49341,7 +51984,14 @@
       "audio_files": 1,
       "total_size": 415013214,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sade/Love Deluxe",
@@ -49441,7 +52091,14 @@
       "audio_files": 9,
       "total_size": 263987912,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sade/Promise",
@@ -49541,7 +52198,14 @@
       "audio_files": 9,
       "total_size": 920111634,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sade/The Best of Sade",
@@ -49731,7 +52395,14 @@
       "audio_files": 18,
       "total_size": 1952362539,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sampha/Process",
@@ -49841,7 +52512,14 @@
       "audio_files": 10,
       "total_size": 258173621,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sarah Vaughan/The Essential Sarah Vaughan",
@@ -50011,7 +52689,14 @@
       "audio_files": 16,
       "total_size": 322317417,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Schubert/Winterreise",
@@ -50211,7 +52896,14 @@
       "audio_files": 19,
       "total_size": 249587584,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Schumann/Kinderszenen - Kreisleriana - Humoreske",
@@ -50281,7 +52973,14 @@
       "audio_files": 6,
       "total_size": 1262918567,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Schumann/Schumann: Dichterliebe - Schubert, Beethoven: Lieder",
@@ -50561,7 +53260,14 @@
       "audio_files": 27,
       "total_size": 287092067,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sergei Rachmaninoff/Piano Concerto no. 2 - 6 Preludes",
@@ -50661,7 +53367,14 @@
       "audio_files": 9,
       "total_size": 227151660,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Shirley Horn/Close Enough for Love",
@@ -50801,7 +53514,14 @@
       "audio_files": 13,
       "total_size": 276645113,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Shirley Horn/Light Out of Darkness",
@@ -50961,7 +53681,14 @@
       "audio_files": 15,
       "total_size": 152502885,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Shirley Horn/You Won't Forget Me",
@@ -51111,7 +53838,14 @@
       "audio_files": 14,
       "total_size": 391666673,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sibylle Baier/Colour Green",
@@ -51261,7 +53995,14 @@
       "audio_files": 14,
       "total_size": 166156631,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Simon Standage - Reichenberg - Reichenberg - The English Concert - Trevor Pinnock/Le quattro stagioni",
@@ -51281,7 +54022,14 @@
       "audio_files": 1,
       "total_size": 8248280,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Stan Getz/Getz-Gilberto",
@@ -51391,7 +54139,14 @@
       "audio_files": 10,
       "total_size": 220915587,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Stan Getz/Getz-Gilberto #2",
@@ -51551,7 +54306,14 @@
       "audio_files": 15,
       "total_size": 337806819,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Stan Getz/The Girl From Ipanema",
@@ -51861,7 +54623,14 @@
       "audio_files": 30,
       "total_size": 743137532,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Stravinsky/Petrouchka - Le Sacre du printemps",
@@ -51931,7 +54700,14 @@
       "audio_files": 6,
       "total_size": 288154621,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Sviatoslav Teofilovich Richter/Concert Performances and Broadcasts 1958-1976",
@@ -52161,7 +54937,14 @@
       "audio_files": 22,
       "total_size": 542754307,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "T. Rex/The Peel Sessions",
@@ -52181,7 +54964,14 @@
       "audio_files": 1,
       "total_size": 93093169,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Talking Heads/Stop Making Sense",
@@ -52371,7 +55161,14 @@
       "audio_files": 18,
       "total_size": 1073484681,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Tchaikovsky/First Piano Concertos",
@@ -52431,7 +55228,14 @@
       "audio_files": 5,
       "total_size": 192846718,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Tchaikovsky/Tchaikovsky: Violin Concerto - Mozart: Violin Concerto no. 5",
@@ -52471,7 +55275,14 @@
       "audio_files": 3,
       "total_size": 117246934,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The Doors/The Doors",
@@ -52781,7 +55592,14 @@
       "audio_files": 30,
       "total_size": 5222585449,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The Oscar Peterson Trio/The London House Sessions",
@@ -53271,7 +56089,14 @@
       "audio_files": 48,
       "total_size": 2037062226,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The War on Drugs/A Deeper Understanding",
@@ -53381,7 +56206,14 @@
       "audio_files": 10,
       "total_size": 482763725,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The War on Drugs/I Dont Live Here Anymore",
@@ -53491,7 +56323,14 @@
       "audio_files": 10,
       "total_size": 384075844,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The War on Drugs/Lost in the Dream",
@@ -53601,7 +56440,14 @@
       "audio_files": 10,
       "total_size": 395013199,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "The_Beatles/Sgt._Pepper_s_Lonely_Hearts_Club_Band__Remastered_",
@@ -53731,7 +56577,14 @@
       "audio_files": 12,
       "total_size": 276280328,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "TheBusiness./Collectors Edition Ep.",
@@ -53751,7 +56604,14 @@
       "audio_files": 1,
       "total_size": 596064567,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Thelonious Monk/Straight, No Chaser",
@@ -53821,7 +56681,14 @@
       "audio_files": 6,
       "total_size": 1037884111,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Thom Yorke/The Eraser",
@@ -53921,7 +56788,14 @@
       "audio_files": 9,
       "total_size": 283054240,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Thomas Quasthoff/Die Stimme: Deutsche Opernarien",
@@ -54021,7 +56895,14 @@
       "audio_files": 9,
       "total_size": 258869591,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Tiffany Poon/Natural Beauty",
@@ -54131,7 +57012,14 @@
       "audio_files": 10,
       "total_size": 181177340,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Tiffany Poon/Nature",
@@ -54301,7 +57189,14 @@
       "audio_files": 16,
       "total_size": 991314889,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Toumani Diabate/Ali and Toumani",
@@ -54421,7 +57316,14 @@
       "audio_files": 11,
       "total_size": 280717681,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Vadym Kholodenko/Liszt: Transcendental Etudes",
@@ -54441,7 +57343,14 @@
       "audio_files": 1,
       "total_size": 197961893,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Various Artists/111 Years of Deutsche Grammophon: The Collectors Edition",
@@ -54561,7 +57470,14 @@
       "audio_files": 11,
       "total_size": 213776487,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Various Artists/Kuschelklassik 9",
@@ -54581,7 +57497,14 @@
       "audio_files": 1,
       "total_size": 16882594,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Vladimir Horowitz/Horowitz in Moscow",
@@ -54741,7 +57664,14 @@
       "audio_files": 15,
       "total_size": 203076646,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Wiener Philharmoniker - Claudio Abbado/21 Ungarische Tanze  Hungarian Dances",
@@ -54761,7 +57691,14 @@
       "audio_files": 1,
       "total_size": 6855066,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Wolfgang Amadeus Mozart/Requiem",
@@ -54891,7 +57828,14 @@
       "audio_files": 12,
       "total_size": 301295299,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     },
     {
       "dir_path": "Ólafur Arnalds/some kind of peace",
@@ -55001,7 +57945,14 @@
       "audio_files": 10,
       "total_size": 185541154,
       "has_cover_art": false,
-      "has_extras": false
+      "has_extras": false,
+      "decision": {
+        "confidence_tier": null,
+        "candidates": [],
+        "reasoning": null,
+        "resolution_state": null,
+        "resolution_source": null
+      }
     }
   ],
   "tracks": [

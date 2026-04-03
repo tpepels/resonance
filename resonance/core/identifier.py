@@ -223,7 +223,14 @@ def extract_evidence(
 
 
 def _read_existing_tags(path: Path) -> dict[str, str]:
+    import hashlib as _hashlib
+
+    # Try suffix-based sidecar first
     metadata_path = path.with_suffix(path.suffix + ".meta.json")
+    if not metadata_path.exists():
+        # Fall back to hash-based sidecar (handles long filenames)
+        path_hash = _hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
+        metadata_path = path.parent / f"{path_hash}.meta.json"
     if not metadata_path.exists():
         return {}
     try:

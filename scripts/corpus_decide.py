@@ -18,7 +18,7 @@ from pathlib import Path
 # Add the project root to Python path so we can import tests
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tests.integration._filesystem_faker import FakerContext, create_faker_for_corpus
+from scripts._corpus_library import build_library_from_metadata
 
 
 def main():
@@ -43,18 +43,11 @@ def main():
     cache_db_path = temp_dir / "cache.db"
 
     try:
-        # Create fake filesystem from metadata
-        print("==> Setting up fake filesystem...")
-        faker = create_faker_for_corpus(corpus_root)
+        # Build real library tree from metadata (no FakerContext)
+        print("==> Building library tree from metadata...")
+        build_library_from_metadata(metadata, fake_library_root)
 
-        with FakerContext(faker):
-            # Create directory structure from metadata
-            for file_info in metadata['files']:
-                file_path = file_info['path']
-                full_path = fake_library_root / file_path
-                full_path.parent.mkdir(parents=True, exist_ok=True)
-                if not full_path.exists():
-                    full_path.touch()
+        if True:  # flat block replaces former FakerContext
 
             # 1. Scan directories
             print("==> Scanning directories...")
@@ -84,7 +77,7 @@ def main():
                 try:
                     run_resolve(args, store=store)
                 except Exception as exc:
-                    if "No provider client available" in str(exc):
+                    if "No provider client available" in str(exc) or "No cached provider data" in str(exc):
                         print("==> No provider credentials available, skipping resolve step")
                         # For corpus tooling, we can proceed without resolution
                         # The directories will remain in NEW state

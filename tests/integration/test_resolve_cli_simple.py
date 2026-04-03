@@ -47,7 +47,7 @@ def test_resolve_processes_new_directories(tmp_path: Path) -> None:
         assert len(new_dirs) == 1
 
         # Resolve (without provider, will fail but command should run)
-        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False)
+        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=False, cache_db=None)
 
         output: list[str] = []
         exit_code = run_resolve(resolve_args, store=store, provider_client=None, output_sink=output.append)
@@ -74,7 +74,7 @@ def test_resolve_json_output_is_valid(tmp_path: Path) -> None:
         run_scan(scan_args, store=store, output_sink=lambda x: None)
 
         # Resolve with JSON output (no provider, will fail)
-        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=True)
+        resolve_args = Namespace(library_root=lib, state_db=state_db_path, json=True, cache_db=None)
 
         output: list[str] = []
         exit_code = run_resolve(resolve_args, store=store, provider_client=None, output_sink=output.append)
@@ -101,7 +101,7 @@ def test_resolve_on_nonexistent_path_returns_error(tmp_path: Path) -> None:
 
     store = DirectoryStateStore(state_db_path)
     try:
-        resolve_args = Namespace(library_root=nonexistent, state_db=state_db_path, json=False)
+        resolve_args = Namespace(library_root=nonexistent, state_db=state_db_path, json=False, cache_db=None)
 
         output: list[str] = []
         exit_code = run_resolve(resolve_args, store=store, provider_client=None, output_sink=output.append)

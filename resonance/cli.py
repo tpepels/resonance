@@ -128,6 +128,11 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    identify_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path",
+    )
 
     plan_parser = subparsers.add_parser(
         "plan",
@@ -183,6 +188,94 @@ def main() -> int:
         help="Emit machine-readable JSON output",
     )
 
+    # Audit command
+    audit_parser = subparsers.add_parser(
+        "audit",
+        help="Inspect a directory's state and audit artifacts",
+    )
+    audit_parser.add_argument(
+        "dir_id",
+        help="Directory identifier to audit",
+    )
+    audit_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    audit_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    # Doctor command
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="Validate store invariants and environment sanity",
+    )
+    doctor_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    doctor_parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path.home() / ".config" / "resonance" / "settings.json",
+        help="Settings path (default: ~/.config/resonance/settings.json)",
+    )
+    doctor_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    # Rollback command
+    rollback_parser = subparsers.add_parser(
+        "rollback",
+        help="Revert applied file operations using an apply report",
+    )
+    rollback_parser.add_argument(
+        "--report",
+        type=Path,
+        required=True,
+        help="Path to apply report artifact",
+    )
+    rollback_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    rollback_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+    # Unjail command
+    unjail_parser = subparsers.add_parser(
+        "unjail",
+        help="Reset a jailed directory to NEW state",
+    )
+    unjail_parser.add_argument(
+        "dir_id",
+        help="Directory identifier to unjail",
+    )
+    unjail_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    unjail_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -221,12 +314,38 @@ def main() -> int:
         elif args.command == "identify":
             from .commands.identify import run_identify
 
-            # For identify command, we don't have app context yet
-            # This would need to be updated when full app integration is done
+            # Construct a real provider client for identify
+            cache_db = getattr(args, 'cache_db', None)
+            provider_client = None
+            fingerprint_reader = None
+            if cache_db:
+                from .app import ResonanceApp
+                app = ResonanceApp.from_env(
+                    library_root=Path(args.directory).resolve(),
+                    cache_path=cache_db,
+                )
+                provider_client = app.provider_client
+                fingerprint_reader = app.fingerprint_reader
+                app.close()
+
+            if provider_client is None:
+                # Try constructing from env without cache
+                import os
+                acoustid_key = os.getenv("ACOUSTID_API_KEY")
+                discogs_token = os.getenv("DISCOGS_TOKEN")
+                if not acoustid_key and not discogs_token:
+                    print(
+                        "Error: No provider credentials configured. "
+                        "Set ACOUSTID_API_KEY or DISCOGS_TOKEN environment variables, "
+                        "or provide --cache-db with cached provider data.",
+                        file=sys.stderr,
+                    )
+                    return 2
+
             return run_identify(
                 args,
-                provider_client=None,
-                fingerprint_reader=None,
+                provider_client=provider_client,
+                fingerprint_reader=fingerprint_reader,
             )
         elif args.command == "plan":
             if not args.state_db:
@@ -249,6 +368,88 @@ def main() -> int:
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_apply(args, store=store)
+            finally:
+                store.close()
+        elif args.command == "audit":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.audit import run_audit
+
+            store = DirectoryStateStore(args.state_db)
+            try:
+                result = run_audit(store=store, dir_id=args.dir_id)
+                json_output = getattr(args, "json", False)
+                if json_output:
+                    import json
+                    print(json.dumps(result, default=str))
+                else:
+                    for key, value in result.items():
+                        print(f"{key}: {value}")
+                return 0
+            finally:
+                store.close()
+        elif args.command == "doctor":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.doctor import run_doctor
+
+            store = DirectoryStateStore(args.state_db)
+            try:
+                result = run_doctor(store=store, config_path=args.config)
+                json_output = getattr(args, "json", False)
+                if json_output:
+                    import json
+                    print(json.dumps(result, default=str))
+                else:
+                    issues = result.get("issues", [])
+                    if not issues:
+                        print("doctor: no issues found")
+                    else:
+                        for issue in issues:
+                            print(f"doctor: {issue}")
+                return 0
+            finally:
+                store.close()
+        elif args.command == "rollback":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.rollback import run_rollback
+
+            if not args.report.exists():
+                print(f"Error: Report file not found: {args.report}", file=sys.stderr)
+                return 1
+
+            import json
+            with open(args.report, 'r') as f:
+                report_data = json.load(f)
+
+            # Convert report_data to a simple namespace for rollback
+            from types import SimpleNamespace
+            file_ops = [SimpleNamespace(**op) for op in report_data.get("file_ops", [])]
+            tag_ops = [SimpleNamespace(**op) for op in report_data.get("tag_ops", [])]
+            report = SimpleNamespace(
+                file_ops=file_ops,
+                tag_ops=tag_ops,
+                errors=report_data.get("errors", []),
+            )
+
+            result = run_rollback(
+                report=report,
+                source_dir=Path("."),  # Will be derived from report
+                destination_dir=Path("."),
+            )
+            json_output = getattr(args, "json", False)
+            if json_output:
+                print(json.dumps(result, default=str))
+            else:
+                print(f"rollback: restored={result.get('restored', False)}")
+            return 0
+        elif args.command == "unjail":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.unjail import run_unjail
+
+            store = DirectoryStateStore(args.state_db)
+            try:
+                run_unjail(store=store, dir_id=args.dir_id)
+                print(f"unjail: reset {args.dir_id} to NEW")
+                return 0
             finally:
                 store.close()
         else:
