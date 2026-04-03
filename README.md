@@ -7,25 +7,133 @@
 ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
 ```
 
-Clean, focused audio metadata organizer using fingerprinting and canonical artist detection.
+# Resonance
 
-## What It Does
+Resonance is a music library organization system for people who want to understand, normalize, and improve a real collection of audio files.
+
+It does not treat your library as a bag of filenames. It treats it as a set of human-meaningful releases, editions, and organizational decisions.
+
+The goal is simple: help you move from a messy or uncertain library to one that is understandable, canonical, and trustworthy.
+
+---
+
+## What it does (for humans)
+
+Resonance helps you answer five practical questions:
+
+* What is actually in my library?
+* What does each directory appear to represent?
+* What is incomplete, duplicated, inconsistent, or ambiguous?
+* What would a cleaner, more canonical organization look like?
+* Which changes can I trust automatically, and which need my judgment?
+
+It is not just automation. It is **trusted automation**.
+
+Every important outcome should be explainable as:
+
+* evidence (what was found)
+* interpretation (what it likely is)
+* proposal (what should change)
+* confidence or ambiguity
+* final decision (recorded and replayable)
+
+---
+
+## Core workflows
+
+Resonance has two primary workflows.
+
+### 1. Decide (authoritative)
+
+Scans a real corpus, interprets it, consults providers, prompts when needed, and records decisions.
+
+```bash
+make corpus-decide
+```
+
+### 2. Review (human validation)
+
+Presents results in a structured UI so you can inspect what Resonance believes and why.
+
+```bash
+make corpus-review
+# opens http://localhost:8080/real_corpus_review.html
+```
+
+These two together form the product loop:
+
+```
+scan → interpret → propose → review → accept → replay
+```
+
+---
+
+## What it does (system view)
 
 Resonance organizes your music library using a deterministic, auditable pipeline:
-1. **Scan** directories to identify audio files and compute content signatures
-2. **Identify** releases using fingerprints and provider APIs (MusicBrainz, Discogs)
-3. **Resolve** uncertain matches with user input or automatic scoring
-4. **Plan** file moves and tag updates with full auditability
-5. **Apply** plans transactionally with rollback support
 
-## Key Features
+1. **Scan**
+   Identify audio files and compute content signatures
 
-- **Deterministic Pipeline**: Content-based identity, no re-matches on repeat runs
-- **Fingerprint-Based Identification**: Uses AcoustID + MusicBrainz
-- **Canonical Name Resolution**: Merges artist variants (e.g., "Bach, J.S." → "Johann Sebastian Bach")
-- **Transaction Support**: Rollback on errors or crashes
-- **Classical Music Support**: Special handling for composer/performer structures
-- **Plan-Based Execution**: Review changes before applying
+2. **Identify**
+   Resolve releases using fingerprints and provider APIs (AcoustID, MusicBrainz, Discogs)
+
+3. **Resolve**
+   Handle uncertainty via scoring or human prompts
+
+4. **Plan**
+   Define file moves and tag updates with full traceability
+
+5. **Apply**
+   Execute changes transactionally with rollback support
+
+---
+
+## Key features
+
+* **Deterministic pipeline**
+  Same inputs → same outputs
+
+* **Fingerprint-based identification**
+  Content identity via AcoustID + MusicBrainz
+
+* **Canonical name resolution**
+  Normalize artist/composer variants
+
+* **Plan-based execution**
+  Review before applying changes
+
+* **Transaction support**
+  Rollback on failure
+
+* **Decision recording + replay**
+  Real decisions can be reproduced or validated
+
+* **Human review surface**
+  Inspect canonicalness, ambiguity, duplicates
+
+---
+
+## Product principles
+
+Resonance is developed under these constraints:
+
+1. **Human intent first**
+   The system exists to help people organize libraries, not to satisfy internal abstractions.
+
+2. **Decision process, not black box**
+   Outcomes must be inspectable and explainable.
+
+3. **Trusted automation**
+   No silent invention of authority.
+
+4. **Deterministic replay**
+   Accepted decisions must replay exactly or fail loudly.
+
+5. **Real workflow equivalence**
+   The corpus workflow must use real system behavior, not test-only paths.
+
+---
 
 ## Installation
 
@@ -34,69 +142,36 @@ cd resonance
 pip install -e .
 ```
 
+---
+
 ## Configuration
 
-Resonance uses a **hybrid configuration system**:
+Resonance uses a hybrid configuration system:
 
-- **Environment Variables**: For API keys and environment-specific settings
-- **JSON Config Files**: For application settings that can be version controlled
+* **Environment variables** → secrets and environment-specific settings
+* **JSON config file** → application behavior
 
-### Quick Setup
+### Quick setup
 
-1. **Copy example files:**
 ```bash
 cp .env.example .env
 cp settings.json.example ~/.config/resonance/settings.json
 ```
 
-2. **Edit with your values:**
-```bash
-# Edit .env with your API keys
-nano .env
-
-# Edit settings.json with your preferences
-nano ~/.config/resonance/settings.json
-```
-
-3. **Optional: Auto-load .env files**
-```bash
-pip install python-dotenv
-```
-**Note:** The CLI automatically loads `.env` files from the current directory. No additional setup required!
-
-### Environment Variables (.env)
-
-Used for **secrets and environment-specific settings**:
+### Environment variables (.env)
 
 ```bash
-# ===========================================
-# API KEYS (Required for full functionality)
-# ===========================================
+ACOUSTID_API_KEY=your_key
+MUSICBRAINZ_USER_AGENT=Resonance/1.0.0 (you@example.com)
 
-# AcoustID - Get from https://acoustid.org/api-key
-ACOUSTID_API_KEY=your_acoustid_api_key_here
+DISCOGS_CONSUMER_KEY=...
+DISCOGS_CONSUMER_SECRET=...
 
-# MusicBrainz - Required user agent
-MUSICBRAINZ_USER_AGENT=Resonance/1.0.0 (your-email@example.com)
-
-# Discogs - Optional, get from https://www.discogs.com/developers
-DISCOGS_CONSUMER_KEY=your_discogs_consumer_key
-DISCOGS_CONSUMER_SECRET=your_discogs_consumer_secret
-
-# ===========================================
-# ENVIRONMENT SETTINGS
-# ===========================================
-
-# Enable offline mode (cache-only, no network calls)
 RESONANCE_OFFLINE_MODE=false
-
-# Enable debug logging
 RESONANCE_DEBUG=false
 ```
 
-### JSON Config File (settings.json)
-
-Used for **application settings** (stored in `~/.config/resonance/settings.json`):
+### JSON config
 
 ```json
 {
@@ -106,147 +181,96 @@ Used for **application settings** (stored in `~/.config/resonance/settings.json`
 }
 ```
 
-### Configuration Priority
+### Priority
 
-Settings are resolved in this priority order:
+1. CLI args
+2. Environment
+3. Config file
+4. Defaults
 
-1. **CLI Arguments** (highest priority)
-2. **Environment Variables**
-3. **JSON Config File**
-4. **Defaults** (lowest priority)
+---
 
-### Complete Example
+## V3 pipeline (low-level workflow)
 
-**Environment Variables (.env):**
-```bash
-ACOUSTID_API_KEY=abcd1234
-MUSICBRAINZ_USER_AGENT=Resonance/1.0.0 (user@example.com)
-RESONANCE_OFFLINE_MODE=false
-```
-
-**Application Settings (~/.config/resonance/settings.json):**
-```json
-{
-  "tag_writer_backend": "mutagen",
-  "identify_scoring_version": "v1",
-  "plan_conflict_policy": "FAIL"
-}
-```
-
-This gives you secure API key management with flexible application configuration.
-
-## Usage
-
-### V3.1 Corpus Processing & Review (Recommended)
-
-For comprehensive music library processing with human review and decision replay:
+For direct control:
 
 ```bash
-# Process entire corpus with live APIs and record decisions
-make corpus-decide
-
-# Review results in interactive HTML interface
-make corpus-review  # Opens http://localhost:8080/real_corpus_review.html
+resonance scan /path --state-db state.db
+resonance resolve /path --state-db state.db
+resonance prompt --state-db state.db
+resonance plan --dir-id <id> --state-db state.db
+resonance apply --plan plan.json --state-db state.db
 ```
 
-**Features:**
-- Interactive decision recording with cryptographic validation
-- Full corpus processing (no batch limits)
-- Deterministic replay for regression testing
-- 3-column HTML review interface with search/filtering
-- Agent-safe: No multi-MB files in context
-
-See [V3.1_REAL_CORPUS_MANUAL.md](docs/process/V3.1_REAL_CORPUS_MANUAL.md) for complete workflow documentation.
-
-### V3 Pipeline (Complete Workflow)
-
-The V3 pipeline uses a deterministic state machine with explicit state transitions:
-
-```bash
-# 1. Scan library to discover audio directories
-resonance scan /path/to/library --state-db ~/.local/share/resonance/state.db
-
-# 2. Resolve directories using provider metadata (MusicBrainz, Discogs)
-resonance resolve /path/to/library --state-db ~/.local/share/resonance/state.db
-
-# 3. Answer prompts for uncertain matches
-resonance prompt --state-db ~/.local/share/resonance/state.db
-
-# 4. Create a plan for a resolved directory
-resonance plan --dir-id <dir-id> --state-db ~/.local/share/resonance/state.db
-
-# 5. Apply the plan
-resonance apply --plan plan.json --state-db ~/.local/share/resonance/state.db
-```
-
-### State Transitions
-
-Directories flow through the following states:
+### State machine
 
 ```
-NEW → (resolve) → RESOLVED_AUTO or QUEUED_PROMPT
-QUEUED_PROMPT → (prompt) → RESOLVED_USER or JAILED
-RESOLVED_AUTO/RESOLVED_USER → (plan) → PLANNED
-PLANNED → (apply) → APPLIED
+NEW → RESOLVED_AUTO | QUEUED_PROMPT
+QUEUED_PROMPT → RESOLVED_USER | JAILED
+RESOLVED → PLANNED → APPLIED
 ```
 
-**Key Invariants:**
+### Invariants
 
-- **No-rematch**: Once resolved, directories are never re-queried to providers
-- **Idempotent**: Rerunning scan/resolve on unchanged directories is a no-op
-- **Deterministic**: Same inputs always produce same outputs
+* No-rematch after resolution
+* Idempotent reruns
+* Deterministic outputs
 
-### JSON Output Mode
+---
 
-All workflow commands support `--json` for machine-readable output:
+## Architecture (mental model)
 
-```bash
-# Scan with JSON output
-resonance scan /path/to/library --state-db state.db --json
+Resonance has two layers:
 
-# Resolve with JSON output
-resonance resolve /path/to/library --state-db state.db --json
-```
+### 1. Decision generation (authoritative)
 
-### Diagnostic Commands
+* real corpus processing
+* real providers
+* real prompts
+* produces decision artifacts
 
-```bash
-# Show help
-resonance --help
+### 2. Human review (inspection)
 
-# Identify a single directory (diagnostic, doesn't modify state)
-resonance identify /path/to/album
+* static, chunked UI
+* no multi-MB ingestion
+* focused on validation of meaning
 
-# Build canonical artist/composer mappings
-resonance prescan /path/to/library --cache ~/.cache/resonance/metadata.db
-```
+---
 
-## Architecture
+## Documentation
 
-Resonance uses a **V3 deterministic pipeline**:
+### Product
 
-```
-scan → resolve → prompt → plan → apply
-```
+* docs/product/system_description.md
+* docs/product/user_jobs.md
+* docs/product/product_guarantees.md
+* docs/product/workflows.md
 
-Each phase is:
+### System
 
-- **Pure**: No side effects in scan, resolve (read-only), and plan stages
-- **Auditable**: Full trace of decisions and changes
-- **Deterministic**: Same inputs always produce same outputs
-- **Transactional**: Apply operations can be rolled back
+* docs/system/architecture.md
+* docs/system/decision_model.md
+* docs/system/replay_model.md
+* docs/system/provider_integration.md
 
-See [Resonance_DESIGN_SPEC.md](Resonance_DESIGN_SPEC.md) for full architecture details.
+### Development
 
-## State Management
+* docs/dev/contributing.md
+* docs/dev/testing_strategy.md
+* docs/dev/fixtures_and_corpus.md
 
-Resonance maintains state in two locations:
-- **DirectoryStateStore** (`~/.local/share/resonance/state.db`): Directory resolution state, plans
-- **MetadataCache** (`~/.cache/resonance/metadata.db`): Provider API responses, canonical name mappings
+---
 
-## Migrating from audio-meta
+## What Resonance is not
 
-Resonance is a clean rewrite of the audio-meta project. Your cache will work automatically - just point Resonance at your library.
+* not a generic media server
+* not a blind batch renamer
+* not a manual tag editor UI
+* not a test-driven abstraction playground
+
+It is a system for making a music library **more understandable, more canonical, and more trustworthy**.
+
+---
 
 ## License
 
