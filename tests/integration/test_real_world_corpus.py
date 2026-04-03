@@ -14,6 +14,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+# Hard guard: real corpus runs must be full-corpus
+if os.getenv("REAL_CORPUS_MAX_BATCHES"):
+    raise SystemExit("REAL_CORPUS_MAX_BATCHES is forbidden: real corpus runs must be full-corpus.")
+
 if TYPE_CHECKING:
     from resonance.infrastructure.directory_store import DirectoryStateStore
     from resonance.services.tag_writer import MetaJsonTagWriter
@@ -90,7 +94,7 @@ def test_real_world_corpus_deterministic_workflow():
             # If decisions file is malformed, continue without scripted decisions
             pass
 
-    # Implement full workflow execution
+    # Implement full workflow execution using ResonanceApp (like real CLI)
     regen_real_corpus = is_regen_enabled("REGEN_REAL_CORPUS")
     REGEN_ENV_VAR = "REGEN_REAL_CORPUS"
     EXPECTED_ROOT = corpus_root
@@ -100,9 +104,9 @@ def test_real_world_corpus_deterministic_workflow():
     output_root = temp_dir / "organized"
 
     try:
-        # 2. Set up Resonance components
+        # 2. Set up Resonance app with proper provider fusion (like real CLI)
+        from resonance.app import ResonanceApp
         from resonance.infrastructure.directory_store import DirectoryStateStore
-        from resonance.infrastructure.scanner import LibraryScanner
         from resonance.services.tag_writer import MetaJsonTagWriter
         from resonance.core.applier import ApplyStatus, apply_plan
         from resonance.core.enricher import build_tag_patch
@@ -111,31 +115,36 @@ def test_real_world_corpus_deterministic_workflow():
         from resonance.core.state import DirectoryState
         from resonance.core.identifier import DirectoryEvidence, TrackEvidence, ConfidenceTier
         from resonance.core.identity.signature import dir_id, dir_signature
-        from resonance.providers.musicbrainz import MusicBrainzClient
-        from resonance.providers.discogs import DiscogsClient
-        from resonance.providers.caching import CachedProviderClient, ProviderConfig
-        from resonance.infrastructure.cache import MetadataCache
         from datetime import datetime, timezone
+
+        # Create ResonanceApp with real credentials from environment (like real CLI)
+        # This ensures the test uses actual provider APIs to validate matching
+        app = ResonanceApp.from_env(
+            library_root=fake_library_root,
+            cache_path=cache_db_path,
+            interactive=False,  # Non-interactive for testing
+            dry_run=False,
+        )
+
+        # Skip test if no provider credentials (can't test real matching without APIs)
+        if not app.provider_client:
+            pytest.skip("Real provider credentials required for corpus matching test")
 
         store = DirectoryStateStore(state_db_path)
         writer = MetaJsonTagWriter()
-        provider_cache = MetadataCache(cache_db_path)
 
-        # Create cached provider clients
-        mb_config = ProviderConfig(provider_name="musicbrainz", client_version="v1")
-        dg_config = ProviderConfig(provider_name="discogs", client_version="v1")
-
-        musicbrainz_provider = CachedProviderClient(MusicBrainzClient(), provider_cache, mb_config)
-        discogs_provider = CachedProviderClient(DiscogsClient(token="dummy_token"), provider_cache, dg_config)
+        # Use app's scanner and provider_client (like real CLI would)
+        scanner = app.scanner
+        provider_client = app.provider_client
+        assert provider_client is not None, "Provider client should be initialized"
 
         # 3. Run scan to discover directories
-        scanner = LibraryScanner([fake_library_root])  # Scan from faked library root
         batches = list(scanner.iter_directories())
 
         # Debug: print what scanner found
         print(f"DEBUG: Scanner found {len(batches)} batches")
-        for i, batch in enumerate(batches[:3]):  # Show first 3
-            print(f"DEBUG: Batch {i}: dir={batch.directory}, files={len(batch.files)}")
+        for i, batch in enumerate(batches[:5]):  # Show first 5
+            print(f"DEBUG: Batch {i}: dir={batch.directory}, dir_id={batch.dir_id}, files={len(batch.files)}")
 
         if not batches:
             pytest.skip("No audio directories found in corpus")
@@ -146,9 +155,11 @@ def test_real_world_corpus_deterministic_workflow():
         # 4. Process each directory: scan → resolve → plan → apply
         failures = []
         fixed_now = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        total_batches = len(batches)
 
-        for batch in batches[:5]:  # Limit to first 5 for initial testing
+        for i, batch in enumerate(batches, 1):  # Process ALL directories - real corpus runs must be full-corpus
             scenario_name = batch.directory.name or f"dir_{batch.dir_id[:8]}"
+            print(f"PROGRESS: Processing directory {i}/{total_batches}: {scenario_name}", flush=True)
 
             # Create directory evidence from files
             tracks = []
@@ -166,15 +177,17 @@ def test_real_world_corpus_deterministic_workflow():
                 total_duration_seconds=0,
             )
 
-            # Resolve directory
+            # Resolve directory using app's provider_client (with provider fusion)
             outcome = resolve_directory(
                 dir_id=batch.dir_id,
                 path=batch.directory,
                 signature_hash=batch.signature_hash,
                 evidence=evidence,
                 store=store,
-                provider_client=musicbrainz_provider,  # Start with MusicBrainz
+                provider_client=provider_client,
             )
+
+            print(f"DEBUG: {scenario_name}: resolved to state {outcome.state}")
 
             if outcome.state == DirectoryState.QUEUED_PROMPT:
                 # Check for scripted decision
@@ -184,7 +197,7 @@ def test_real_world_corpus_deterministic_workflow():
                         # Apply automatic resolution using top candidate
                         # Run identification to get candidates
                         from resonance.core.identifier import identify
-                        result = identify(evidence, musicbrainz_provider)
+                        result = identify(evidence, provider_client)
 
                         if result.best_candidate and result.tier in (ConfidenceTier.PROBABLE, ConfidenceTier.CERTAIN):
                             # Use the best candidate
@@ -203,29 +216,21 @@ def test_real_world_corpus_deterministic_workflow():
                                 signature_hash=batch.signature_hash,
                                 evidence=evidence,
                                 store=store,
-                                provider_client=musicbrainz_provider,
+                                provider_client=provider_client,
                             )
                         else:
                             # No good candidates, jail it
                             store.set_state(batch.dir_id, DirectoryState.JAILED)
-                            continue
                     elif scripted_decision == "JAIL":
                         # Jail the directory
                         store.set_state(batch.dir_id, DirectoryState.JAILED)
-                        continue
                     elif isinstance(scripted_decision, str):
                         # Specific release_id provided
                         # Parse provider:release_id format
                         if ":" in scripted_decision:
                             provider_name, release_id = scripted_decision.split(":", 1)
-                            # Validate the release exists
-                            if provider_name == "musicbrainz":
-                                release_obj = musicbrainz_provider.release_by_id(provider_name, release_id)
-                            elif provider_name == "discogs":
-                                release_obj = discogs_provider.release_by_id(provider_name, release_id)
-                            else:
-                                continue  # Invalid provider
-
+                            # Validate the release exists using combined provider
+                            release_obj = provider_client.release_by_id(provider_name, release_id)
                             if release_obj:
                                 # Apply the scripted decision
                                 store.set_state(
@@ -241,19 +246,30 @@ def test_real_world_corpus_deterministic_workflow():
                                     signature_hash=batch.signature_hash,
                                     evidence=evidence,
                                     store=store,
-                                    provider_client=musicbrainz_provider,
+                                    provider_client=provider_client,
                                 )
                             else:
-                                continue  # Release not found
+                                # Release not found, jail it
+                                store.set_state(batch.dir_id, DirectoryState.JAILED)
                         else:
-                            continue  # Invalid format
+                            # Invalid format, jail it
+                            store.set_state(batch.dir_id, DirectoryState.JAILED)
                     else:
-                        continue  # Invalid decision format
+                        # Invalid decision format, jail it
+                        store.set_state(batch.dir_id, DirectoryState.JAILED)
                 else:
-                    # No scripted decision available, skip
-                    continue
+                    # No scripted decision available - for real corpus, this is an error
+                    # Every directory must have a decision. JAIL it to ensure full-corpus processing.
+                    store.set_state(batch.dir_id, DirectoryState.JAILED)
+                    print(f"DEBUG: {scenario_name}: no scripted decision, jailing")
 
             if outcome.state not in (DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
+                # Directory was not resolved - ensure it has some terminal state
+                current_state = store.get(batch.dir_id)
+                if not current_state or current_state.state not in (DirectoryState.JAILED, DirectoryState.RESOLVED_AUTO, DirectoryState.RESOLVED_USER):
+                    # Force a terminal state - JAIL unresolved directories
+                    store.set_state(batch.dir_id, DirectoryState.JAILED)
+                    print(f"DEBUG: {scenario_name}: unresolved, jailing to ensure terminal state")
                 continue
 
             # Get resolved record
@@ -261,17 +277,12 @@ def test_real_world_corpus_deterministic_workflow():
             if not record or not record.pinned_release_id or not record.pinned_provider:
                 continue
 
-            # Retrieve the full ProviderRelease object
-            pinned_release = musicbrainz_provider.release_by_id(
+            # Retrieve the full ProviderRelease object using app's provider_client
+            pinned_release = provider_client.release_by_id(
                 record.pinned_provider, record.pinned_release_id
             )
             if not pinned_release:
-                # Try Discogs if MusicBrainz failed
-                pinned_release = discogs_provider.release_by_id(
-                    record.pinned_provider, record.pinned_release_id
-                )
-                if not pinned_release:
-                    continue
+                continue
 
             # Plan directory
             plan = plan_directory(
@@ -467,6 +478,45 @@ def test_real_world_corpus_snapshot_gating():
 
 
 # Snapshot generation/comparison is now implemented inline in the main test
+
+
+def test_prompt_fingerprint_stability():
+    """Test that prompt fingerprints are stable and deterministic."""
+    from resonance.commands.prompt import compute_prompt_fingerprint
+
+    # Create mock candidates
+    class MockCandidate:
+        def __init__(self, provider, release_id):
+            self.release = MockRelease(provider, release_id)
+
+    class MockRelease:
+        def __init__(self, provider, release_id):
+            self.provider = provider
+            self.release_id = release_id
+
+    # Test data
+    dir_id = "test_dir_123"
+    candidates = [
+        MockCandidate("musicbrainz", "mb_123"),
+        MockCandidate("discogs", "dg_456"),
+    ]
+    reasons = ["reason1", "reason2", "reason3"]
+
+    # Compute fingerprint twice - should be identical
+    fp1 = compute_prompt_fingerprint(dir_id, candidates, reasons)
+    fp2 = compute_prompt_fingerprint(dir_id, candidates, reasons)
+
+    assert fp1 == fp2, "Fingerprint should be deterministic"
+
+    # Different input should give different fingerprint
+    candidates_different = [MockCandidate("musicbrainz", "mb_999")]
+    fp3 = compute_prompt_fingerprint(dir_id, candidates_different, reasons)
+    assert fp1 != fp3, "Different input should give different fingerprint"
+
+    # Different order should give same fingerprint (stable sorting)
+    candidates_reordered = list(reversed(candidates))
+    fp4 = compute_prompt_fingerprint(dir_id, candidates_reordered, reasons)
+    assert fp1 == fp4, "Order should not affect fingerprint"
 
 
 # Placeholder for future implementation phases

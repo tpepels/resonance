@@ -8,6 +8,11 @@
   },
 
   "decisions": {
-    "_auto": "AUTO"
+    "_auto": "AUTO",
+    "bfa835a1463c3f41151479e445d5acc27c460f2d431b96dec99b0818a53c5bd8": "APPLIED",
+    "5cd7b0aa52608fb69315a0f824e15167f52a94613050db6e85a12b6c929237a2": "APPLIED",
+    "a8efd46767c4e37f4da58cd4718566a04fb1c39d3daafa64de20de721dd04242": "APPLIED",
+    "cb4fe89b0a8d5225aad195b67395e87cf1b4077db0e167174f728e6ff9d9140b": "JAILED",
+    "78ed854fbf42622b9b6cf43ab76b4192ccb2123bdeb4c1d8515df7b4b1a16b0a": "APPLIED"
   }
 }
