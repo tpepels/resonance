@@ -187,6 +187,24 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    apply_parser.add_argument(
+        "--tag-patch",
+        type=Path,
+        dest="tag_patch",
+        help="Path to tag patch artifact (optional)",
+    )
+    apply_parser.add_argument(
+        "--no-dry-run",
+        action="store_true",
+        dest="no_dry_run",
+        help="Execute plan for real (default is dry-run safe mode)",
+    )
+    apply_parser.add_argument(
+        "--library-root",
+        type=Path,
+        dest="library_root",
+        help="Library root directory (required when plan uses relative destination paths)",
+    )
 
     # Audit command
     audit_parser = subparsers.add_parser(

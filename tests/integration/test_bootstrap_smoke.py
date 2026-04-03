@@ -1,6 +1,7 @@
-"""Coverage gate tests for V3.05 governance compliance.
+"""Bootstrap smoke tests — module wiring and env loading verification.
 
-These tests ensure > 0% coverage for hard wiring gates required by GOVERNANCE.md §4.1.
+These tests verify that core modules construct and connect correctly.
+They do not test product behavior; for that see test_e2e_cli_workflow.py.
 """
 
 from __future__ import annotations

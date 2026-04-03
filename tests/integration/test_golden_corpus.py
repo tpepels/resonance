@@ -1,4 +1,9 @@
-"""Golden corpus integration test for V3 invariants."""
+"""Golden corpus integration test for V3 invariants.
+
+Scope: This test proves pipeline logic determinism using synthetic fixtures
+(FilesystemFaker + MetaJsonTagWriter). It does NOT process real audio files.
+For real audio proof (Guarantee G8), see test_real_audio_pipeline.py.
+"""
 
 from __future__ import annotations
 

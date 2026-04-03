@@ -15,6 +15,8 @@ import pytest
 from tests.helpers.scenarios import build_golden_scenario, GoldenScenario
 from tests.helpers.fs import AudioStubSpec, build_album_dir, AlbumFixture
 
+collect_ignore_glob = ["archived/*"]
+
 
 _PIPELINE_V1_PATHS = (
     "tests/test_visitors/",

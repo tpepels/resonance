@@ -330,28 +330,28 @@ Layer 1: Snapshot Determinism    (golden corpus)           ~40 tests
 
 ## 8. Recommended Follow-Up Portfolio
 
-### Sprint 06: Test Suite Hygiene (Low Risk, High Clarity)
+### Sprint 06: Test Suite Hygiene — COMPLETE
 
-| Task | Priority | Effort |
+| Task | Priority | Status |
 |------|----------|--------|
-| Delete test_filesystem_faker.py | P1 | 5 min |
-| Archive tests/legacy/ to tests/archived/ | P1 | 15 min |
-| Delete test_legacy_imports.py | P1 | 5 min |
-| Rename test_coverage_gates.py → test_bootstrap_smoke.py | P2 | 5 min |
-| Add scope comment to test_golden_corpus.py | P2 | 5 min |
+| Delete test_filesystem_faker.py | P1 | DONE — 15 distorting tests removed |
+| Archive tests/legacy/ to tests/archived/ | P1 | DONE — 18 legacy tests excluded from default collection |
+| Keep test_legacy_imports.py (guardrail still needed) | P1 | KEPT — resonance/legacy/ production package still exists |
+| Rename test_coverage_gates.py → test_bootstrap_smoke.py | P2 | DONE |
+| Add scope comment to test_golden_corpus.py | P2 | DONE |
 
-**Acceptance:** `pytest --co -q` collects ≤500 tests. All pass. No legacy tests in default collection.
+**Result:** 491 tests collected after Sprint 06 (from 524).
 
-### Sprint 07: Coverage Gap Closure (Medium Risk, High Value)
+### Sprint 07: Coverage Gap Closure — COMPLETE
 
-| Task | Priority | Effort |
+| Task | Priority | Status |
 |------|----------|--------|
-| Add test_review_bundle_structure.py (G6) | P1 | 1 hour |
-| Add ambiguity escalation test (G3) | P1 | 30 min |
-| Expand test_real_audio_pipeline to 3 scenarios | P2 | 1 hour |
-| Add E2E audit→doctor→rollback chain test (G7) | P2 | 45 min |
+| Add test_review_inspectability.py (G6) — 3 tests | P1 | DONE |
+| Add test_ambiguity_escalation.py (G3) — 2 tests | P1 | DONE |
+| Expand test_real_audio_pipeline with album2 (G8) — 1 test | P2 | DONE |
+| Add test_lifecycle_chain.py (G7) — 2 tests | P2 | DONE |
 
-**Acceptance:** Every guarantee G1-G9 has at least one direct behavioral test. `pytest` still green.
+**Result:** 499 tests collected, 493 passed, 6 skipped. Every guarantee G1-G9 now has direct behavioral coverage.
 
 ### Sprint 08: Documentation Alignment (Low Risk)
 

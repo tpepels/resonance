@@ -288,6 +288,138 @@ def test_real_audio_scan_resolve_plan_apply_readback(work_dir: Path) -> None:
         store.close()
 
 
+# ---------------------------------------------------------------------------
+# Album 2: two-track release (different track count proves pipeline handles it)
+# ---------------------------------------------------------------------------
+ALBUM2_RELEASE = ProviderRelease(
+    provider="musicbrainz",
+    release_id="test-mb-release-002",
+    title="Short EP",
+    artist="EP Artist",
+    tracks=(
+        ProviderTrack(
+            position=1,
+            title="Side A",
+            duration_seconds=3,
+            fingerprint_id="fp-album2-001",
+            composer=None,
+            disc_number=1,
+            recording_id="rec-ep-001",
+        ),
+        ProviderTrack(
+            position=2,
+            title="Side B",
+            duration_seconds=4,
+            fingerprint_id="fp-album2-002",
+            composer=None,
+            disc_number=1,
+            recording_id="rec-ep-002",
+        ),
+    ),
+    year=2026,
+)
+
+
+@pytest.fixture
+def work_dir_album2(tmp_path: Path) -> Path:
+    """Copy album2 real audio fixtures into a temporary working directory."""
+    src = FIXTURE_DIR / "album2"
+    assert src.exists(), f"Fixture directory missing: {src}"
+    dest = tmp_path / "library" / "album2"
+    shutil.copytree(src, dest)
+    return tmp_path
+
+
+def test_real_audio_two_track_ep(work_dir_album2: Path) -> None:
+    """Pipeline proof for a 2-track EP — different shape than album1's 3 tracks."""
+    library = work_dir_album2 / "library"
+    album_dir = library / "album2"
+    state_db = work_dir_album2 / "state.db"
+
+    scanner = LibraryScanner(roots=[library])
+    batches = list(scanner.iter_directories())
+    assert len(batches) == 1
+    batch = batches[0]
+    assert len(batch.files) == 2
+
+    for f in batch.files:
+        audio = mutagen.File(str(f))
+        assert audio is not None, f"mutagen cannot read {f}"
+
+    store = DirectoryStateStore(state_db)
+    try:
+        fp_reader = _make_fingerprint_reader(batch.files, ALBUM2_RELEASE)
+        evidence = extract_evidence(batch.files, fingerprint_reader=fp_reader)
+        assert evidence.track_count == 2
+
+        provider = StubProviderClient(ALBUM2_RELEASE)
+        outcome = resolve_directory(
+            dir_id=batch.dir_id,
+            path=batch.directory,
+            signature_hash=batch.signature_hash,
+            evidence=evidence,
+            store=store,
+            provider_client=provider,
+        )
+        assert outcome.state == DirectoryState.RESOLVED_AUTO
+
+        record = store.get(batch.dir_id)
+        assert record is not None
+        plan = plan_directory(
+            record=record,
+            pinned_release=ALBUM2_RELEASE,
+            source_files=batch.files,
+        )
+        assert len(plan.operations) == 2
+
+        store.set_state(
+            batch.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=ALBUM2_RELEASE.provider,
+            pinned_release_id=ALBUM2_RELEASE.release_id,
+        )
+        store.record_plan_summary(
+            batch.dir_id,
+            plan_hash=_stable_plan_hash(plan),
+            plan_version=plan.plan_version,
+        )
+
+        tag_patch = build_tag_patch(
+            plan=plan,
+            pinned_release=ALBUM2_RELEASE,
+            resolution_state=DirectoryState.RESOLVED_AUTO,
+        )
+        assert tag_patch.allowed is True
+
+        tag_writer = MutagenTagWriter()
+        report = apply_plan(
+            plan=plan,
+            tag_patch=tag_patch,
+            store=store,
+            allowed_roots=(work_dir_album2,),
+            dry_run=False,
+            tag_writer=tag_writer,
+        )
+        assert report.status == ApplyStatus.APPLIED
+        assert not report.errors
+        assert len(report.tag_ops) == 2
+
+        for op in sorted(plan.operations, key=lambda o: o.track_position):
+            dest = _resolve_dest(op.destination_path, work_dir_album2)
+            audio = mutagen.File(str(dest))
+            assert audio is not None
+            tags = {k.lower(): v[0] if isinstance(v, list) else v for k, v in audio.tags.items()}
+            assert tags["album"] == "Short EP"
+            assert tags["albumartist"] == "EP Artist"
+            assert tags.get("musicbrainz_albumid") == ALBUM2_RELEASE.release_id
+
+        final_record = store.get(batch.dir_id)
+        assert final_record is not None
+        assert final_record.state == DirectoryState.APPLIED
+    finally:
+        store.close()
+
+
 def _resolve_dest(dest: Path, root: Path) -> Path:
     """Resolve a relative destination path against the working root."""
     if dest.is_absolute():

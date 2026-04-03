@@ -9,6 +9,7 @@ from pathlib import Path
 from resonance.commands.output import emit_output
 from resonance.errors import ValidationError
 from resonance.core.applier import ApplyReport, ApplyStatus, apply_plan
+from resonance.core.artifacts import load_plan, load_tag_patch
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.services.tag_writer import get_tag_writer
 from resonance.settings import load_settings, resolve_tag_writer_backend
@@ -61,8 +62,8 @@ def run_apply(
         raise ValidationError("apply requires --state-db")
     if not json_output:
         output_sink(f"Using tag writer backend: {backend}")
-    result = apply_fn(tag_writer=writer, backend=backend)
     if apply_fn is not apply_plan:
+        result = apply_fn(tag_writer=writer, backend=backend)
         payload = {
             "status": "OK",
             "backend": backend,
@@ -88,32 +89,56 @@ def run_apply(
     if store is None:
         raise ValidationError("store is required; construct it in the CLI composition root")
     try:
-        plan = None  # TODO: load plan artifact
-        tag_patch = None  # TODO: load tag patch artifact
-        if plan is None:
+        library_root = getattr(args, "library_root", None)
+        allowed_roots: tuple[Path, ...] = (Path(library_root),) if library_root else ()
+        try:
+            plan = load_plan(Path(args.plan), allowed_roots=allowed_roots)
+        except (OSError, ValueError) as exc:
             emit_output(
                 command="apply",
-                payload={"status": "PLAN_LOAD_NOT_IMPLEMENTED"},
+                payload={"status": "PLAN_LOAD_ERROR", "error": str(exc)},
                 json_output=json_output,
                 output_sink=output_sink,
-                human_lines=("apply: plan loading not implemented",),
+                human_lines=(f"apply: plan load error: {exc}",),
             )
             return 1
-        apply_fn(
+        tag_patch = None
+        if getattr(args, "tag_patch", None):
+            try:
+                tag_patch = load_tag_patch(Path(args.tag_patch))
+            except (OSError, ValueError) as exc:
+                emit_output(
+                    command="apply",
+                    payload={"status": "TAG_PATCH_LOAD_ERROR", "error": str(exc)},
+                    json_output=json_output,
+                    output_sink=output_sink,
+                    human_lines=(f"apply: tag patch load error: {exc}",),
+                )
+                return 1
+        dry_run = not getattr(args, "no_dry_run", False)
+        result = apply_fn(
             plan,
             tag_patch,
             store,
-            allowed_roots=(),
-            dry_run=True,
+            allowed_roots=allowed_roots or None,
+            dry_run=dry_run,
             tag_writer=writer,
         )
     finally:
         store.close()
+    payload = {
+        "status": result.status.value,
+        "backend": backend,
+        "dry_run": result.dry_run,
+        "plan_version": result.plan_version,
+        "errors": list(result.errors),
+        "warnings": list(result.warnings),
+    }
     emit_output(
         command="apply",
-        payload={"status": ApplyStatus.APPLIED.value, "backend": backend},
+        payload=payload,
         json_output=json_output,
         output_sink=output_sink,
-        human_lines=("apply: status=APPLIED",),
+        human_lines=(f"apply: status={payload['status']} dry_run={payload['dry_run']}",),
     )
-    return 0
+    return 0 if result.status in (ApplyStatus.APPLIED, ApplyStatus.NOOP_ALREADY_APPLIED) else 1
