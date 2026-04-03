@@ -8,7 +8,7 @@ lint-fix:
 	python -m ruff check resonance --fix
 
 test-v1:
-	pytest -m pipeline_v1
+	pytest tests/archived/ -v --override-ini="collect_ignore_glob="
 
 test-v2:
 	pytest -m pipeline_v2
