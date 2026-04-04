@@ -15,6 +15,27 @@ from resonance.core.state import DirectoryRecord, DirectoryState
 from resonance import __version__ as RESONANCE_VERSION
 
 
+_SELECT_COLUMNS = (
+    "dir_id, last_seen_path, signature_hash, signature_version, state, "
+    "pinned_provider, pinned_release_id, pinned_confidence, created_at, updated_at"
+)
+
+
+def _row_to_record(row: tuple) -> DirectoryRecord:
+    return DirectoryRecord(
+        dir_id=row[0],
+        last_seen_path=Path(row[1]),
+        signature_hash=row[2],
+        signature_version=row[3],
+        state=DirectoryState(row[4]),
+        pinned_provider=row[5],
+        pinned_release_id=row[6],
+        pinned_confidence=row[7],
+        created_at=row[8],
+        updated_at=row[9],
+    )
+
+
 class DirectoryStateStore:
     """SQLite-backed store for directory state records."""
 
@@ -262,89 +283,27 @@ class DirectoryStateStore:
     def list_by_state(self, state: DirectoryState) -> list[DirectoryRecord]:
         with self._lock:
             rows = self._conn.execute(
-                """
-                SELECT dir_id, last_seen_path, signature_hash, signature_version, state,
-                       pinned_provider, pinned_release_id, pinned_confidence,
-                       created_at, updated_at
-                FROM directories
-                WHERE state = ?
-                ORDER BY dir_id ASC
-                """,
+                f"SELECT {_SELECT_COLUMNS} FROM directories WHERE state = ? ORDER BY dir_id ASC",
                 (state.value,),
             ).fetchall()
-
-        return [
-            DirectoryRecord(
-                dir_id=row[0],
-                last_seen_path=Path(row[1]),
-                signature_hash=row[2],
-                signature_version=row[3],
-                state=DirectoryState(row[4]),
-                pinned_provider=row[5],
-                pinned_release_id=row[6],
-                pinned_confidence=row[7],
-                created_at=row[8],
-                updated_at=row[9],
-            )
-            for row in rows
-        ]
+        return [_row_to_record(row) for row in rows]
 
     def list_all(self) -> list[DirectoryRecord]:
         with self._lock:
             rows = self._conn.execute(
-                """
-                SELECT dir_id, last_seen_path, signature_hash, signature_version, state,
-                       pinned_provider, pinned_release_id, pinned_confidence,
-                       created_at, updated_at
-                FROM directories
-                ORDER BY dir_id ASC
-                """
+                f"SELECT {_SELECT_COLUMNS} FROM directories ORDER BY dir_id ASC"
             ).fetchall()
-
-        return [
-            DirectoryRecord(
-                dir_id=row[0],
-                last_seen_path=Path(row[1]),
-                signature_hash=row[2],
-                signature_version=row[3],
-                state=DirectoryState(row[4]),
-                pinned_provider=row[5],
-                pinned_release_id=row[6],
-                pinned_confidence=row[7],
-                created_at=row[8],
-                updated_at=row[9],
-            )
-            for row in rows
-        ]
+        return [_row_to_record(row) for row in rows]
 
     def get(self, dir_id: str) -> Optional[DirectoryRecord]:
         with self._lock:
             row = self._conn.execute(
-                """
-                SELECT dir_id, last_seen_path, signature_hash, signature_version, state,
-                       pinned_provider, pinned_release_id, pinned_confidence,
-                       created_at, updated_at
-                FROM directories
-                WHERE dir_id = ?
-                """,
+                f"SELECT {_SELECT_COLUMNS} FROM directories WHERE dir_id = ?",
                 (dir_id,),
             ).fetchone()
-
         if not row:
             return None
-
-        return DirectoryRecord(
-            dir_id=row[0],
-            last_seen_path=Path(row[1]),
-            signature_hash=row[2],
-            signature_version=row[3],
-            state=DirectoryState(row[4]),
-            pinned_provider=row[5],
-            pinned_release_id=row[6],
-            pinned_confidence=row[7],
-            created_at=row[8],
-            updated_at=row[9],
-        )
+        return _row_to_record(row)
 
     def upsert(self, record: DirectoryRecord) -> DirectoryRecord:
         now = self._now_iso()

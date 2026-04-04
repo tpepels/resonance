@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
 import json
 import os
 from pathlib import Path
 from typing import Optional
+
+from resonance.core.metadata import stable_hash
 
 
 _DEFAULT_BACKEND = "meta-json"
@@ -93,8 +94,7 @@ def settings_hash(settings: Settings, stage: str) -> str:
     if relevance is None:
         raise ValueError(f"Unknown settings hash stage: {stage}")
     payload = {key: getattr(settings, key) for key in relevance}
-    serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    return stable_hash(payload)
 
 
 def _relevance_sets() -> dict[str, tuple[str, ...]]:

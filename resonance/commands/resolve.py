@@ -14,21 +14,6 @@ from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.infrastructure.scanner import LibraryScanner
 
 
-def _error_payload(library_root: Path, exc: BaseException) -> dict:
-    """Build error payload for resolve command."""
-    return build_error_payload(
-        library_root=str(library_root),
-        exc=exc,
-        counters={
-            "processed": 0,
-            "resolved_auto": 0,
-            "queued_prompt": 0,
-            "skipped": 0,
-            "errors": 1,
-        },
-    )
-
-
 def _resolve_item(outcome: ResolveOutcome, directory: Path) -> dict:
     """Build JSON item for a resolved directory."""
     item = {
@@ -72,7 +57,11 @@ def run_resolve(
         exc = IOFailure(f"Library root does not exist: {library_root}")
         emit_output(
             command="resolve",
-            payload=_error_payload(library_root, exc),
+            payload=build_error_payload(
+                library_root=str(library_root),
+                exc=exc,
+                counters={"processed": 0, "resolved_auto": 0, "queued_prompt": 0, "skipped": 0, "errors": 1},
+            ),
             json_output=json_output,
             output_sink=output_sink,
             human_lines=(f"resolve: error={exc}",),

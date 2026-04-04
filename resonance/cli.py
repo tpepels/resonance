@@ -103,6 +103,27 @@ def main() -> int:
     )
     _add_mode_argument(resolve_parser)
 
+    # Stability command
+    stability_parser = subparsers.add_parser(
+        "stability",
+        help="Compare two audit reports for stability (drift detection)",
+    )
+    stability_parser.add_argument(
+        "report_a",
+        type=Path,
+        help="First audit report file (JSON)",
+    )
+    stability_parser.add_argument(
+        "report_b",
+        type=Path,
+        help="Second audit report file (JSON)",
+    )
+    _add_json_argument(stability_parser)
+
+    # ...existing code for other subparsers...
+
+    args = parser.parse_args()
+
     prompt_parser = subparsers.add_parser(
         "prompt",
         help="Interactively resolve queued directories",

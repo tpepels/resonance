@@ -7,12 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
-import hashlib
-import json
 from pathlib import Path
 from typing import Optional
 
 from resonance.core.identifier import ProviderRelease
+from resonance.core.metadata import stable_hash
 from resonance.core.planner import Plan
 from resonance.core.state import DirectoryState
 from resonance import __version__
@@ -89,8 +88,7 @@ def _stable_plan_hash(plan: Plan) -> str:
         return obj
 
     payload = convert_paths(payload)
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+    return stable_hash(payload)
 
 
 def _provenance_tags(

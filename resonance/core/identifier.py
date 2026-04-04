@@ -11,8 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import json
 from typing import Callable, Optional, Protocol
+
+from resonance.core.metadata import read_sidecar
 
 
 class ConfidenceTier(str, Enum):
@@ -223,29 +224,10 @@ def extract_evidence(
 
 
 def _read_existing_tags(path: Path) -> dict[str, str]:
-    import hashlib as _hashlib
-
-    # Try suffix-based sidecar first
-    metadata_path = path.with_suffix(path.suffix + ".meta.json")
-    if not metadata_path.exists():
-        # Fall back to hash-based sidecar (handles long filenames)
-        path_hash = _hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
-        metadata_path = path.parent / f"{path_hash}.meta.json"
-    if not metadata_path.exists():
-        return {}
-    try:
-        data = json.loads(metadata_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return {}
-    tags = data.get("tags")
+    tags = read_sidecar(path, hash_first=False).get("tags")
     if not isinstance(tags, dict):
         return {}
-    normalized: dict[str, str] = {}
-    for key, value in tags.items():
-        if value is None:
-            continue
-        normalized[str(key)] = str(value)
-    return normalized
+    return {str(k): str(v) for k, v in tags.items() if v is not None}
 
 
 def read_fingerprint_from_test_metadata(path: Path) -> str | None:
@@ -260,17 +242,8 @@ def read_fingerprint_from_test_metadata(path: Path) -> str | None:
     Returns:
         Fingerprint string or None if not available
     """
-    metadata_path = path.with_suffix(path.suffix + ".meta.json")
-    if not metadata_path.exists():
-        return None
-    try:
-        data = json.loads(metadata_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return None
-    fingerprint = data.get("fingerprint")
-    if isinstance(fingerprint, str):
-        return fingerprint
-    return None
+    fp = read_sidecar(path, hash_first=False).get("fingerprint")
+    return fp if isinstance(fp, str) else None
 
 
 def score_release(

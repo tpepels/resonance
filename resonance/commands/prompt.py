@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 from ..core.identifier import ConfidenceTier, extract_evidence, identify
+from ..core.metadata import stable_hash
 from ..core.state import DirectoryState
 from ..core.validation import validate_release_id
 from ..errors import ValidationError
@@ -88,9 +89,7 @@ def compute_prompt_fingerprint(dir_id: str, candidates: List, result_reasons: Li
         "result_reasons": sorted(result_reasons),  # Stable ordering
     }
 
-    # Create stable JSON representation
-    json_str = json.dumps(fingerprint_data, sort_keys=True, separators=(',', ':'))
-    return hashlib.sha256(json_str.encode('utf-8')).hexdigest()
+    return stable_hash(fingerprint_data)
 
 
 def run_prompt_uncertain(

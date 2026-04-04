@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import fnmatch
-import json
 import os
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from resonance.core.identity import dir_signature, dir_id
+from resonance.core.metadata import read_sidecar
 
 
 @dataclass
@@ -181,33 +181,8 @@ class LibraryScanner:
         return None
 
     def _read_stub_tags(self, path: Path) -> dict[str, str]:
-        # Try hash-based naming first (for real corpus with long filenames)
-        import hashlib
-        path_hash = hashlib.sha256(str(path).encode('utf-8')).hexdigest()[:16]
-        metadata_path = path.parent / f"{path_hash}.meta.json"
-
-        if metadata_path.exists():
-            try:
-                data = json.loads(metadata_path.read_text())
-                tags = data.get("tags")
-                if isinstance(tags, dict):
-                    return tags
-            except (json.JSONDecodeError, OSError):
-                pass
-
-        # Fall back to old naming scheme for test stubs (only if filename is short enough)
-        if len(str(path)) <= 200:  # Only try legacy path for reasonably short filenames
-            legacy_path = path.with_suffix(path.suffix + ".meta.json")
-            if legacy_path.exists():
-                try:
-                    data = json.loads(legacy_path.read_text())
-                    tags = data.get("tags")
-                    if isinstance(tags, dict):
-                        return tags
-                except (json.JSONDecodeError, OSError):
-                    pass
-
-        return {}
+        tags = read_sidecar(path).get("tags")
+        return tags if isinstance(tags, dict) else {}
 
     def _root_for_batch(self, batch: DirectoryBatch) -> Path:
         for root in self.roots:

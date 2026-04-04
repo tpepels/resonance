@@ -93,29 +93,18 @@ class ResonanceApp:
         self.provider_client = None
         providers: list[NamedProvider] = []
 
-        if self.musicbrainz:
-            mb_cached = CachedProviderClient(
-                self.musicbrainz,
-                self.cache,
-                ProviderConfig(
-                    provider_name="musicbrainz",
-                    client_version=RESONANCE_VERSION,
-                    offline=offline,
-                ),
-            )
-            providers.append(NamedProvider("musicbrainz", mb_cached))
-
-        if self.discogs:
-            discogs_cached = CachedProviderClient(
-                self.discogs,
-                self.cache,
-                ProviderConfig(
-                    provider_name="discogs",
-                    client_version=RESONANCE_VERSION,
-                    offline=offline,
-                ),
-            )
-            providers.append(NamedProvider("discogs", discogs_cached))
+        for name, client in [("musicbrainz", self.musicbrainz), ("discogs", self.discogs)]:
+            if client:
+                cached = CachedProviderClient(
+                    client,
+                    self.cache,
+                    ProviderConfig(
+                        provider_name=name,
+                        client_version=RESONANCE_VERSION,
+                        offline=offline,
+                    ),
+                )
+                providers.append(NamedProvider(name, cached))
 
         if self.acoustid:
             # AcoustID uses different caching strategy - direct client for now

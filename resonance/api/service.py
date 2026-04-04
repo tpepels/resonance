@@ -87,7 +87,36 @@ class ResonanceService:
             "doctor": lambda: self._run_doctor(args, output_sink=output_sink),
             "rollback": lambda: self._run_rollback(args, output_sink=output_sink),
             "unjail": lambda: self._run_unjail(args, output_sink=output_sink),
+            "stability": lambda: self._run_stability(args, output_sink=output_sink),
         }
+
+        handler = dispatch.get(command) if command is not None else None
+        if handler is not None:
+            return handler()
+
+        raise ValidationError(f"Unsupported command: {command}")
+    def _run_stability(self, args: Namespace, output_sink) -> int:
+        import json
+        from resonance.commands.stability import run_stability_report
+        try:
+            with open(args.report_a, "r") as f:
+                report_a = json.load(f)
+            with open(args.report_b, "r") as f:
+                report_b = json.load(f)
+        except Exception as exc:
+            output_sink(f"Error loading report files: {exc}")
+            return 2
+        result = run_stability_report(report_a, report_b)
+        if getattr(args, "json", False):
+            output_sink(json.dumps(result, indent=2))
+        else:
+            if result["same"]:
+                output_sink("No differences detected.")
+            else:
+                output_sink("Differences detected:")
+                for diff in result["differences"]:
+                    output_sink(f"  Field: {diff['field']}\n    Left: {diff['left']}\n    Right: {diff['right']}")
+        return 0
 
         handler = dispatch.get(command) if command is not None else None
         if handler is not None:

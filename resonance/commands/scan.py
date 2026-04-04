@@ -4,37 +4,17 @@ from __future__ import annotations
 
 from argparse import Namespace
 from pathlib import Path
-import json
 from typing import Iterable
 
 from resonance.commands.output import build_error_payload, emit_output
+from resonance.core.metadata import read_sidecar
 from resonance.errors import IOFailure, ValidationError, exit_code_for_exception
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.infrastructure.scanner import LibraryScanner
 
 
 def _read_duration_seconds(path: Path) -> int | None:
-    import hashlib as _hashlib
-
-    meta_path = path.with_suffix(path.suffix + ".meta.json")
-    try:
-        if not meta_path.exists():
-            # Fall back to hash-based sidecar (handles long filenames)
-            path_hash = _hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
-            meta_path = path.parent / f"{path_hash}.meta.json"
-    except OSError:
-        # Handle filesystem faker issues with long paths
-        return None
-    try:
-        if not meta_path.exists():
-            return None
-    except OSError:
-        return None
-    try:
-        data = json.loads(meta_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return None
-    duration = data.get("duration_seconds")
+    duration = read_sidecar(path, hash_first=False).get("duration_seconds")
     return duration if isinstance(duration, int) else None
 
 
@@ -45,20 +25,6 @@ def _duration_total(files: Iterable[Path]) -> int:
         if isinstance(duration, int):
             total += duration
     return total
-
-
-def _error_payload(library_root: Path, exc: BaseException) -> dict:
-    return build_error_payload(
-        library_root=str(library_root),
-        exc=exc,
-        counters={
-            "scanned": 0,
-            "new": 0,
-            "already_tracked": 0,
-            "skipped": 0,
-            "errors": 1,
-        },
-    )
 
 
 def run_scan(
@@ -77,7 +43,11 @@ def run_scan(
         exc = IOFailure(f"Library root does not exist: {library_root}")
         emit_output(
             command="scan",
-            payload=_error_payload(library_root, exc),
+            payload=build_error_payload(
+                library_root=str(library_root),
+                exc=exc,
+                counters={"scanned": 0, "new": 0, "already_tracked": 0, "skipped": 0, "errors": 1},
+            ),
             json_output=json_output,
             output_sink=output_sink,
             human_lines=(f"scan: error={exc}",),
