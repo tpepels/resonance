@@ -10,6 +10,7 @@ from resonance.errors import ValidationError
 from resonance.core.identifier import ProviderClient, ProviderRelease
 from resonance.core.artifacts import serialize_plan
 from resonance.core.planner import plan_directory
+from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
 
 
@@ -66,6 +67,12 @@ def run_plan(
         )
         plan_hash = hashlib.sha256(serialize_plan(plan).encode("utf-8")).hexdigest()
         store.record_plan_summary(plan.dir_id, plan_hash, plan.plan_version)
+        store.set_state(
+            plan.dir_id,
+            DirectoryState.PLANNED,
+            pinned_provider=record.pinned_provider,
+            pinned_release_id=record.pinned_release_id,
+        )
     finally:
         pass
 

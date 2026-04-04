@@ -182,7 +182,7 @@ class MetadataCache:
         self._conn.commit()
 
     def _purge_schema(self) -> None:
-        tables = (
+        _PURGEABLE_TABLES = frozenset({
             "cache",
             "processed_files",
             "directory_releases",
@@ -193,9 +193,10 @@ class MetadataCache:
             "skipped_directories",
             "skipped_directories_by_id",
             "file_moves",
-        )
-        for table in tables:
-            self._conn.execute(f"DROP TABLE IF EXISTS {table}")
+        })
+        for table in _PURGEABLE_TABLES:
+            # Table name is from a hardcoded whitelist, not user input
+            self._conn.execute(f"DROP TABLE IF EXISTS {table}")  # noqa: S608
 
     def _get_metadata(self, key: str) -> Optional[str]:
         row = self._conn.execute(

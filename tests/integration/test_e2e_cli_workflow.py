@@ -18,6 +18,7 @@ from resonance.core.identifier import (
 )
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
+from tests.helpers.fs import write_audio_stub
 
 
 class StubProviderClient:
@@ -45,24 +46,6 @@ class StubProviderClient:
         return list(self._releases)
 
 
-def _write_audio(
-    path: Path, duration: int = 180, fingerprint: str | None = None
-) -> None:
-    """Create a stub audio file with metadata."""
-    import json
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("stub")
-
-    # Create .meta.json sidecar with unique metadata
-    meta = {"duration_seconds": duration}
-    if fingerprint:
-        meta["fingerprint_id"] = fingerprint
-
-    meta_path = path.with_suffix(path.suffix + ".meta.json")
-    meta_path.write_text(json.dumps(meta))
-
-
 def test_cli_workflow_scan_resolve_prompt(tmp_path: Path) -> None:
     """Test the full CLI workflow: scan → resolve → prompt."""
     state_db_path = tmp_path / "state.db"
@@ -70,28 +53,28 @@ def test_cli_workflow_scan_resolve_prompt(tmp_path: Path) -> None:
 
     # Setup: Create 3 albums with different confidence scenarios
     # Album 1: CERTAIN (high score, good fingerprint coverage)
-    _write_audio(
+    write_audio_stub(
         lib / "album_certain" / "track1.flac", duration=180, fingerprint="fp-certain-1"
     )
-    _write_audio(
+    write_audio_stub(
         lib / "album_certain" / "track2.flac", duration=200, fingerprint="fp-certain-2"
     )
 
     # Album 2: PROBABLE (moderate score, some fingerprint coverage)
-    _write_audio(
+    write_audio_stub(
         lib / "album_probable" / "track1.flac",
         duration=190,
         fingerprint="fp-probable-1",
     )
-    _write_audio(
+    write_audio_stub(
         lib / "album_probable" / "track2.flac",
         duration=210,
         fingerprint="fp-probable-2",
     )
 
     # Album 3: UNSURE (low score, no fingerprints)
-    _write_audio(lib / "album_unsure" / "track1.flac", duration=195)
-    _write_audio(lib / "album_unsure" / "track2.flac", duration=215)
+    write_audio_stub(lib / "album_unsure" / "track1.flac", duration=195)
+    write_audio_stub(lib / "album_unsure" / "track2.flac", duration=215)
 
     store = DirectoryStateStore(state_db_path)
     try:
@@ -219,7 +202,7 @@ def test_cli_idempotency_rerun_is_noop(tmp_path: Path) -> None:
     lib = tmp_path / "library"
 
     # Create a simple album
-    _write_audio(lib / "album" / "track.flac", duration=180, fingerprint="fp-1")
+    write_audio_stub(lib / "album" / "track.flac", duration=180, fingerprint="fp-1")
 
     store = DirectoryStateStore(state_db_path)
     try:
@@ -297,7 +280,7 @@ def test_cli_json_mode_all_commands(tmp_path: Path) -> None:
     state_db_path = tmp_path / "state.db"
     lib = tmp_path / "library"
 
-    _write_audio(lib / "album" / "track.flac", duration=180, fingerprint="fp-1")
+    write_audio_stub(lib / "album" / "track.flac", duration=180, fingerprint="fp-1")
 
     store = DirectoryStateStore(state_db_path)
     try:

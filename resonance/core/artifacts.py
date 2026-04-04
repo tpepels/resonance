@@ -37,6 +37,8 @@ def _ensure_str(value: Any, name: str) -> str:
 
 def _resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...]) -> Path:
     if path.is_absolute():
+        # Absolute paths must still be validated against allowed_roots
+        SafePath(path, allowed_roots)
         return path
     if len(allowed_roots) != 1:
         raise ValueError("Relative destination path requires a single allowed_root")
@@ -44,6 +46,8 @@ def _resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...]) -> Pa
 
 
 def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
+    if not allowed_roots:
+        raise ValueError("allowed_roots is required for plan loading")
     data = json.loads(path.read_text())
     dir_id = _ensure_str(_require(data.get("dir_id"), "dir_id"), "dir_id")
     validate_dir_id(dir_id)

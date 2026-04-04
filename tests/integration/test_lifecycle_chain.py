@@ -176,6 +176,7 @@ def test_full_lifecycle_scan_through_rollback(tmp_path: Path) -> None:
             report=report,
             source_dir=lib / "album",
             destination_dir=tmp_path,
+            allowed_roots=(tmp_path,),
             tag_writer=tag_writer,
         )
         assert rollback_result["restored"] is True

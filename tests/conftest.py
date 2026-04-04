@@ -8,7 +8,6 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Generator, Any
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -226,81 +225,6 @@ def create_test_audio_file(temp_dir: Path):
 
 
 @pytest.fixture
-def mock_app_no_network(test_cache: Path, test_library: Path):
-    """Create a ResonanceApp with mocked network calls."""
-    from resonance.app import ResonanceApp
-
-    # Mock the MusicBrainz and Discogs clients to avoid network calls
-    with patch("resonance.app.MusicBrainzClient"), \
-         patch("resonance.app.DiscogsClient"):
-
-        app = ResonanceApp.from_env(
-            library_root=test_library,
-            cache_path=test_cache,
-            interactive=False,  # Non-interactive for tests
-            dry_run=False,
-        )
-
-        yield app
-
-        # Cleanup
-        app.close()
-
-
-class TestScenario:
-    """Helper class for defining test scenarios."""
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        input_files: list[dict[str, Any]],
-        expected_output: dict[str, Any],
-        mock_responses: dict[str, Any] | None = None,
-    ):
-        """Initialize test scenario.
-
-        Args:
-            name: Scenario name
-            description: Human-readable description
-            input_files: List of input file specs
-            expected_output: Expected outcome (paths, metadata, etc.)
-            mock_responses: Mock API responses to use
-        """
-        self.name = name
-        self.description = description
-        self.input_files = input_files
-        self.expected_output = expected_output
-        self.mock_responses = mock_responses or {}
-
-    def setup(self, base_dir: Path, create_file_fn) -> Path:
-        """Create test files in base_dir.
-
-        Args:
-            base_dir: Base directory for test files
-            create_file_fn: Function to create audio files
-
-        Returns:
-            Path to input directory
-        """
-        input_dir = base_dir / "input" / self.name
-        input_dir.mkdir(parents=True, exist_ok=True)
-
-        for file_spec in self.input_files:
-            file_path = input_dir / file_spec["filename"]
-            create_file_fn(
-                path=file_path,
-                title=file_spec.get("title"),
-                artist=file_spec.get("artist"),
-                album=file_spec.get("album"),
-                track_number=file_spec.get("track_number"),
-                duration=file_spec.get("duration", 180),
-            )
-
-        return input_dir
-
-
-@pytest.fixture
 def album_dir_factory(temp_dir: Path):
     """Factory for creating album directories with audio/non-audio stubs."""
     def _create_album(
@@ -360,66 +284,3 @@ def non_audio_present(golden_scenario_builder) -> GoldenScenario:
 @pytest.fixture
 def target_exists_conflict(golden_scenario_builder) -> GoldenScenario:
     return golden_scenario_builder("target_exists_conflict")
-
-
-@pytest.fixture
-def getz_gilberto_scenario(mock_musicbrainz_response, mock_acoustid_response):
-    """Test scenario: Getz/Gilberto with artist name variants."""
-
-    # Mock MusicBrainz release
-    mb_response = mock_musicbrainz_response(
-        release_id="c4f86c97-d672-33d0-8f2c-a0a5bfdb2a7e",
-        album_title="Getz/Gilberto",
-        album_artist="Stan Getz & João Gilberto",
-        release_date="1964-03",
-        tracks=[
-            {"title": "The Girl from Ipanema", "duration": 326},
-            {"title": "Doralice", "duration": 157},
-            {"title": "P'ra Machucar Meu Coração", "duration": 251},
-        ],
-    )
-
-    return TestScenario(
-        name="getz_gilberto",
-        description="Multi-artist album with name variants",
-        input_files=[
-            {
-                "filename": "01 - The Girl from Ipanema.flac",
-                "title": "The Girl from Ipanema",
-                "artist": "Stan Getz & João Gilberto",  # Variant 1
-                "album": "Getz/Gilberto",
-                "track_number": 1,
-                "duration": 326,
-            },
-            {
-                "filename": "02 - Doralice.flac",
-                "title": "Doralice",
-                "artist": "Getz, Gilberto",  # Variant 2
-                "album": "Getz/Gilberto",
-                "track_number": 2,
-                "duration": 157,
-            },
-            {
-                "filename": "03 - P'ra Machucar Meu Coração.flac",
-                "title": "P'ra Machucar Meu Coração",
-                "artist": "Getz/Gilberto",  # Variant 3
-                "album": "Getz-Gilberto",  # Slight album variant
-                "track_number": 3,
-                "duration": 251,
-            },
-        ],
-        expected_output={
-            "canonical_artist": "Stan Getz & João Gilberto",  # Canonical form
-            "canonical_album": "Getz/Gilberto",
-            "release_id": "c4f86c97-d672-33d0-8f2c-a0a5bfdb2a7e",
-            "provider": "musicbrainz",
-            "output_path_pattern": r"Stan Getz.*João Gilberto/Getz.*Gilberto",
-            "track_count": 3,
-        },
-        mock_responses={
-            "musicbrainz": mb_response,
-        },
-    )
-
-
-# More scenario fixtures will be added here...

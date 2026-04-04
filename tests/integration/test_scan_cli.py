@@ -9,22 +9,7 @@ from pathlib import Path
 from resonance.commands.scan import run_scan
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
-
-
-def _write_audio(path: Path, content: str = "stub", duration: int = 180, fingerprint: str | None = None) -> None:
-    """Create a stub audio file with metadata."""
-    import json
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content)
-
-    # Create .meta.json sidecar with unique metadata
-    meta = {"duration_seconds": duration}
-    if fingerprint:
-        meta["fingerprint_id"] = fingerprint
-
-    meta_path = path.with_suffix(path.suffix + ".meta.json")
-    meta_path.write_text(json.dumps(meta))
+from tests.helpers.fs import write_audio_stub
 
 
 def test_scan_populates_state_db_with_new_directories(tmp_path: Path) -> None:
@@ -34,8 +19,8 @@ def test_scan_populates_state_db_with_new_directories(tmp_path: Path) -> None:
 
     # Create test library with different metadata to ensure unique dir_ids
     lib = tmp_path / "library"
-    _write_audio(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
-    _write_audio(lib / "album2" / "track.mp3", duration=200, fingerprint="fp2")
+    write_audio_stub(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
+    write_audio_stub(lib / "album2" / "track.mp3", duration=200, fingerprint="fp2")
 
     args = Namespace(
         library_root=lib,
@@ -69,7 +54,7 @@ def test_scan_rescan_skips_already_scanned_dirs_with_same_signature(tmp_path: Pa
     try:
         # Create test library
         lib = tmp_path / "library"
-        _write_audio(lib / "album1" / "track.flac")
+        write_audio_stub(lib / "album1" / "track.flac")
 
         args = Namespace(
             library_root=lib,
@@ -99,7 +84,7 @@ def test_scan_json_output_is_deterministic(tmp_path: Path) -> None:
     try:
         # Create test library
         lib = tmp_path / "library"
-        _write_audio(lib / "album1" / "track.flac")
+        write_audio_stub(lib / "album1" / "track.flac")
 
         args = Namespace(
             library_root=lib,

@@ -108,6 +108,7 @@ def test_rollback_reverts_applied_move(tmp_path: Path) -> None:
             report=report,
             source_dir=source,
             destination_dir=dest_root,
+            allowed_roots=(tmp_path,),
         )
         assert result["restored"] is True
         assert result["errors"] == ()
@@ -199,6 +200,7 @@ def test_rollback_restores_tag_snapshot(tmp_path: Path) -> None:
             report=report,
             source_dir=source,
             destination_dir=dest_root,
+            allowed_roots=(tmp_path,),
             tag_writer=writer,
         )
         assert result["restored"] is True

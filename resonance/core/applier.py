@@ -18,6 +18,9 @@ from resonance.core.planner import Plan, TrackOperation
 from resonance.core.state import DirectoryState
 from resonance.core.validation import (
     SafePath,
+    _is_within,
+    resolve_destination_path as _resolve_destination_path,
+    resolve_source_path as _resolve_source_path,
     validate_dir_id,
     validate_release_id,
     validate_signature_hash,
@@ -71,29 +74,6 @@ class ApplyReport:
 _SUPPORTED_PLAN_VERSIONS = frozenset({"v1"})
 _SUPPORTED_TAGPATCH_VERSIONS = frozenset({"v1"})
 
-
-def _is_within(parent: Path, child: Path) -> bool:
-    parent = parent.resolve()
-    child = child.resolve()
-    return parent == child or parent in child.parents
-
-
-def _resolve_source_path(source_root: Path, path: Path) -> Path:
-    if ".." in path.parts:
-        raise ValueError(f"Path traversal not allowed: {path}")
-    if path.is_absolute():
-        return path
-    return source_root / path
-
-
-def _resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...] | None) -> Path:
-    if ".." in path.parts:
-        raise ValueError(f"Path traversal not allowed: {path}")
-    if path.is_absolute():
-        return path
-    if not allowed_roots or len(allowed_roots) != 1:
-        raise ValueError("Relative destination path requires a single allowed_root")
-    return allowed_roots[0] / path
 
 
 def _collect_audio_files(source_path: Path) -> list[Path]:

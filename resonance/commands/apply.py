@@ -90,7 +90,16 @@ def run_apply(
         raise ValidationError("store is required; construct it in the CLI composition root")
     try:
         library_root = getattr(args, "library_root", None)
-        allowed_roots: tuple[Path, ...] = (Path(library_root),) if library_root else ()
+        if not library_root:
+            emit_output(
+                command="apply",
+                payload={"status": "MISSING_LIBRARY_ROOT"},
+                json_output=json_output,
+                output_sink=output_sink,
+                human_lines=("apply: --library-root is required",),
+            )
+            raise ValidationError("apply requires --library-root")
+        allowed_roots: tuple[Path, ...] = (Path(library_root).resolve(),)
         try:
             plan = load_plan(Path(args.plan), allowed_roots=allowed_roots)
         except (OSError, ValueError) as exc:
@@ -120,7 +129,7 @@ def run_apply(
             plan,
             tag_patch,
             store,
-            allowed_roots=allowed_roots or None,
+            allowed_roots=allowed_roots,
             dry_run=dry_run,
             tag_writer=writer,
         )

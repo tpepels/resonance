@@ -81,39 +81,23 @@ def normalize_token(value: str | None) -> str:
 
 
 def split_names(value: str | None) -> list[str]:
-    """Split a multi-name string into deterministic parts."""
+    """Split a multi-name string into deterministic parts.
+
+    Delegates to canonicalize.split_names for the authoritative implementation.
+    """
     if not value:
         return []
-
-    cleaned = unicodedata.normalize("NFKC", value).strip()
-    cleaned = re.sub(r"\s+", " ", cleaned)
-
-    cleaned = re.sub(r"\bfeat\.?\b", ";", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\bfeaturing\b", ";", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\bft\.?\b", ";", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\bincluding\b", ";", cleaned, flags=re.IGNORECASE)
-    cleaned = JOINER_PATTERN.sub(";", cleaned)
-    cleaned = re.sub(r"[,&/;]+", ";", cleaned)
-
-    parts = []
-    for part in cleaned.split(";"):
-        part = part.strip()
-        part = re.sub(r"^[\W_]+|[\W_]+$", "", part)
-        if part:
-            parts.append(part)
-    return parts
+    from .canonicalize import split_names as _canonical_split_names
+    return _canonical_split_names(value)
 
 
 def dedupe_names(names: list[str]) -> list[str]:
-    """Remove duplicate names using normalized token comparison."""
-    seen: set[str] = set()
-    unique: list[str] = []
-    for name in names:
-        token = normalize_token(name)
-        if token and token not in seen:
-            unique.append(name)
-            seen.add(token)
-    return unique
+    """Remove duplicate names using normalized token comparison.
+
+    Delegates to canonicalize.dedupe_names for the authoritative implementation.
+    """
+    from .canonicalize import dedupe_names as _canonical_dedupe_names
+    return _canonical_dedupe_names(names)
 
 
 def strip_featuring(value: str | None) -> str | None:

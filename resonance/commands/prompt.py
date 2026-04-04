@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Callable
 
 from ..core.identifier import ConfidenceTier, extract_evidence, identify
 from ..core.state import DirectoryState
+from ..core.validation import validate_release_id
 from ..errors import ValidationError
 from ..infrastructure.scanner import LibraryScanner
 
@@ -185,6 +186,7 @@ def run_prompt_uncertain(
                     )
             elif chosen.startswith("mb:"):
                 release_id = chosen[3:]
+                validate_release_id(release_id)
                 store.set_state(
                     record.dir_id,
                     DirectoryState.RESOLVED_USER,
@@ -193,6 +195,7 @@ def run_prompt_uncertain(
                 )
             elif chosen.startswith("dg:"):
                 release_id = chosen[3:]
+                validate_release_id(release_id)
                 store.set_state(
                     record.dir_id,
                     DirectoryState.RESOLVED_USER,
@@ -241,6 +244,7 @@ def run_prompt_uncertain(
         if response.startswith("mb:"):
             release_id = response[3:].strip()
             if release_id:
+                validate_release_id(release_id)
                 store.set_state(
                     record.dir_id,
                     DirectoryState.RESOLVED_USER,
@@ -257,6 +261,7 @@ def run_prompt_uncertain(
         if response.startswith("dg:"):
             release_id = response[3:].strip()
             if release_id:
+                validate_release_id(release_id)
                 store.set_state(
                     record.dir_id,
                     DirectoryState.RESOLVED_USER,
@@ -365,90 +370,94 @@ def run_prompt_scripted(args: Namespace, *, store, output_sink=print) -> int:
     queued = store.list_by_state(DirectoryState.QUEUED_PROMPT)
     processed = 0
 
-    for record in queued:
-        dir_id = record.dir_id
-        scripted_decision = scripted_decisions.get(dir_id)
+    # Create provider client once for all AUTO decisions
+    scripted_app = None
+    scripted_provider_client = None
+    if hasattr(args, 'cache_db') and args.cache_db:
+        from resonance.app import ResonanceApp
+        scripted_app = ResonanceApp.from_env(
+            library_root=Path("/tmp"),  # dummy
+            cache_path=args.cache_db,
+            offline=True,  # Always offline for scripted mode
+        )
+        scripted_provider_client = scripted_app.provider_client
 
-        if scripted_decision == "AUTO":
-            # Run identification to get candidates and pick best
-            from ..core.identifier import extract_evidence, identify
-            from ..infrastructure.scanner import LibraryScanner
+    try:
+        for record in queued:
+            dir_id = record.dir_id
+            scripted_decision = scripted_decisions.get(dir_id)
 
-            # Get provider client
-            if hasattr(args, 'cache_db') and args.cache_db:
-                from resonance.app import ResonanceApp
-                app = ResonanceApp.from_env(
-                    library_root=Path("/tmp"),  # dummy
-                    cache_path=args.cache_db,
-                    offline=True,  # Always offline for scripted mode
-                )
-                provider_client = app.provider_client
-                app.close()
-                if provider_client is None:
+            if scripted_decision == "AUTO":
+                # Run identification to get candidates and pick best
+                from ..core.identifier import extract_evidence, identify
+                from ..infrastructure.scanner import LibraryScanner
+
+                if scripted_provider_client is None:
                     output_sink(f"WARNING: No provider client for {dir_id}, jailing")
                     store.set_state(dir_id, DirectoryState.JAILED)
+                    processed += 1
                     continue
-            else:
-                output_sink(f"WARNING: No cache_db for {dir_id}, jailing")
-                store.set_state(dir_id, DirectoryState.JAILED)
-                continue
 
-            # Extract evidence and identify
-            audio_files = sorted(
-                path for path in record.last_seen_path.iterdir()
-                if path.is_file() and path.suffix.lower() in LibraryScanner.DEFAULT_EXTENSIONS
-            )
-            if not audio_files:
-                store.set_state(dir_id, DirectoryState.JAILED)
-                continue
-
-            evidence = extract_evidence(audio_files)
-            result = identify(evidence, provider_client)
-
-            if result.best_candidate and result.tier in (ConfidenceTier.PROBABLE, ConfidenceTier.CERTAIN):
-                best = result.best_candidate
-                store.set_state(
-                    dir_id,
-                    DirectoryState.RESOLVED_USER,
-                    pinned_provider=best.release.provider,
-                    pinned_release_id=best.release.release_id,
-                    pinned_confidence=best.total_score,
+                # Extract evidence and identify
+                audio_files = sorted(
+                    path for path in record.last_seen_path.iterdir()
+                    if path.is_file() and path.suffix.lower() in LibraryScanner.DEFAULT_EXTENSIONS
                 )
-                output_sink(f"SCRIPTED: {dir_id} -> AUTO ({best.release.provider}:{best.release.release_id})")
-            else:
-                store.set_state(dir_id, DirectoryState.JAILED)
-                output_sink(f"SCRIPTED: {dir_id} -> JAIL (no good candidates)")
+                if not audio_files:
+                    store.set_state(dir_id, DirectoryState.JAILED)
+                    processed += 1
+                    continue
 
-        elif scripted_decision == "JAIL":
-            store.set_state(dir_id, DirectoryState.JAILED)
-            output_sink(f"SCRIPTED: {dir_id} -> JAIL")
+                evidence = extract_evidence(audio_files)
+                result = identify(evidence, scripted_provider_client)
 
-        elif isinstance(scripted_decision, str):
-            # Specific release_id provided in format "provider:release_id"
-            if ":" in scripted_decision:
-                provider_name, release_id = scripted_decision.split(":", 1)
-                # Validate provider name
-                if provider_name in ("musicbrainz", "discogs", "acoustid"):
+                if result.best_candidate and result.tier in (ConfidenceTier.PROBABLE, ConfidenceTier.CERTAIN):
+                    best = result.best_candidate
                     store.set_state(
                         dir_id,
                         DirectoryState.RESOLVED_USER,
-                        pinned_provider=provider_name,
-                        pinned_release_id=release_id,
+                        pinned_provider=best.release.provider,
+                        pinned_release_id=best.release.release_id,
+                        pinned_confidence=best.total_score,
                     )
-                    output_sink(f"SCRIPTED: {dir_id} -> {provider_name}:{release_id}")
+                    output_sink(f"SCRIPTED: {dir_id} -> AUTO ({best.release.provider}:{best.release.release_id})")
                 else:
                     store.set_state(dir_id, DirectoryState.JAILED)
-                    output_sink(f"SCRIPTED: {dir_id} -> JAIL (invalid provider {provider_name})")
-            else:
+                    output_sink(f"SCRIPTED: {dir_id} -> JAIL (no good candidates)")
+
+            elif scripted_decision == "JAIL":
                 store.set_state(dir_id, DirectoryState.JAILED)
-                output_sink(f"SCRIPTED: {dir_id} -> JAIL (invalid format)")
+                output_sink(f"SCRIPTED: {dir_id} -> JAIL")
 
-        else:
-            # No scripted decision available
-            store.set_state(dir_id, DirectoryState.JAILED)
-            output_sink(f"SCRIPTED: {dir_id} -> JAIL (no decision)")
+            elif isinstance(scripted_decision, str):
+                # Specific release_id provided in format "provider:release_id"
+                if ":" in scripted_decision:
+                    provider_name, release_id = scripted_decision.split(":", 1)
+                    # Validate provider name
+                    if provider_name in ("musicbrainz", "discogs", "acoustid"):
+                        store.set_state(
+                            dir_id,
+                            DirectoryState.RESOLVED_USER,
+                            pinned_provider=provider_name,
+                            pinned_release_id=release_id,
+                        )
+                        output_sink(f"SCRIPTED: {dir_id} -> {provider_name}:{release_id}")
+                    else:
+                        store.set_state(dir_id, DirectoryState.JAILED)
+                        output_sink(f"SCRIPTED: {dir_id} -> JAIL (invalid provider {provider_name})")
+                else:
+                    store.set_state(dir_id, DirectoryState.JAILED)
+                    output_sink(f"SCRIPTED: {dir_id} -> JAIL (invalid format)")
 
-        processed += 1
+            else:
+                # No scripted decision available
+                store.set_state(dir_id, DirectoryState.JAILED)
+                output_sink(f"SCRIPTED: {dir_id} -> JAIL (no decision)")
+
+            processed += 1
+    finally:
+        if scripted_app is not None:
+            scripted_app.close()
 
     output_sink(f"Processed {processed} queued directories with scripted decisions")
     return 0
@@ -471,16 +480,17 @@ def run_prompt_record(args: Namespace, *, store, provider_client=None,
     replay_recorder = PromptReplay(corpus_hashes)
 
     # Get provider client if not provided
+    record_app = None
     if provider_client is None and hasattr(args, 'cache_db') and args.cache_db:
         from resonance.app import ResonanceApp
-        app = ResonanceApp.from_env(
+        record_app = ResonanceApp.from_env(
             library_root=Path("/tmp"),  # dummy
             cache_path=args.cache_db,
             offline=False,  # Recording mode should use live providers
         )
-        provider_client = app.provider_client
-        app.close()
+        provider_client = record_app.provider_client
         if provider_client is None:
+            record_app.close()
             raise ValidationError("Provider client required for recording mode")
 
     # Use extract_evidence as the evidence builder
@@ -499,6 +509,8 @@ def run_prompt_record(args: Namespace, *, store, provider_client=None,
             replay_recorder=replay_recorder,
         )
     finally:
+        if record_app is not None:
+            record_app.close()
         # Save replay file atomically
         import tempfile
         import os
@@ -548,29 +560,33 @@ def run_prompt_replay(args: Namespace, *, store, output_sink=print) -> int:
 
     # Get provider client (can be offline since we're replaying)
     provider_client = None
+    replay_app = None
     if hasattr(args, 'cache_db') and args.cache_db:
         from resonance.app import ResonanceApp
-        app = ResonanceApp.from_env(
+        replay_app = ResonanceApp.from_env(
             library_root=Path("/tmp"),  # dummy
             cache_path=args.cache_db,
             offline=True,  # Replay can use cached data
         )
-        provider_client = app.provider_client
-        app.close()
+        provider_client = replay_app.provider_client
 
     # Use extract_evidence as the evidence builder
     def evidence_builder(audio_files):
         return extract_evidence(audio_files)
 
     # Run prompt in replay mode
-    run_prompt_uncertain(
-        store=store,
-        provider_client=provider_client,
-        input_provider=lambda _: "",  # No input needed in replay mode
-        output_sink=output_sink,
-        evidence_builder=evidence_builder,
-        replay_data=replay_data,
-    )
+    try:
+        run_prompt_uncertain(
+            store=store,
+            provider_client=provider_client,
+            input_provider=lambda _: "",  # No input needed in replay mode
+            output_sink=output_sink,
+            evidence_builder=evidence_builder,
+            replay_data=replay_data,
+        )
+    finally:
+        if replay_app is not None:
+            replay_app.close()
 
     output_sink(f"Replayed {len(replay_data.decisions)} decisions from {replay_file}")
     return 0
@@ -580,29 +596,33 @@ def run_prompt_replay_internal(args: Namespace, *, store, replay: PromptReplay, 
     """Internal function to replay decisions from a PromptReplay object."""
     # Get provider client (can be offline since we're replaying)
     provider_client = None
+    internal_app = None
     if hasattr(args, 'cache_db') and args.cache_db:
         from resonance.app import ResonanceApp
-        app = ResonanceApp.from_env(
+        internal_app = ResonanceApp.from_env(
             library_root=Path("/tmp"),  # dummy
             cache_path=args.cache_db,
             offline=True,  # Replay can use cached data
         )
-        provider_client = app.provider_client
-        app.close()
+        provider_client = internal_app.provider_client
 
     # Use extract_evidence as the evidence builder
     def evidence_builder(audio_files):
         return extract_evidence(audio_files)
 
     # Run prompt in replay mode
-    run_prompt_uncertain(
-        store=store,
-        provider_client=provider_client,
-        input_provider=lambda _: "",  # No input needed in replay mode
-        output_sink=output_sink,
-        evidence_builder=evidence_builder,
-        replay_data=replay,
-    )
+    try:
+        run_prompt_uncertain(
+            store=store,
+            provider_client=provider_client,
+            input_provider=lambda _: "",  # No input needed in replay mode
+            output_sink=output_sink,
+            evidence_builder=evidence_builder,
+            replay_data=replay,
+        )
+    finally:
+        if internal_app is not None:
+            internal_app.close()
 
     output_sink(f"Replayed {len(replay.decisions)} decisions from replay object")
     return 0

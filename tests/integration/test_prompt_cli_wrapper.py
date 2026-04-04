@@ -16,6 +16,7 @@ from resonance.core.identifier import (
 from resonance.core.state import DirectoryState
 from resonance.errors import ValidationError
 from resonance.infrastructure.directory_store import DirectoryStateStore
+from tests.helpers.fs import write_audio_stub
 
 
 class StubProviderClient:
@@ -40,19 +41,6 @@ class StubProviderClient:
         return list(self._releases)
 
 
-def _write_audio(path: Path, duration: int = 180) -> None:
-    """Create a stub audio file with metadata."""
-    import json
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("stub")
-
-    # Create .meta.json sidecar
-    meta = {"duration_seconds": duration}
-    meta_path = path.with_suffix(path.suffix + ".meta.json")
-    meta_path.write_text(json.dumps(meta))
-
-
 def test_prompt_cli_wrapper_routes_to_run_prompt_uncertain(tmp_path: Path) -> None:
     """The CLI wrapper should successfully call the underlying prompt function."""
     state_db_path = tmp_path / "state.db"
@@ -60,7 +48,7 @@ def test_prompt_cli_wrapper_routes_to_run_prompt_uncertain(tmp_path: Path) -> No
     try:
         # Create a QUEUED_PROMPT directory
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "track.flac", duration=120)
+        write_audio_stub(album_dir / "track.flac", duration=120)
 
         record = store.get_or_create(
             "dir-1",
@@ -132,7 +120,7 @@ def test_prompt_cli_handles_manual_musicbrainz_id(tmp_path: Path) -> None:
     store = DirectoryStateStore(state_db_path)
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "track.flac")
+        write_audio_stub(album_dir / "track.flac")
 
         record = store.get_or_create(
             "dir-1",
@@ -176,7 +164,7 @@ def test_prompt_cli_handles_jail_decision(tmp_path: Path) -> None:
     store = DirectoryStateStore(state_db_path)
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "track.flac")
+        write_audio_stub(album_dir / "track.flac")
 
         record = store.get_or_create(
             "dir-1",
@@ -218,7 +206,7 @@ def test_prompt_cli_handles_skip_decision(tmp_path: Path) -> None:
     store = DirectoryStateStore(state_db_path)
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "track.flac")
+        write_audio_stub(album_dir / "track.flac")
 
         record = store.get_or_create(
             "dir-1",

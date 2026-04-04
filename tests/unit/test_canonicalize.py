@@ -1,9 +1,13 @@
 """Unit tests for canonicalization functions.
 
 Tests the explicit display vs match_key split as required by Phase A.1.
+Also covers normalize_token, short_folder_name, and IdentityCanonicalizer
+(migrated from test_identity.py).
 """
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 import pytest
 
@@ -17,6 +21,29 @@ from resonance.core.identity.canonicalize import (
     split_names,
     dedupe_names,
 )
+from resonance.core.identity.matching import (
+    normalize_token,
+    short_folder_name,
+)
+from resonance.core.identity.canonicalizer import IdentityCanonicalizer
+
+
+# ============================================================================
+# Helpers
+# ============================================================================
+
+
+@dataclass
+class FakeCanonicalCache:
+    """Minimal cache stub for IdentityCanonicalizer unit tests."""
+
+    store: dict[str, str]
+
+    def get_canonical_name(self, key: str) -> str | None:
+        return self.store.get(key)
+
+    def set_canonical_name(self, key: str, canonical: str) -> None:
+        self.store[key] = canonical
 
 
 # ============================================================================
@@ -255,3 +282,208 @@ class TestCommonArtistNames:
         assert split_names("Artist feat. Guest") == ["Artist", "Guest"]
         assert split_names("Artist with Guest") == ["Artist", "Guest"]
         assert split_names("Artist w/ Guest") == ["Artist", "Guest"]
+
+
+# ============================================================================
+# normalize_token (migrated from test_identity.py)
+# ============================================================================
+
+
+class TestNormalizeToken:
+    """Test normalize_token() edge cases and variants."""
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("Björk", "bjork"),
+            ("Sigur Rós", "sigurros"),
+            ("  The Beatles  ", "thebeatles"),
+            ("Daft Punk feat. Pharrell Williams", "daftpunk"),
+            ("Daft Punk featuring Pharrell Williams", "daftpunk"),
+            ("AC/DC", "acdc"),
+            ("Guns N' Roses", "gunsnroses"),
+            ("", ""),
+            (None, ""),
+            # Case + whitespace normalization
+            ("  bjÖrK  ", "bjork"),
+            ("\tSigur  Rós\n", "sigurros"),
+            ("The   Beatles", "thebeatles"),
+            # Unicode compatibility forms / punctuation
+            ("Beyoncé", "beyonce"),
+            ("Mötley Crüe", "motleycrue"),
+            ("Zoë Keating", "zoekeating"),
+            ("R.E.M.", "rem"),
+            ("P!nk", "pnk"),
+            ("A$AP Rocky", "aaprocky"),
+            ("Guns N\u2019 Roses", "gunsnroses"),  # curly apostrophe
+            ("Guns N` Roses", "gunsnroses"),  # backtick variant
+            ("AC\uff0fDC", "acdc"),  # fullwidth slash
+            ("Sigur\xa0Rós", "sigurros"),  # NBSP between words
+            # Featuring variants
+            ("Daft Punk ft Pharrell Williams", "daftpunk"),
+            ("Daft Punk ft. Pharrell Williams", "daftpunk"),
+            ("Daft Punk including Pharrell Williams", "daftpunk"),
+            ("Daft Punk f. Pharrell Williams", "daftpunkfpharrellwilliams"),
+            ("Daft Punk w/ Pharrell Williams", "daftpunkwpharrellwilliams"),
+            ("Daft Punk with Pharrell Williams", "daftpunkwithpharrellwilliams"),
+            # Parenthetical featuring
+            ("Daft Punk (feat Pharrell Williams)", "daftpunk"),
+            ("Daft Punk [feat. Pharrell Williams]", "daftpunk"),
+            ("Radiohead (Official)", "radioheadofficial"),
+        ],
+        ids=lambda v: repr(v)[:40],
+    )
+    def test_normalize_token_variants(self, raw, expected):
+        assert normalize_token(raw) == expected
+
+    def test_is_idempotent(self):
+        t1 = normalize_token("Björk")
+        assert normalize_token(t1) == t1
+
+    def test_does_not_reorder_comma_names(self):
+        assert normalize_token("Beatles, The") == "beatlesthe"
+        assert normalize_token("The Beatles") == "thebeatles"
+        assert normalize_token("Beatles, The") != normalize_token("The Beatles")
+
+
+# ============================================================================
+# split_names / dedupe_names additional variants (migrated from test_identity.py)
+# ============================================================================
+
+
+class TestSplitNamesExtended:
+    """Extended split_names tests with more separator variants."""
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("A and B", ["A", "B"]),
+            ("A & B", ["A", "B"]),
+            ("A / B", ["A", "B"]),
+            ("A; B", ["A", "B"]),
+            ("A, B", ["A", "B"]),
+            ("Daft Punk ft. Pharrell", ["Daft Punk", "Pharrell"]),
+            ("Daft Punk (feat. Pharrell)", ["Daft Punk", "Pharrell"]),
+            ("Daft Punk [feat Pharrell]", ["Daft Punk", "Pharrell"]),
+            ("Daft Punk including Pharrell", ["Daft Punk", "Pharrell"]),
+            ("Travis Scott x Drake", ["Travis Scott", "Drake"]),
+        ],
+    )
+    def test_split_names_separator_variants(self, raw, expected):
+        assert split_names(raw) == expected
+
+    def test_preserves_order_and_is_stable(self):
+        raw = "C / A & B"
+        assert split_names(raw) == ["C", "A", "B"]
+        assert split_names(raw) == split_names(raw)
+
+    def test_deterministic(self):
+        assert split_names("A & B / C") == ["A", "B", "C"]
+        assert split_names("Björk, Bjork; Björk") == ["Björk", "Bjork", "Björk"]
+
+
+class TestDedupeNamesExtended:
+    """Extended dedupe_names tests."""
+
+    def test_preserves_first_display_variant(self):
+        assert dedupe_names(["Bjork", "Björk", "BJÖRK"]) == ["Bjork"]
+
+    def test_keeps_distinct_names(self):
+        assert dedupe_names(["Björk", "Sigur Rós", "Bjork"]) == ["Björk", "Sigur Rós"]
+
+
+# ============================================================================
+# short_folder_name (migrated from test_identity.py)
+# ============================================================================
+
+
+class TestShortFolderName:
+    """Test short_folder_name() featuring removal and length enforcement."""
+
+    def test_removes_featuring(self):
+        assert short_folder_name("Daft Punk feat. Pharrell Williams") == "Daft Punk"
+        assert short_folder_name("Daft Punk (feat. Pharrell Williams)") == "Daft Punk"
+
+    def test_enforces_max_length(self):
+        value = "Artist Name - Deluxe Edition - Super Extra Long Bonus Disc"
+        assert short_folder_name(value, max_length=30) == "Artist Name - Deluxe Edition"
+        assert len(short_folder_name(value, max_length=20)) <= 20
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("Daft Punk FEAT. Pharrell Williams", "Daft Punk"),
+            ("Daft Punk (FEAT Pharrell Williams)", "Daft Punk"),
+            ("Daft Punk [Featuring Pharrell Williams]", "Daft Punk"),
+            ("Daft Punk feat. Pharrell Williams  ", "Daft Punk"),
+            ("Daft Punk feat. Pharrell & Nile Rodgers", "Daft Punk"),
+        ],
+    )
+    def test_featuring_pattern_variants(self, raw, expected):
+        assert short_folder_name(raw) == expected
+
+    def test_no_change_when_no_featuring(self):
+        assert short_folder_name("The Beatles") == "The Beatles"
+        assert short_folder_name("Beatles, The") == "Beatles, The"
+
+    def test_max_length_prefers_clean_cut(self):
+        value = "Artist Name - Deluxe Edition - Super Extra Long Bonus Disc"
+        out = short_folder_name(value, max_length=30)
+        assert out.startswith("Artist Name")
+        assert len(out) <= 30
+
+    def test_is_idempotent(self):
+        raw = "Daft Punk (feat. Pharrell Williams)"
+        assert short_folder_name(short_folder_name(raw)) == short_folder_name(raw)
+
+
+# ============================================================================
+# IdentityCanonicalizer (migrated from test_identity.py)
+# ============================================================================
+
+
+class TestIdentityCanonicalizer:
+    """Test IdentityCanonicalizer with fake cache."""
+
+    def test_prefers_cached_mapping(self):
+        cache = FakeCanonicalCache(store={"artist::bach": "Johann Sebastian Bach"})
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize("Bach", "artist") == "Johann Sebastian Bach"
+
+    def test_falls_back_to_original_when_missing(self):
+        cache = FakeCanonicalCache(store={})
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize("Bjork", "artist") == "Bjork"
+        assert canonicalizer.canonicalize("Björk", "artist") == "Björk"
+
+    def test_canonicalize_multi_deduplicates_equivalents(self):
+        cache = FakeCanonicalCache(store={"artist::bjork": "Björk"})
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize_multi("Björk, Bjork; Björk", "artist") == "Björk"
+
+    def test_preserves_display_when_missing_mapping(self):
+        cache = FakeCanonicalCache(store={})
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize("Daft Punk feat. Pharrell Williams", "artist") == (
+            "Daft Punk feat. Pharrell Williams"
+        )
+        assert canonicalizer.canonicalize("Beatles, The", "artist") == "Beatles, The"
+
+    def test_cache_key_uses_normalized_token(self):
+        cache = FakeCanonicalCache(store={
+            "artist::bjork": "Björk",
+            "artist::sigurros": "Sigur Rós",
+        })
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize("  BJÖRK  ", "artist") == "Björk"
+        assert canonicalizer.canonicalize("Sigur  Rós", "artist") == "Sigur Rós"
+
+    def test_canonicalize_multi_applies_mapping_then_dedupes(self):
+        cache = FakeCanonicalCache(store={
+            "artist::bjork": "Björk",
+            "artist::sigurros": "Sigur Rós",
+        })
+        canonicalizer = IdentityCanonicalizer(cache=cache)
+        assert canonicalizer.canonicalize_multi("Bjork, Björk; Sigur Rós", "artist") == (
+            "Björk; Sigur Rós"
+        )

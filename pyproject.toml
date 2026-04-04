@@ -19,6 +19,7 @@ dependencies = [
     "watchdog>=4.0",           # File system monitoring for daemon mode
     "pydantic>=2.6",           # Data validation
     "PyYAML>=6.0",             # Configuration files
+    "python-dotenv>=1.0",      # .env file loading
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,7 @@ dev = [
     "mypy",
     "ruff",
     "pytest",
+    "pytest-cov",
 ]
 
 [project.scripts]
@@ -41,3 +43,12 @@ exclude = ["tests/**", "resonance/legacy/**"]
 
 [tool.ruff.lint]
 select = ["F"]
+
+[tool.coverage.run]
+source = ["resonance"]
+omit = ["resonance/legacy/*"]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+skip_empty = true

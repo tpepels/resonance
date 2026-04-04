@@ -89,3 +89,26 @@ def build_album_dir(
         non_audio_files=non_audio_paths,
         audio_specs=audio_specs,
     )
+
+
+def write_audio_stub(
+    path: Path,
+    *,
+    content: str = "stub",
+    duration: int = 180,
+    fingerprint: str | None = None,
+) -> None:
+    """Create a lightweight stub audio file with a .meta.json sidecar.
+
+    This is a simpler alternative to create_audio_stub() for integration
+    tests that only need a file + metadata sidecar on disk.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+    meta: dict[str, Any] = {"duration_seconds": duration}
+    if fingerprint:
+        meta["fingerprint_id"] = fingerprint
+
+    meta_path = path.with_suffix(path.suffix + ".meta.json")
+    meta_path.write_text(json.dumps(meta))

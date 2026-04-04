@@ -87,3 +87,23 @@ class SafePath:
         if not any(_is_within(root, resolved) for root in allowed_roots):
             raise ValueError(f"Path outside allowed roots: {path}")
         self.path = resolved
+
+
+def resolve_source_path(source_root: Path, path: Path) -> Path:
+    """Resolve a source path relative to source_root, rejecting traversal."""
+    if ".." in path.parts:
+        raise ValueError(f"Path traversal not allowed: {path}")
+    if path.is_absolute():
+        return path
+    return source_root / path
+
+
+def resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...] | None) -> Path:
+    """Resolve a destination path, rejecting traversal."""
+    if ".." in path.parts:
+        raise ValueError(f"Path traversal not allowed: {path}")
+    if path.is_absolute():
+        return path
+    if not allowed_roots or len(allowed_roots) != 1:
+        raise ValueError("Relative destination path requires a single allowed_root")
+    return allowed_roots[0] / path

@@ -78,6 +78,7 @@ def run_resolve(
         return exit_code_for_exception(exc)
 
     # Create provider client if not already provided
+    app = None
     if provider_client is None and hasattr(args, 'cache_db') and args.cache_db:
         from resonance.app import ResonanceApp
         # Create app in offline mode if requested, otherwise use env credentials
@@ -88,92 +89,96 @@ def run_resolve(
             offline=offline,
         )
         provider_client = app.provider_client
-        app.close()  # Clean up after getting the client
 
         if provider_client is None:
+            app.close()
             if offline:
                 raise ValidationError("No cached provider data available. Run with real credentials first.")
             else:
                 raise ValidationError("Provider credentials required for real workflow. Set ACOUSTID_API_KEY and DISCOGS_TOKEN.")
 
     # Get directories that need resolution
-    to_process = store.list_by_state(DirectoryState.NEW)
+    try:
+        to_process = store.list_by_state(DirectoryState.NEW)
 
-    items: list[dict] = []
-    processed = 0
-    resolved_auto = 0
-    queued_prompt = 0
-    skipped = 0
-    errors = 0
+        items: list[dict] = []
+        processed = 0
+        resolved_auto = 0
+        queued_prompt = 0
+        skipped = 0
+        errors = 0
 
-    for record in to_process:
-        processed += 1
+        for record in to_process:
+            processed += 1
 
-        try:
-            # Get audio files from directory
-            audio_files = sorted(
-                path
-                for path in record.last_seen_path.iterdir()
-                if path.is_file() and path.suffix.lower() in LibraryScanner.DEFAULT_EXTENSIONS
-            )
+            try:
+                # Get audio files from directory
+                audio_files = sorted(
+                    path
+                    for path in record.last_seen_path.iterdir()
+                    if path.is_file() and path.suffix.lower() in LibraryScanner.DEFAULT_EXTENSIONS
+                )
 
-            # Build evidence for identification
-            evidence = extract_evidence(audio_files)
+                # Build evidence for identification
+                evidence = extract_evidence(audio_files)
 
-            # Resolve directory
-            outcome = resolve_directory(
-                dir_id=record.dir_id,
-                path=record.last_seen_path,
-                signature_hash=record.signature_hash,
-                evidence=evidence,
-                store=store,
-                provider_client=provider_client,
-            )
+                # Resolve directory
+                outcome = resolve_directory(
+                    dir_id=record.dir_id,
+                    path=record.last_seen_path,
+                    signature_hash=record.signature_hash,
+                    evidence=evidence,
+                    store=store,
+                    provider_client=provider_client,
+                )
 
-            # Count by outcome
-            if outcome.state == DirectoryState.RESOLVED_AUTO:
-                resolved_auto += 1
-            elif outcome.state == DirectoryState.QUEUED_PROMPT:
-                queued_prompt += 1
-            elif outcome.state in (DirectoryState.RESOLVED_USER, DirectoryState.APPLIED):
-                skipped += 1
+                # Count by outcome
+                if outcome.state == DirectoryState.RESOLVED_AUTO:
+                    resolved_auto += 1
+                elif outcome.state == DirectoryState.QUEUED_PROMPT:
+                    queued_prompt += 1
+                elif outcome.state in (DirectoryState.RESOLVED_USER, DirectoryState.APPLIED):
+                    skipped += 1
 
-            # Build item for JSON output
-            items.append(_resolve_item(outcome, record.last_seen_path))
+                # Build item for JSON output
+                items.append(_resolve_item(outcome, record.last_seen_path))
 
-        except Exception as exc:
-            errors += 1
-            items.append(
-                {
-                    "dir_id": record.dir_id,
-                    "directory": str(record.last_seen_path),
-                    "state": "FAILED",
-                    "error": str(exc),
-                }
-            )
+            except Exception as exc:
+                errors += 1
+                items.append(
+                    {
+                        "dir_id": record.dir_id,
+                        "directory": str(record.last_seen_path),
+                        "state": "FAILED",
+                        "error": str(exc),
+                    }
+                )
 
-    # Build and emit output
-    payload = {
-        "library_root": str(library_root),
-        "status": "ERROR" if errors > 0 else "OK",
-        "processed": processed,
-        "resolved_auto": resolved_auto,
-        "queued_prompt": queued_prompt,
-        "skipped": skipped,
-        "errors": errors,
-        "items": items,
-    }
+        # Build and emit output
+        payload = {
+            "library_root": str(library_root),
+            "status": "ERROR" if errors > 0 else "OK",
+            "processed": processed,
+            "resolved_auto": resolved_auto,
+            "queued_prompt": queued_prompt,
+            "skipped": skipped,
+            "errors": errors,
+            "items": items,
+        }
 
-    emit_output(
-        command="resolve",
-        payload=payload,
-        json_output=json_output,
-        output_sink=output_sink,
-        human_lines=(
-            f"resolve: library_root={library_root}",
-            f"resolve: processed={processed} resolved_auto={resolved_auto} "
-            f"queued_prompt={queued_prompt} skipped={skipped}",
-        ),
-    )
+        emit_output(
+            command="resolve",
+            payload=payload,
+            json_output=json_output,
+            output_sink=output_sink,
+            human_lines=(
+                f"resolve: library_root={library_root}",
+                f"resolve: processed={processed} resolved_auto={resolved_auto} "
+                f"queued_prompt={queued_prompt} skipped={skipped}",
+            ),
+        )
 
-    return 0
+        return 0
+    finally:
+        if app is not None:
+            app.close()

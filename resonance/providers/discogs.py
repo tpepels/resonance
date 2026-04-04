@@ -65,7 +65,6 @@ class DiscogsClient(ProviderClient):
             return []
 
         params: dict[str, str] = {
-            "token": self._token,
             "type": "release",
             "per_page": str(_SEARCH_LIMIT),
         }
@@ -119,7 +118,7 @@ class DiscogsClient(ProviderClient):
                 logger.debug("Discogs cache hit for release %s", release_id)
                 return cached
 
-        url = f"https://api.discogs.com/releases/{release_id}?token={self._token}"
+        url = f"https://api.discogs.com/releases/{release_id}"
         payload = self._request(url)
         if payload and self._cache:
             logger.debug("Discogs cache miss; storing release %s", release_id)
@@ -134,7 +133,10 @@ class DiscogsClient(ProviderClient):
     def _request(self, url: str) -> Optional[dict]:
         if self._offline:
             return None
-        request = urllib.request.Request(url, headers={"User-Agent": self._useragent})
+        request = urllib.request.Request(url, headers={
+            "User-Agent": self._useragent,
+            "Authorization": f"Discogs token={self._token}",
+        })
         try:
             with urllib.request.urlopen(request, timeout=10) as resp:
                 return json.load(resp)

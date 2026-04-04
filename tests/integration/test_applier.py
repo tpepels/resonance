@@ -709,7 +709,15 @@ def test_applier_noop_on_reapply(tmp_path: Path) -> None:
         store.close()
 
 
-def test_applier_conflict_policy_skip(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "policy, extra_occupied, check_exists, source_kept",
+    [
+        pytest.param("SKIP", [], ["library/Artist/Album/02 - Track B.flac"], True, id="skip"),
+        pytest.param("RENAME", [], ["library/Artist/Album/01 - Track A (1).flac", "library/Artist/Album/01 - Track A.flac"], False, id="rename"),
+        pytest.param("RENAME", ["01 - Track A (1).flac"], ["library/Artist/Album/01 - Track A (2).flac"], False, id="rename_next_slot"),
+    ],
+)
+def test_applier_conflict_policy(tmp_path: Path, policy: str, extra_occupied: list[str], check_exists: list[str], source_kept: bool) -> None:
     fixture = build_album_dir(
         tmp_path / "source",
         "album",
@@ -718,27 +726,12 @@ def test_applier_conflict_policy_skip(tmp_path: Path) -> None:
             AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
         ],
     )
-    plan = _make_plan(fixture.path)
-    plan = Plan(
-        dir_id=plan.dir_id,
-        source_path=plan.source_path,
-        signature_hash=plan.signature_hash,
-        provider=plan.provider,
-        release_id=plan.release_id,
-        release_title=plan.release_title,
-        release_artist=plan.release_artist,
-        destination_path=plan.destination_path,
-        operations=plan.operations,
-        non_audio_policy=plan.non_audio_policy,
-        plan_version=plan.plan_version,
-        is_compilation=plan.is_compilation,
-        compilation_reason=plan.compilation_reason,
-        is_classical=plan.is_classical,
-        conflict_policy="SKIP",
-    )
+    plan = replace(_make_plan(fixture.path), conflict_policy=policy)
     collision = tmp_path / "library/Artist/Album/01 - Track A.flac"
     collision.parent.mkdir(parents=True, exist_ok=True)
     collision.write_text("exists")
+    for name in extra_occupied:
+        (collision.parent / name).write_text("exists")
     store = _init_store(tmp_path, plan.signature_hash, fixture.path)
     try:
         report = apply_plan(
@@ -749,13 +742,23 @@ def test_applier_conflict_policy_skip(tmp_path: Path) -> None:
             dry_run=False,
         )
         assert report.status == ApplyStatus.APPLIED
-        assert (tmp_path / "library/Artist/Album/02 - Track B.flac").exists()
-        assert (fixture.path / "01 - Track A.flac").exists()
+        for rel in check_exists:
+            assert (tmp_path / rel).exists()
+        if source_kept:
+            assert (fixture.path / "01 - Track A.flac").exists()
     finally:
         store.close()
 
 
-def test_applier_conflict_policy_rename(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "non_audio_files",
+    [
+        pytest.param(["cover.jpg"], id="single"),
+        pytest.param(["cover.jpg", "booklet.pdf", "disc1.cue", "disc1.log"], id="multiple"),
+        pytest.param(["notes.txt", "readme.nfo"], id="unknown_types"),
+    ],
+)
+def test_applier_moves_non_audio_with_album(tmp_path: Path, non_audio_files: list[str]) -> None:
     fixture = build_album_dir(
         tmp_path / "source",
         "album",
@@ -763,112 +766,7 @@ def test_applier_conflict_policy_rename(tmp_path: Path) -> None:
             AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
             AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
         ],
-    )
-    plan = _make_plan(fixture.path)
-    plan = Plan(
-        dir_id=plan.dir_id,
-        source_path=plan.source_path,
-        signature_hash=plan.signature_hash,
-        provider=plan.provider,
-        release_id=plan.release_id,
-        release_title=plan.release_title,
-        release_artist=plan.release_artist,
-        destination_path=plan.destination_path,
-        operations=plan.operations,
-        non_audio_policy=plan.non_audio_policy,
-        plan_version=plan.plan_version,
-        is_compilation=plan.is_compilation,
-        compilation_reason=plan.compilation_reason,
-        is_classical=plan.is_classical,
-        conflict_policy="RENAME",
-    )
-    collision = tmp_path / "library/Artist/Album/01 - Track A.flac"
-    collision.parent.mkdir(parents=True, exist_ok=True)
-    collision.write_text("exists")
-    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
-    try:
-        report = apply_plan(
-            plan,
-            tag_patch=None,
-            store=store,
-            allowed_roots=(tmp_path / "library",),
-            dry_run=False,
-        )
-        assert report.status == ApplyStatus.APPLIED
-        renamed = tmp_path / "library/Artist/Album/01 - Track A (1).flac"
-        assert renamed.exists()
-        assert collision.exists()
-    finally:
-        store.close()
-
-
-def test_applier_conflict_policy_rename_uses_next_slot(tmp_path: Path) -> None:
-    fixture = build_album_dir(
-        tmp_path / "source",
-        "album",
-        [
-            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
-            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
-        ],
-    )
-    plan = replace(_make_plan(fixture.path), conflict_policy="RENAME")
-    collision = tmp_path / "library/Artist/Album/01 - Track A.flac"
-    collision.parent.mkdir(parents=True, exist_ok=True)
-    collision.write_text("exists")
-    occupied = tmp_path / "library/Artist/Album/01 - Track A (1).flac"
-    occupied.write_text("exists")
-    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
-    try:
-        report = apply_plan(
-            plan,
-            tag_patch=None,
-            store=store,
-            allowed_roots=(tmp_path / "library",),
-            dry_run=False,
-        )
-        assert report.status == ApplyStatus.APPLIED
-        renamed = tmp_path / "library/Artist/Album/01 - Track A (2).flac"
-        assert renamed.exists()
-    finally:
-        store.close()
-
-
-def test_applier_moves_non_audio_with_album(tmp_path: Path) -> None:
-    fixture = build_album_dir(
-        tmp_path / "source",
-        "album",
-        [
-            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
-            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
-        ],
-        non_audio_files=["cover.jpg"],
-    )
-    plan = replace(_make_plan(fixture.path), non_audio_policy="MOVE_WITH_ALBUM")
-    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
-    try:
-        report = apply_plan(
-            plan,
-            tag_patch=None,
-            store=store,
-            allowed_roots=(tmp_path / "library",),
-            dry_run=False,
-        )
-        assert report.status == ApplyStatus.APPLIED
-        assert not (fixture.path / "cover.jpg").exists()
-        assert (tmp_path / "library/Artist/Album/cover.jpg").exists()
-    finally:
-        store.close()
-
-
-def test_applier_moves_multiple_extras_with_album(tmp_path: Path) -> None:
-    fixture = build_album_dir(
-        tmp_path / "source",
-        "album",
-        [
-            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
-            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
-        ],
-        non_audio_files=["cover.jpg", "booklet.pdf", "disc1.cue", "disc1.log"],
+        non_audio_files=non_audio_files,
     )
     plan = replace(_make_plan(fixture.path), non_audio_policy="MOVE_WITH_ALBUM")
     store = _init_store(tmp_path, plan.signature_hash, fixture.path)
@@ -882,39 +780,9 @@ def test_applier_moves_multiple_extras_with_album(tmp_path: Path) -> None:
         )
         assert report.status == ApplyStatus.APPLIED
         dest_root = tmp_path / "library/Artist/Album"
-        for name in ("cover.jpg", "booklet.pdf", "disc1.cue", "disc1.log"):
+        for name in non_audio_files:
             assert (dest_root / name).exists()
             assert not (fixture.path / name).exists()
-    finally:
-        store.close()
-
-
-def test_applier_moves_unknown_extras_deterministically(tmp_path: Path) -> None:
-    fixture = build_album_dir(
-        tmp_path / "source",
-        "album",
-        [
-            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
-            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
-        ],
-        non_audio_files=["notes.txt", "readme.nfo"],
-    )
-    plan = replace(_make_plan(fixture.path), non_audio_policy="MOVE_WITH_ALBUM")
-    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
-    try:
-        report = apply_plan(
-            plan,
-            tag_patch=None,
-            store=store,
-            allowed_roots=(tmp_path / "library",),
-            dry_run=False,
-        )
-        assert report.status == ApplyStatus.APPLIED
-        dest_root = tmp_path / "library/Artist/Album"
-        assert (dest_root / "notes.txt").exists()
-        assert (dest_root / "readme.nfo").exists()
-        assert not (fixture.path / "notes.txt").exists()
-        assert not (fixture.path / "readme.nfo").exists()
     finally:
         store.close()
 
@@ -986,7 +854,14 @@ def test_applier_moves_extras_without_disc_collisions(tmp_path: Path) -> None:
         store.close()
 
 
-def test_applier_leaves_non_audio_in_place(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "policy, source_stays, source_dir_stays, has_cleanup_warning",
+    [
+        pytest.param("LEAVE_IN_PLACE", True, True, True, id="leave"),
+        pytest.param("DELETE", False, False, False, id="delete"),
+    ],
+)
+def test_applier_non_audio_policy(tmp_path: Path, policy: str, source_stays: bool, source_dir_stays: bool, has_cleanup_warning: bool) -> None:
     fixture = build_album_dir(
         tmp_path / "source",
         "album",
@@ -994,9 +869,9 @@ def test_applier_leaves_non_audio_in_place(tmp_path: Path) -> None:
             AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
             AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
         ],
-        non_audio_files=["booklet.pdf"],
+        non_audio_files=["extras.txt"],
     )
-    plan = replace(_make_plan(fixture.path), non_audio_policy="LEAVE_IN_PLACE")
+    plan = replace(_make_plan(fixture.path), non_audio_policy=policy)
     store = _init_store(tmp_path, plan.signature_hash, fixture.path)
     try:
         report = apply_plan(
@@ -1007,37 +882,14 @@ def test_applier_leaves_non_audio_in_place(tmp_path: Path) -> None:
             dry_run=False,
         )
         assert report.status == ApplyStatus.APPLIED
-        assert (fixture.path / "booklet.pdf").exists()
-        assert not (tmp_path / "library/Artist/Album/booklet.pdf").exists()
-        assert any("Cleanup skipped due to non-audio policy" in warning for warning in report.warnings)
-    finally:
-        store.close()
-
-
-def test_applier_deletes_non_audio_and_source_dir(tmp_path: Path) -> None:
-    fixture = build_album_dir(
-        tmp_path / "source",
-        "album",
-        [
-            AudioStubSpec(filename="01 - Track A.flac", fingerprint_id="fp-a"),
-            AudioStubSpec(filename="02 - Track B.flac", fingerprint_id="fp-b"),
-        ],
-        non_audio_files=["notes.txt"],
-    )
-    plan = replace(_make_plan(fixture.path), non_audio_policy="DELETE")
-    store = _init_store(tmp_path, plan.signature_hash, fixture.path)
-    try:
-        report = apply_plan(
-            plan,
-            tag_patch=None,
-            store=store,
-            allowed_roots=(tmp_path / "library",),
-            dry_run=False,
-        )
-        assert report.status == ApplyStatus.APPLIED
-        assert not (tmp_path / "library/Artist/Album/notes.txt").exists()
-        assert not fixture.path.exists()
-        assert report.warnings == ()
+        assert not (tmp_path / "library/Artist/Album/extras.txt").exists()
+        assert (fixture.path / "extras.txt").exists() == source_stays
+        if not source_dir_stays:
+            assert not fixture.path.exists()
+        if has_cleanup_warning:
+            assert any("Cleanup skipped due to non-audio policy" in w for w in report.warnings)
+        else:
+            assert report.warnings == ()
     finally:
         store.close()
 

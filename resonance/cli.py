@@ -278,6 +278,13 @@ def main() -> int:
         help="Directory state DB path",
     )
     rollback_parser.add_argument(
+        "--library-root",
+        type=Path,
+        required=True,
+        dest="library_root",
+        help="Library root directory (required for path validation)",
+    )
+    rollback_parser.add_argument(
         "--json",
         action="store_true",
         help="Emit machine-readable JSON output",
@@ -346,6 +353,7 @@ def main() -> int:
             cache_db = getattr(args, 'cache_db', None)
             provider_client = None
             fingerprint_reader = None
+            app = None
             if cache_db:
                 from .app import ResonanceApp
                 app = ResonanceApp.from_env(
@@ -354,7 +362,6 @@ def main() -> int:
                 )
                 provider_client = app.provider_client
                 fingerprint_reader = app.fingerprint_reader
-                app.close()
 
             if provider_client is None:
                 # Try constructing from env without cache
@@ -370,11 +377,15 @@ def main() -> int:
                     )
                     return 2
 
-            return run_identify(
-                args,
-                provider_client=provider_client,
-                fingerprint_reader=fingerprint_reader,
-            )
+            try:
+                return run_identify(
+                    args,
+                    provider_client=provider_client,
+                    fingerprint_reader=fingerprint_reader,
+                )
+            finally:
+                if app is not None:
+                    app.close()
         elif args.command == "plan":
             if not args.state_db:
                 raise ValueError("state_db is required")
@@ -387,16 +398,18 @@ def main() -> int:
                 provider_client = None
                 cache_db = getattr(args, "cache_db", None)
                 library_root = getattr(args, "library_root", None)
+                app = None
                 if cache_db and library_root:
                     app = ResonanceApp.from_env(
                         library_root=Path(library_root).resolve(),
                         cache_path=cache_db,
                     )
-                    try:
-                        provider_client = app.provider_client
-                    finally:
+                    provider_client = app.provider_client
+                try:
+                    return run_plan(args, store=store, provider_client=provider_client)
+                finally:
+                    if app is not None:
                         app.close()
-                return run_plan(args, store=store, provider_client=provider_client)
             finally:
                 store.close()
         # prescan command removed - V2 legacy code in resonance.legacy
@@ -475,6 +488,7 @@ def main() -> int:
                 report=report,
                 source_dir=Path("."),  # Will be derived from report
                 destination_dir=Path("."),
+                allowed_roots=(Path(args.library_root).resolve(),),
             )
             json_output = getattr(args, "json", False)
             if json_output:

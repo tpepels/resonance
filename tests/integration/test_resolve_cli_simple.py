@@ -10,22 +10,7 @@ from resonance.commands.resolve import run_resolve
 from resonance.commands.scan import run_scan
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
-
-
-def _write_audio(path: Path, duration: int = 180, fingerprint: str | None = None) -> None:
-    """Create a stub audio file with metadata."""
-    import json as json_module
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("stub")
-
-    # Create .meta.json sidecar with unique metadata
-    meta = {"duration_seconds": duration}
-    if fingerprint:
-        meta["fingerprint_id"] = fingerprint
-
-    meta_path = path.with_suffix(path.suffix + ".meta.json")
-    meta_path.write_text(json_module.dumps(meta))
+from tests.helpers.fs import write_audio_stub
 
 
 def test_resolve_processes_new_directories(tmp_path: Path) -> None:
@@ -34,7 +19,7 @@ def test_resolve_processes_new_directories(tmp_path: Path) -> None:
     lib = tmp_path / "library"
 
     # Create and scan directory
-    _write_audio(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
+    write_audio_stub(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
 
     store = DirectoryStateStore(state_db_path)
     try:
@@ -65,7 +50,7 @@ def test_resolve_json_output_is_valid(tmp_path: Path) -> None:
     lib = tmp_path / "library"
 
     # Create and scan directory
-    _write_audio(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
+    write_audio_stub(lib / "album1" / "track.flac", duration=180, fingerprint="fp1")
 
     store = DirectoryStateStore(state_db_path)
     try:

@@ -14,6 +14,7 @@ from resonance.core.identifier import (
 )
 from resonance.core.state import DirectoryState
 from resonance.infrastructure.directory_store import DirectoryStateStore
+from tests.helpers.fs import write_audio_stub
 
 
 class StubProviderClient:
@@ -36,17 +37,12 @@ class StubProviderClient:
         return list(self._releases)
 
 
-def _write_audio(path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("stub")
-
-
 def test_prompt_outputs_tracks_and_candidates_with_scores(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "01 - Track A.flac")
-        _write_audio(album_dir / "02 - Track B.flac")
+        write_audio_stub(album_dir / "01 - Track A.flac")
+        write_audio_stub(album_dir / "02 - Track B.flac")
 
         record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
@@ -100,7 +96,7 @@ def test_prompt_supports_jail_decision(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "01 - Track A.flac")
+        write_audio_stub(album_dir / "01 - Track A.flac")
         record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)
 
@@ -141,8 +137,8 @@ def test_prompt_orders_candidates_and_options_stably(tmp_path: Path) -> None:
     store = DirectoryStateStore(tmp_path / "state.db")
     try:
         album_dir = tmp_path / "album"
-        _write_audio(album_dir / "02 - Track B.flac")
-        _write_audio(album_dir / "01 - Track A.flac")
+        write_audio_stub(album_dir / "02 - Track B.flac")
+        write_audio_stub(album_dir / "01 - Track A.flac")
 
         record = store.get_or_create("dir-1", album_dir, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         store.set_state(record.dir_id, DirectoryState.QUEUED_PROMPT)

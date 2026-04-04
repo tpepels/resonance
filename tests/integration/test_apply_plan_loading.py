@@ -143,7 +143,7 @@ def test_apply_returns_plan_load_error_on_missing_file(tmp_path: Path) -> None:
 
     captured: list[str] = []
     exit_code = run_apply(
-        _make_args(tmp_path / "nonexistent.json", state_db),
+        _make_args(tmp_path / "nonexistent.json", state_db, library_root=tmp_path),
         store=store,
         output_sink=captured.append,
     )
