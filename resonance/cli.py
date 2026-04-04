@@ -153,6 +153,16 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    plan_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path (required unless pinned release is injected)",
+    )
+    plan_parser.add_argument(
+        "--library-root",
+        type=Path,
+        help="Library root for provider client bootstrap (required unless pinned release is injected)",
+    )
 
     # Prescan command removed - moved to resonance.legacy (V2 code)
 
@@ -370,10 +380,23 @@ def main() -> int:
                 raise ValueError("state_db is required")
             from .infrastructure.directory_store import DirectoryStateStore
             from .commands.plan import run_plan
+            from .app import ResonanceApp
 
             store = DirectoryStateStore(args.state_db)
             try:
-                return run_plan(args, store=store)
+                provider_client = None
+                cache_db = getattr(args, "cache_db", None)
+                library_root = getattr(args, "library_root", None)
+                if cache_db and library_root:
+                    app = ResonanceApp.from_env(
+                        library_root=Path(library_root).resolve(),
+                        cache_path=cache_db,
+                    )
+                    try:
+                        provider_client = app.provider_client
+                    finally:
+                        app.close()
+                return run_plan(args, store=store, provider_client=provider_client)
             finally:
                 store.close()
         # prescan command removed - V2 legacy code in resonance.legacy

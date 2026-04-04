@@ -7,7 +7,7 @@ import hashlib
 
 from resonance.commands.output import emit_output
 from resonance.errors import ValidationError
-from resonance.core.identifier import ProviderRelease
+from resonance.core.identifier import ProviderClient, ProviderRelease
 from resonance.core.artifacts import serialize_plan
 from resonance.core.planner import plan_directory
 from resonance.infrastructure.directory_store import DirectoryStateStore
@@ -30,19 +30,35 @@ def run_plan(
     *,
     store: DirectoryStateStore | None = None,
     pinned_release: ProviderRelease | None = None,
+    provider_client: ProviderClient | None = None,
     canonicalize_display=None,
     output_sink=print,
 ) -> int:
     """Generate a plan for a resolved directory."""
     if store is None:
         raise ValidationError("store is required; construct it in the CLI composition root")
-    if pinned_release is None:
-        raise ValidationError("pinned_release is required")
 
     try:
         record = store.get(args.dir_id)
         if not record:
             raise ValidationError(f"Directory {args.dir_id} not found in store")
+        if pinned_release is None:
+            if not record.pinned_provider or not record.pinned_release_id:
+                raise ValidationError(
+                    "directory is not pinned; resolve/prompt must run before plan"
+                )
+            if provider_client is None:
+                raise ValidationError(
+                    "provider_client is required when pinned_release is not injected"
+                )
+            pinned_release = provider_client.release_by_id(
+                record.pinned_provider,
+                record.pinned_release_id,
+            )
+            if pinned_release is None:
+                raise ValidationError(
+                    "failed to load pinned release from provider; check provider credentials/cache"
+                )
         plan = plan_directory(
             record=record,
             pinned_release=pinned_release,
