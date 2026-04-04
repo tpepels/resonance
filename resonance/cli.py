@@ -16,6 +16,23 @@ def _add_mode_argument(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_json_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+
+
+def _add_state_db_argument(parser: argparse.ArgumentParser, *, required: bool = True) -> None:
+    parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=required,
+        help="Directory state DB path",
+    )
+
+
 def main() -> int:
     """Main CLI entry point."""
     # Load environment variables from .env files
@@ -43,17 +60,8 @@ def main() -> int:
         type=Path,
         help="Library root directory to scan",
     )
-    scan_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
-    scan_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_state_db_argument(scan_parser)
+    _add_json_argument(scan_parser)
     _add_mode_argument(scan_parser)
 
     resolve_parser = subparsers.add_parser(
@@ -65,12 +73,7 @@ def main() -> int:
         type=Path,
         help="Library root directory to resolve",
     )
-    resolve_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(resolve_parser)
     resolve_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -81,11 +84,7 @@ def main() -> int:
         action="store_true",
         help="Run in offline mode (cached responses only)",
     )
-    resolve_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(resolve_parser)
     resolve_parser.add_argument(
         "--auto-probable",
         action="store_true",
@@ -108,12 +107,7 @@ def main() -> int:
         "prompt",
         help="Interactively resolve queued directories",
     )
-    prompt_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(prompt_parser)
     prompt_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -134,11 +128,7 @@ def main() -> int:
         type=Path,
         help="[ADVANCED] Replay decisions from recorded replay file",
     )
-    prompt_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(prompt_parser)
     _add_mode_argument(prompt_parser)
 
     # Diagnostic commands
@@ -151,11 +141,7 @@ def main() -> int:
         type=Path,
         help="Directory to identify",
     )
-    identify_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(identify_parser)
     identify_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -172,16 +158,8 @@ def main() -> int:
         required=True,
         help="Directory identifier to plan",
     )
-    plan_parser.add_argument(
-        "--state-db",
-        type=Path,
-        help="Directory state DB path",
-    )
-    plan_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_state_db_argument(plan_parser, required=False)
+    _add_json_argument(plan_parser)
     plan_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -211,11 +189,7 @@ def main() -> int:
         type=Path,
         help="Path to plan artifact",
     )
-    apply_parser.add_argument(
-        "--state-db",
-        type=Path,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(apply_parser, required=False)
     apply_parser.add_argument(
         "--config",
         type=Path,
@@ -227,11 +201,7 @@ def main() -> int:
         choices=["meta-json", "mutagen"],
         help="Override tag writer backend for this run",
     )
-    apply_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(apply_parser)
     apply_parser.add_argument(
         "--tag-patch",
         type=Path,
@@ -262,12 +232,7 @@ def main() -> int:
         type=Path,
         help="Library root directory",
     )
-    decide_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(decide_parser)
     decide_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -283,11 +248,7 @@ def main() -> int:
         type=Path,
         help="[ADVANCED] JSON file with scripted decisions (non-interactive mode)",
     )
-    decide_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(decide_parser)
     decide_parser.add_argument(
         "--auto-probable",
         action="store_true",
@@ -330,12 +291,7 @@ def main() -> int:
         type=Path,
         help="Library root directory",
     )
-    app_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(app_parser)
     app_parser.add_argument(
         "--cache-db",
         type=Path,
@@ -362,11 +318,7 @@ def main() -> int:
         default=0.15,
         help="Minimum score gap for auto-probable (default: 0.15)",
     )
-    app_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(app_parser)
     audit_parser = subparsers.add_parser(
         "audit",
         help="Inspect a directory's state and audit artifacts",
@@ -375,40 +327,22 @@ def main() -> int:
         "dir_id",
         help="Directory identifier to audit",
     )
-    audit_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
-    audit_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_state_db_argument(audit_parser)
+    _add_json_argument(audit_parser)
 
     # Doctor command
     doctor_parser = subparsers.add_parser(
         "doctor",
         help="Validate store invariants and environment sanity",
     )
-    doctor_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(doctor_parser)
     doctor_parser.add_argument(
         "--config",
         type=Path,
         default=Path.home() / ".config" / "resonance" / "settings.json",
         help="Settings path (default: ~/.config/resonance/settings.json)",
     )
-    doctor_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(doctor_parser)
 
     # Rollback command
     rollback_parser = subparsers.add_parser(
@@ -421,12 +355,7 @@ def main() -> int:
         required=True,
         help="Path to apply report artifact",
     )
-    rollback_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
+    _add_state_db_argument(rollback_parser)
     rollback_parser.add_argument(
         "--library-root",
         type=Path,
@@ -434,11 +363,7 @@ def main() -> int:
         dest="library_root",
         help="Library root directory (required for path validation)",
     )
-    rollback_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_json_argument(rollback_parser)
 
     # Unjail command
     unjail_parser = subparsers.add_parser(
@@ -449,17 +374,8 @@ def main() -> int:
         "dir_id",
         help="Directory identifier to unjail",
     )
-    unjail_parser.add_argument(
-        "--state-db",
-        type=Path,
-        required=True,
-        help="Directory state DB path",
-    )
-    unjail_parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Emit machine-readable JSON output",
-    )
+    _add_state_db_argument(unjail_parser)
+    _add_json_argument(unjail_parser)
     _add_mode_argument(unjail_parser)
 
     args = parser.parse_args()
@@ -469,9 +385,9 @@ def main() -> int:
         return 1
 
     try:
-        from .api.bootstrap import build_service
+        from .api.service import ResonanceService
 
-        service = build_service()
+        service = ResonanceService()
         return service.execute(args)
     except Exception as exc:  # pragma: no cover - exercised in CLI tests
         from .errors import exit_code_for_exception

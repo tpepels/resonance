@@ -9,7 +9,9 @@ from resonance import cli
 
 def test_cli_uses_service_execution_path() -> None:
     src = inspect.getsource(cli.main)
-    assert "build_service" in src
+    # CLI must instantiate the bounded service (either directly or via factory) then
+    # route execution through it. We check for the service class and execute call.
+    assert "ResonanceService" in src or "build_service" in src
     assert "service.execute(args)" in src
 
 

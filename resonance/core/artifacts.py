@@ -35,6 +35,14 @@ def _ensure_str(value: Any, name: str) -> str:
     return value
 
 
+def _require_str(data: dict, name: str) -> str:
+    return _ensure_str(_require(data.get(name), name), name)
+
+
+def _require_int(data: dict, name: str) -> int:
+    return _ensure_int(_require(data.get(name), name), name)
+
+
 def _resolve_destination_path(path: Path, allowed_roots: tuple[Path, ...]) -> Path:
     if path.is_absolute():
         # Absolute paths must still be validated against allowed_roots
@@ -49,16 +57,13 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
     if not allowed_roots:
         raise ValueError("allowed_roots is required for plan loading")
     data = json.loads(path.read_text())
-    dir_id = _ensure_str(_require(data.get("dir_id"), "dir_id"), "dir_id")
+    dir_id = _require_str(data, "dir_id")
     validate_dir_id(dir_id)
-    signature_hash = _ensure_str(
-        _require(data.get("signature_hash"), "signature_hash"),
-        "signature_hash",
-    )
+    signature_hash = _require_str(data, "signature_hash")
     validate_signature_hash(signature_hash)
-    release_id = _ensure_str(_require(data.get("release_id"), "release_id"), "release_id")
+    release_id = _require_str(data, "release_id")
     validate_release_id(release_id)
-    source_path = Path(_ensure_str(_require(data.get("source_path"), "source_path"), "source_path"))
+    source_path = Path(_require_str(data, "source_path"))
     if not source_path.is_absolute():
         raise ValueError("Plan source_path must be absolute")
     SafePath(source_path, (source_path,))
@@ -71,16 +76,9 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
     for raw_op in raw_ops:
         if not isinstance(raw_op, dict):
             raise ValueError("Invalid operation entry")
-        track_position = _ensure_int(
-            _require(raw_op.get("track_position"), "track_position"),
-            "track_position",
-        )
-        src = Path(_ensure_str(_require(raw_op.get("source_path"), "source_path"), "source_path"))
-        dest = Path(
-            _ensure_str(
-                _require(raw_op.get("destination_path"), "destination_path"), "destination_path"
-            )
-        )
+        track_position = _require_int(raw_op, "track_position")
+        src = Path(_require_str(raw_op, "source_path"))
+        dest = Path(_require_str(raw_op, "destination_path"))
         src = source_path / src if not src.is_absolute() else src
         dest = _resolve_destination_path(dest, allowed_roots)
         SafePath(src, (source_path,))
@@ -90,9 +88,7 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
                 track_position=track_position,
                 source_path=src,
                 destination_path=dest,
-                track_title=_ensure_str(
-                    _require(raw_op.get("track_title"), "track_title"), "track_title"
-                ),
+                track_title=_require_str(raw_op, "track_title"),
             )
         )
 
@@ -100,35 +96,21 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
         dir_id=dir_id,
         source_path=source_path,
         signature_hash=signature_hash,
-        provider=_ensure_str(_require(data.get("provider"), "provider"), "provider"),
+        provider=_require_str(data, "provider"),
         release_id=release_id,
-        release_title=_ensure_str(
-            _require(data.get("release_title"), "release_title"), "release_title"
-        ),
-        release_artist=_ensure_str(
-            _require(data.get("release_artist"), "release_artist"), "release_artist"
-        ),
+        release_title=_require_str(data, "release_title"),
+        release_artist=_require_str(data, "release_artist"),
         destination_path=_resolve_destination_path(
-            Path(
-                _ensure_str(
-                    _require(data.get("destination_path"), "destination_path"), "destination_path"
-                )
-            ),
+            Path(_require_str(data, "destination_path")),
             allowed_roots,
         ),
         operations=tuple(operations),
-        non_audio_policy=_ensure_str(
-            _require(data.get("non_audio_policy"), "non_audio_policy"), "non_audio_policy"
-        ),
-        plan_version=_ensure_str(
-            _require(data.get("plan_version"), "plan_version"), "plan_version"
-        ),
+        non_audio_policy=_require_str(data, "non_audio_policy"),
+        plan_version=_require_str(data, "plan_version"),
         is_compilation=bool(data.get("is_compilation", False)),
         compilation_reason=data.get("compilation_reason"),
         is_classical=bool(data.get("is_classical", False)),
-        conflict_policy=_ensure_str(
-            _require(data.get("conflict_policy"), "conflict_policy"), "conflict_policy"
-        ),
+        conflict_policy=_require_str(data, "conflict_policy"),
         settings_hash=data.get("settings_hash"),
     )
     return plan
@@ -136,9 +118,9 @@ def load_plan(path: Path, *, allowed_roots: tuple[Path, ...]) -> Plan:
 
 def load_tag_patch(path: Path) -> TagPatch:
     data = json.loads(path.read_text())
-    dir_id = _ensure_str(_require(data.get("dir_id"), "dir_id"), "dir_id")
+    dir_id = _require_str(data, "dir_id")
     validate_dir_id(dir_id)
-    release_id = _ensure_str(_require(data.get("release_id"), "release_id"), "release_id")
+    release_id = _require_str(data, "release_id")
     validate_release_id(release_id)
 
     album_patch = None
@@ -157,19 +139,16 @@ def load_tag_patch(path: Path) -> TagPatch:
             raise ValueError("Invalid track_patch entry")
         track_patches.append(
             TrackTagPatch(
-                track_position=_ensure_int(
-                    _require(raw_track.get("track_position"), "track_position"),
-                    "track_position",
-                ),
+                track_position=_require_int(raw_track, "track_position"),
                 set_tags=dict(raw_track.get("set_tags", {})),
             )
         )
 
     return TagPatch(
         dir_id=dir_id,
-        provider=_ensure_str(_require(data.get("provider"), "provider"), "provider"),
+        provider=_require_str(data, "provider"),
         release_id=release_id,
-        version=_ensure_str(_require(data.get("version"), "version"), "version"),
+        version=_require_str(data, "version"),
         allowed=bool(data.get("allowed", False)),
         reason=data.get("reason"),
         album_patch=album_patch,

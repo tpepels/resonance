@@ -53,3 +53,15 @@ def emit_output(
         return
     for line in human_lines:
         output_sink(line)
+
+
+def build_error_payload(*, library_root: str, exc: BaseException, counters: dict[str, int]) -> dict:
+    """Build a standard command error payload with command-specific counters."""
+    payload: dict[str, object] = {
+        "library_root": library_root,
+        "status": "ERROR",
+        "error_type": exc.__class__.__name__,
+        "error_message": str(exc),
+    }
+    payload.update(counters)
+    return payload

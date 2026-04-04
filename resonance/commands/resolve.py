@@ -5,7 +5,7 @@ from __future__ import annotations
 from argparse import Namespace
 from pathlib import Path
 
-from resonance.commands.output import emit_output
+from resonance.commands.output import build_error_payload, emit_output
 from resonance.core.identifier import extract_evidence
 from resonance.core.resolver import ResolveOutcome, resolve_directory
 from resonance.core.state import DirectoryState
@@ -16,17 +16,17 @@ from resonance.infrastructure.scanner import LibraryScanner
 
 def _error_payload(library_root: Path, exc: BaseException) -> dict:
     """Build error payload for resolve command."""
-    return {
-        "library_root": str(library_root),
-        "status": "ERROR",
-        "error_type": exc.__class__.__name__,
-        "error_message": str(exc),
-        "processed": 0,
-        "resolved_auto": 0,
-        "queued_prompt": 0,
-        "skipped": 0,
-        "errors": 1,
-    }
+    return build_error_payload(
+        library_root=str(library_root),
+        exc=exc,
+        counters={
+            "processed": 0,
+            "resolved_auto": 0,
+            "queued_prompt": 0,
+            "skipped": 0,
+            "errors": 1,
+        },
+    )
 
 
 def _resolve_item(outcome: ResolveOutcome, directory: Path) -> dict:

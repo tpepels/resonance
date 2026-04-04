@@ -8,7 +8,7 @@ from pathlib import Path
 
 from resonance.commands.output import emit_output
 from resonance.errors import ValidationError
-from resonance.core.applier import ApplyReport, ApplyStatus, apply_plan
+from resonance.core.applier import ApplyStatus, apply_plan
 from resonance.core.artifacts import load_plan, load_tag_patch
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.services.tag_writer import get_tag_writer

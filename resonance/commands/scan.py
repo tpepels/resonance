@@ -7,7 +7,7 @@ from pathlib import Path
 import json
 from typing import Iterable
 
-from resonance.commands.output import emit_output
+from resonance.commands.output import build_error_payload, emit_output
 from resonance.errors import IOFailure, ValidationError, exit_code_for_exception
 from resonance.infrastructure.directory_store import DirectoryStateStore
 from resonance.infrastructure.scanner import LibraryScanner
@@ -48,17 +48,17 @@ def _duration_total(files: Iterable[Path]) -> int:
 
 
 def _error_payload(library_root: Path, exc: BaseException) -> dict:
-    return {
-        "library_root": str(library_root),
-        "status": "ERROR",
-        "error_type": exc.__class__.__name__,
-        "error_message": str(exc),
-        "scanned": 0,
-        "new": 0,
-        "already_tracked": 0,
-        "skipped": 0,
-        "errors": 1,
-    }
+    return build_error_payload(
+        library_root=str(library_root),
+        exc=exc,
+        counters={
+            "scanned": 0,
+            "new": 0,
+            "already_tracked": 0,
+            "skipped": 0,
+            "errors": 1,
+        },
+    )
 
 
 def run_scan(

@@ -7,7 +7,7 @@ import json
 from argparse import Namespace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Any, Callable
+from typing import Dict, List, Any
 
 from ..core.identifier import ConfidenceTier, extract_evidence, identify
 from ..core.state import DirectoryState
@@ -512,8 +512,6 @@ def run_prompt_record(args: Namespace, *, store, provider_client=None,
         if record_app is not None:
             record_app.close()
         # Save replay file atomically
-        import tempfile
-        import os
         temp_file = record_file.with_suffix(record_file.suffix + '.tmp')
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
@@ -547,7 +545,7 @@ def run_prompt_replay(args: Namespace, *, store, output_sink=print) -> int:
 
     # Validate corpus input hashes
     corpus_root = Path(__file__).parent.parent.parent / 'tests' / 'real_corpus'
-    for artifact, expected_hash in replay_data.metadata["corpus_input_hashes"].items():
+    for artifact, expected_hash in replay_data.metadata["corpus_input_hashes"].items():  # type: ignore[attr-defined]
         artifact_path = corpus_root / artifact
         if not artifact_path.exists():
             raise ValidationError(f"Corpus artifact missing: {artifact}")

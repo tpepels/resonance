@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Callable
 from typing import Optional
 
 from resonance.core.identifier import ProviderClient, ProviderRelease
@@ -92,6 +93,48 @@ class CachedProviderClient(ProviderClient):
         """Delegate capabilities to underlying provider."""
         return self._provider.capabilities
 
+    def _cached_release_list(
+        self,
+        *,
+        request_type: str,
+        query: dict[str, str],
+        namespace: str,
+        offline_error: str,
+        fetcher: Callable[[], list[ProviderRelease]],
+        cache_hit_log: str,
+        http_call_log: str,
+    ) -> list[ProviderRelease]:
+        """Read-through cache helper for methods that return release lists."""
+        cache_key = provider_cache_key(
+            provider=self._config.provider_name,
+            request_type=request_type,
+            query=query,
+            version=self._config.cache_version,
+            client_version=self._config.client_version,
+        )
+
+        cached = self._cache.get(cache_key, namespace=namespace)
+        if cached is not None:
+            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
+            logger.debug("Provider %s %s", self._config.provider_name, cache_hit_log)
+            return self._deserialize_releases(cached)
+
+        if self._config.offline:
+            raise RuntimeFailure(
+                f"Provider {self._config.provider_name} requires network "
+                f"(offline mode, cache miss for {offline_error})"
+            )
+
+        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
+        logger.debug("Provider %s %s", self._config.provider_name, http_call_log)
+        releases = fetcher()
+        self._cache.set(
+            cache_key,
+            self._serialize_releases(releases),
+            namespace=namespace,
+        )
+        return releases
+
     def search_by_fingerprints(self, fingerprints: list[str]) -> list[ProviderRelease]:
         """Search by fingerprints with cache-first semantics.
 
@@ -100,46 +143,17 @@ class CachedProviderClient(ProviderClient):
         Returns:
             Cached or fresh list of ProviderRelease
         """
-        # Build stable cache key
-        # Sort fingerprints to ensure stable key regardless of input order
+        # Sort fingerprints to ensure stable key regardless of input order.
         sorted_fps = sorted(fingerprints)
-        cache_key = provider_cache_key(
-            provider=self._config.provider_name,
+        return self._cached_release_list(
             request_type="search_by_fingerprints",
             query={"fingerprints": ",".join(sorted_fps)},
-            version=self._config.cache_version,
-            client_version=self._config.client_version,
-        )
-
-        # Cache-first read
-        cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:search")
-        if cached is not None:
-            # Cache hit - deserialize to ProviderRelease objects
-            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
-            logger.debug("Provider %s cache hit for fingerprint search", self._config.provider_name)
-            return self._deserialize_releases(cached)
-
-        # Cache miss
-        if self._config.offline:
-            # Offline mode: deterministic error on cache miss
-            raise RuntimeFailure(
-                f"Provider {self._config.provider_name} requires network "
-                f"(offline mode, cache miss for fingerprint search)"
-            )
-
-        # Online mode: call provider
-        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
-        logger.debug("Provider %s making HTTP call for fingerprint search", self._config.provider_name)
-        releases = self._provider.search_by_fingerprints(fingerprints)
-
-        # Write-through to cache
-        self._cache.set(
-            cache_key,
-            self._serialize_releases(releases),
             namespace=f"{self._config.provider_name}:search",
+            offline_error="fingerprint search",
+            fetcher=lambda: self._provider.search_by_fingerprints(fingerprints),
+            cache_hit_log="cache hit for fingerprint search",
+            http_call_log="making HTTP call for fingerprint search",
         )
-
-        return releases
 
     def search_by_metadata(
         self, artist: Optional[str], album: Optional[str], track_count: int
@@ -159,44 +173,17 @@ class CachedProviderClient(ProviderClient):
             query_parts["album"] = album
         query_parts["track_count"] = str(track_count)
 
-        cache_key = provider_cache_key(
-            provider=self._config.provider_name,
+        return self._cached_release_list(
             request_type="search_by_metadata",
             query=query_parts,
-            version=self._config.cache_version,
-            client_version=self._config.client_version,
-        )
-
-        # Cache-first read
-        cached = self._cache.get(cache_key, namespace=f"{self._config.provider_name}:search")
-        if cached is not None:
-            # Cache hit - deserialize to ProviderRelease objects
-            PROVIDER_CALL_COUNTS[self._config.provider_name]["cache_hits"] += 1
-            logger.debug("Provider %s cache hit for metadata search", self._config.provider_name)
-            return self._deserialize_releases(cached)
-
-        # Cache miss
-        if self._config.offline:
-            # Offline mode: deterministic error on cache miss
-            raise RuntimeFailure(
-                f"Provider {self._config.provider_name} requires network "
-                f"(offline mode, cache miss for metadata search: "
-                f"artist={artist!r}, album={album!r}, track_count={track_count})"
-            )
-
-        # Online mode: call provider
-        PROVIDER_CALL_COUNTS[self._config.provider_name]["http_calls"] += 1
-        logger.debug("Provider %s making HTTP call for metadata search", self._config.provider_name)
-        releases = self._provider.search_by_metadata(artist, album, track_count)
-
-        # Write-through to cache
-        self._cache.set(
-            cache_key,
-            self._serialize_releases(releases),
             namespace=f"{self._config.provider_name}:search",
+            offline_error=(
+                f"metadata search: artist={artist!r}, album={album!r}, track_count={track_count}"
+            ),
+            fetcher=lambda: self._provider.search_by_metadata(artist, album, track_count),
+            cache_hit_log="cache hit for metadata search",
+            http_call_log="making HTTP call for metadata search",
         )
-
-        return releases
 
     def release_by_id(self, provider: str, release_id: str) -> Optional[ProviderRelease]:
         """Fetch a specific release by provider and release_id with caching.

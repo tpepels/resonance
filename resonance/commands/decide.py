@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from argparse import Namespace
 from pathlib import Path
-from typing import Optional
 
 from resonance.commands.output import emit_output
 from resonance.core.state import DirectoryState
@@ -190,7 +189,6 @@ def run_decide(
         return 1
 
     # --- Stage 5: Apply (for all planned directories) ---
-    from resonance.commands.apply import run_apply
 
     applied = 0
     apply_errors = 0
