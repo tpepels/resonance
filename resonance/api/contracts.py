@@ -9,6 +9,20 @@ from typing import Any
 
 
 API_CONTRACT_VERSION = "v1"
+COMMAND_NAMES: tuple[str, ...] = (
+    "app",
+    "scan",
+    "resolve",
+    "prompt",
+    "identify",
+    "plan",
+    "apply",
+    "decide",
+    "audit",
+    "doctor",
+    "rollback",
+    "unjail",
+)
 CommandName = Literal[
     "app",
     "scan",
@@ -72,6 +86,104 @@ class DecideRequest(BaseRequest):
     plan_dir: Path | None = None
     fail_on_prompt: bool = False
     fail_on_warning: bool = False
+
+
+@dataclass(frozen=True)
+class PromptRequest(BaseRequest):
+    """Request model for prompt operation."""
+
+    command: CommandName = "prompt"
+    state_db: Path = Path("state.db")
+    cache_db: Path | None = None
+    decisions_file: Path | None = None
+    record_replay: Path | None = None
+    replay_file: Path | None = None
+
+
+@dataclass(frozen=True)
+class IdentifyRequest(BaseRequest):
+    """Request model for identify operation."""
+
+    command: CommandName = "identify"
+    directory: Path = Path(".")
+    cache_db: Path | None = None
+
+
+@dataclass(frozen=True)
+class PlanRequest(BaseRequest):
+    """Request model for plan operation."""
+
+    command: CommandName = "plan"
+    dir_id: str = ""
+    state_db: Path = Path("state.db")
+    cache_db: Path | None = None
+    library_root: Path | None = None
+    plan_dir: Path | None = None
+
+
+@dataclass(frozen=True)
+class ApplyRequest(BaseRequest):
+    """Request model for apply operation."""
+
+    command: CommandName = "apply"
+    plan: Path | None = None
+    state_db: Path = Path("state.db")
+    library_root: Path | None = None
+    tag_patch: Path | None = None
+    config: Path | None = None
+    tag_writer_backend: str | None = None
+    no_dry_run: bool = False
+
+
+@dataclass(frozen=True)
+class AuditRequest(BaseRequest):
+    """Request model for audit operation."""
+
+    command: CommandName = "audit"
+    dir_id: str = ""
+    state_db: Path = Path("state.db")
+
+
+@dataclass(frozen=True)
+class DoctorRequest(BaseRequest):
+    """Request model for doctor operation."""
+
+    command: CommandName = "doctor"
+    state_db: Path = Path("state.db")
+    config: Path | None = None
+
+
+@dataclass(frozen=True)
+class RollbackRequest(BaseRequest):
+    """Request model for rollback operation."""
+
+    command: CommandName = "rollback"
+    report: Path | None = None
+    state_db: Path = Path("state.db")
+    library_root: Path | None = None
+
+
+@dataclass(frozen=True)
+class UnjailRequest(BaseRequest):
+    """Request model for unjail operation."""
+
+    command: CommandName = "unjail"
+    dir_id: str = ""
+    state_db: Path = Path("state.db")
+
+
+@dataclass(frozen=True)
+class AppRequest(BaseRequest):
+    """Request model for unified app entrypoint."""
+
+    command: CommandName = "app"
+    library_root: Path = Path(".")
+    state_db: Path = Path("state.db")
+    cache_db: Path | None = None
+    offline: bool = False
+    plan_dir: Path | None = None
+    auto_probable: bool = False
+    auto_probable_min_gap: float = 0.15
 
 
 @dataclass(frozen=True)
