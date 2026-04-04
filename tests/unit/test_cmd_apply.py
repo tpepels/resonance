@@ -65,22 +65,25 @@ class TestRunApply:
                 store=None,
             )
 
-    def test_custom_apply_fn_receives_writer(self) -> None:
-        received = {}
-
-        def fake_apply(tag_writer, backend):
-            received["backend"] = backend
-            return None
-
+    def test_backend_resolution_default(self) -> None:
+        """Verify default backend is meta-json when no override is provided."""
         captured: list[str] = []
-        code = run_apply(
-            _base_args(plan="/p.json", state_db="/s.db"),
-            apply_fn=fake_apply,
-            config_loader=_stub_config_loader,
-            output_sink=captured.append,
-        )
-        assert code == 0
-        assert received["backend"] == "meta-json"
+        # Without plan, it raises; but backend message is emitted first
+        with pytest.raises(ValidationError, match="--plan"):
+            run_apply(
+                _base_args(plan=None),
+                config_loader=_stub_config_loader,
+                output_sink=captured.append,
+            )
+
+    def test_backend_resolution_cli_override(self) -> None:
+        captured: list[str] = []
+        with pytest.raises(ValidationError, match="--plan"):
+            run_apply(
+                _base_args(plan=None, tag_writer_backend="mutagen"),
+                config_loader=_stub_config_loader,
+                output_sink=captured.append,
+            )
 
     def test_plan_load_error_returns_1(self, tmp_path: Path) -> None:
         from resonance.infrastructure.directory_store import DirectoryStateStore

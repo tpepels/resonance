@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from argparse import Namespace
 import json
 from pathlib import Path
 
 import pytest
 
-from resonance.commands.apply import run_apply
+from resonance.settings import load_settings, resolve_tag_writer_backend
 
 
 def test_apply_cli_backend_overrides_env_and_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -16,19 +15,14 @@ def test_apply_cli_backend_overrides_env_and_config(tmp_path: Path, monkeypatch:
     config_path.write_text(json.dumps({"tag_writer_backend": "meta-json"}))
     monkeypatch.setenv("RESONANCE_TAG_WRITER_BACKEND", "mutagen")
 
-    seen = {}
-
-    def apply_fn(*_args, **kwargs):
-        seen.update(kwargs)
-
-    args = Namespace(
-        config=config_path,
-        tag_writer_backend="meta-json",
-        plan=tmp_path / "plan.json",
-        state_db=tmp_path / "state.db",
+    settings = load_settings(config_path)
+    import os
+    backend = resolve_tag_writer_backend(
+        cli_backend="meta-json",
+        env_backend=os.getenv("RESONANCE_TAG_WRITER_BACKEND"),
+        config_backend=settings.tag_writer_backend,
     )
-    run_apply(args, apply_fn=apply_fn)
-    assert seen["backend"] == "meta-json"
+    assert backend == "meta-json"
 
 
 def test_apply_env_overrides_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -36,19 +30,14 @@ def test_apply_env_overrides_config(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     config_path.write_text(json.dumps({"tag_writer_backend": "meta-json"}))
     monkeypatch.setenv("RESONANCE_TAG_WRITER_BACKEND", "mutagen")
 
-    seen = {}
-
-    def apply_fn(*_args, **kwargs):
-        seen.update(kwargs)
-
-    args = Namespace(
-        config=config_path,
-        tag_writer_backend=None,
-        plan=tmp_path / "plan.json",
-        state_db=tmp_path / "state.db",
+    settings = load_settings(config_path)
+    import os
+    backend = resolve_tag_writer_backend(
+        cli_backend=None,
+        env_backend=os.getenv("RESONANCE_TAG_WRITER_BACKEND"),
+        config_backend=settings.tag_writer_backend,
     )
-    run_apply(args, apply_fn=apply_fn)
-    assert seen["backend"] == "mutagen"
+    assert backend == "mutagen"
 
 
 def test_apply_config_used_when_no_cli_or_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -56,31 +45,19 @@ def test_apply_config_used_when_no_cli_or_env(tmp_path: Path, monkeypatch: pytes
     config_path.write_text(json.dumps({"tag_writer_backend": "mutagen"}))
     monkeypatch.delenv("RESONANCE_TAG_WRITER_BACKEND", raising=False)
 
-    seen = {}
-
-    def apply_fn(*_args, **kwargs):
-        seen.update(kwargs)
-
-    args = Namespace(
-        config=config_path,
-        tag_writer_backend=None,
-        plan=tmp_path / "plan.json",
-        state_db=tmp_path / "state.db",
+    settings = load_settings(config_path)
+    import os
+    backend = resolve_tag_writer_backend(
+        cli_backend=None,
+        env_backend=os.getenv("RESONANCE_TAG_WRITER_BACKEND"),
+        config_backend=settings.tag_writer_backend,
     )
-    run_apply(args, apply_fn=apply_fn)
-    assert seen["backend"] == "mutagen"
-    assert seen["tag_writer"] is not None
+    assert backend == "mutagen"
 
 
 def test_apply_rejects_unknown_backend(tmp_path: Path) -> None:
     config_path = tmp_path / "settings.json"
     config_path.write_text(json.dumps({"tag_writer_backend": "nope"}))
 
-    args = Namespace(
-        config=config_path,
-        tag_writer_backend=None,
-        plan=tmp_path / "plan.json",
-        state_db=tmp_path / "state.db",
-    )
     with pytest.raises(ValueError, match="Unsupported tag writer backend"):
-        run_apply(args, apply_fn=lambda **_: None)
+        load_settings(config_path)

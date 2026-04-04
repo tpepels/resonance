@@ -14,6 +14,8 @@ _DEFAULT_BACKEND = "meta-json"
 _ALLOWED_BACKENDS = {"meta-json", "mutagen"}
 _DEFAULT_SCORING_VERSION = "v1"
 _DEFAULT_CONFLICT_POLICY = "FAIL"
+_DEFAULT_AUTO_PROBABLE = False
+_DEFAULT_AUTO_PROBABLE_MIN_GAP = 0.15
 
 
 @dataclass(frozen=True)
@@ -21,6 +23,8 @@ class Settings:
     tag_writer_backend: str = _DEFAULT_BACKEND
     identify_scoring_version: str = _DEFAULT_SCORING_VERSION
     plan_conflict_policy: str = _DEFAULT_CONFLICT_POLICY
+    auto_probable: bool = _DEFAULT_AUTO_PROBABLE
+    auto_probable_min_gap: float = _DEFAULT_AUTO_PROBABLE_MIN_GAP
 
 
 def load_settings(path: Optional[Path]) -> Settings:
@@ -51,11 +55,15 @@ def load_settings(path: Optional[Path]) -> Settings:
 
     scoring_version = json_settings.get("identify_scoring_version", _DEFAULT_SCORING_VERSION)
     conflict_policy = json_settings.get("plan_conflict_policy", _DEFAULT_CONFLICT_POLICY)
+    auto_probable = json_settings.get("auto_probable", _DEFAULT_AUTO_PROBABLE)
+    auto_probable_min_gap = json_settings.get("auto_probable_min_gap", _DEFAULT_AUTO_PROBABLE_MIN_GAP)
 
     return Settings(
         tag_writer_backend=backend,
         identify_scoring_version=scoring_version,
         plan_conflict_policy=conflict_policy,
+        auto_probable=bool(auto_probable),
+        auto_probable_min_gap=float(auto_probable_min_gap),
     )
 
 
@@ -92,6 +100,7 @@ def settings_hash(settings: Settings, stage: str) -> str:
 def _relevance_sets() -> dict[str, tuple[str, ...]]:
     return {
         "identify": ("identify_scoring_version",),
+        "resolve": ("auto_probable", "auto_probable_min_gap"),
         "plan": ("plan_conflict_policy",),
         "apply": ("tag_writer_backend",),
     }

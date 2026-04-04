@@ -62,30 +62,6 @@ def run_apply(
         raise ValidationError("apply requires --state-db")
     if not json_output:
         output_sink(f"Using tag writer backend: {backend}")
-    if apply_fn is not apply_plan:
-        result = apply_fn(tag_writer=writer, backend=backend)
-        payload = {
-            "status": "OK",
-            "backend": backend,
-        }
-        if isinstance(result, ApplyReport):
-            payload.update(
-                {
-                    "status": result.status.value,
-                    "plan_version": result.plan_version,
-                    "tagpatch_version": result.tagpatch_version,
-                    "errors": list(result.errors),
-                    "warnings": list(result.warnings),
-                }
-            )
-        emit_output(
-            command="apply",
-            payload=payload,
-            json_output=json_output,
-            output_sink=output_sink,
-            human_lines=(f"apply: status={payload['status']}",),
-        )
-        return 0
     if store is None:
         raise ValidationError("store is required; construct it in the CLI composition root")
     try:

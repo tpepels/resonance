@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from pathlib import Path
 from typing import Any, Optional
 
 from resonance.core.identifier import ProviderCapabilities, ProviderClient, ProviderRelease
@@ -124,8 +125,31 @@ class AcoustIDClient(ProviderClient):
         Returns:
             List of ProviderRelease objects
         """
-        # Placeholder implementation - would deserialize cached data
-        return []
+        from resonance.core.identifier import ProviderTrack
+
+        releases: list[ProviderRelease] = []
+        for entry in cached_data.get("releases", []):
+            tracks = tuple(
+                ProviderTrack(
+                    position=t["position"],
+                    title=t["title"],
+                    duration_seconds=t.get("duration_seconds"),
+                    fingerprint_id=t.get("fingerprint_id"),
+                )
+                for t in entry.get("tracks", [])
+            )
+            releases.append(
+                ProviderRelease(
+                    provider=entry["provider"],
+                    release_id=entry["release_id"],
+                    title=entry["title"],
+                    artist=entry["artist"],
+                    tracks=tracks,
+                    year=entry.get("year"),
+                    release_kind=entry.get("release_kind"),
+                )
+            )
+        return releases
 
     def _parse_acoustid_results(self, results: list[dict[str, Any]]) -> list[ProviderRelease]:
         """Parse AcoustID API response into ProviderRelease objects.
@@ -193,8 +217,28 @@ class AcoustIDClient(ProviderClient):
         Returns:
             Serializable data structure
         """
-        # Placeholder implementation - would serialize releases for caching
-        return {"releases": [], "timestamp": None}
+        return {
+            "releases": [
+                {
+                    "provider": r.provider,
+                    "release_id": r.release_id,
+                    "title": r.title,
+                    "artist": r.artist,
+                    "tracks": [
+                        {
+                            "position": t.position,
+                            "title": t.title,
+                            "duration_seconds": t.duration_seconds,
+                            "fingerprint_id": t.fingerprint_id,
+                        }
+                        for t in r.tracks
+                    ],
+                    "year": r.year,
+                    "release_kind": r.release_kind,
+                }
+                for r in releases
+            ],
+        }
 
     def search_by_metadata(
         self, artist: Optional[str], album: Optional[str], track_count: int
@@ -235,8 +279,15 @@ class AcoustIDCache:
         Returns:
             Cached response data or None
         """
-        # Placeholder - will be implemented when needed
-        return None
+        if not self.cache_dir:
+            return None
+        cache_file = Path(self.cache_dir) / f"{key}.json"
+        if not cache_file.exists():
+            return None
+        try:
+            return json.loads(cache_file.read_text())
+        except (json.JSONDecodeError, OSError):
+            return None
 
     def put(self, key: str, data: dict[str, Any]) -> None:
         """Store response data in cache.
@@ -245,8 +296,12 @@ class AcoustIDCache:
             key: Cache key
             data: Response data to cache
         """
-        # Placeholder - will be implemented when needed
-        pass
+        if not self.cache_dir:
+            return
+        cache_path = Path(self.cache_dir)
+        cache_path.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_path / f"{key}.json"
+        cache_file.write_text(json.dumps(data, sort_keys=True, separators=(",", ":")))
 
     @staticmethod
     def make_cache_key(

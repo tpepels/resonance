@@ -42,6 +42,9 @@ def resolve_directory(
     evidence: DirectoryEvidence,
     store: DirectoryStateStore,
     provider_client: ProviderClient,
+    *,
+    auto_probable: bool = False,
+    auto_probable_min_gap: float = 0.15,
 ) -> ResolveOutcome:
     """Resolve a single directory, respecting pinned decisions.
 
@@ -146,6 +149,34 @@ def resolve_directory(
         )
 
     elif result.tier in (ConfidenceTier.PROBABLE, ConfidenceTier.UNSURE):
+        # Auto-pin PROBABLE if auto_probable is enabled and clear winner
+        if (
+            auto_probable
+            and result.tier == ConfidenceTier.PROBABLE
+            and result.best_candidate is not None
+        ):
+            best = result.best_candidate
+            gap_ok = True
+            if len(result.candidates) >= 2:
+                gap = best.total_score - result.candidates[1].total_score
+                gap_ok = gap >= auto_probable_min_gap
+            if gap_ok:
+                updated = store.set_state(
+                    record.dir_id,
+                    DirectoryState.RESOLVED_AUTO,
+                    pinned_provider=best.release.provider,
+                    pinned_release_id=best.release.release_id,
+                    pinned_confidence=best.total_score,
+                )
+                return ResolveOutcome(
+                    dir_id=updated.dir_id,
+                    state=updated.state,
+                    pinned_provider=updated.pinned_provider,
+                    pinned_release_id=updated.pinned_release_id,
+                    pinned_confidence=updated.pinned_confidence,
+                    scoring_version=result.scoring_version,
+                    reasons=result.reasons + ("Auto-probable: clear winner",),
+                )
         # Queue for user resolution
         return _queue_for_prompt(record, store, result.reasons)
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from resonance.core.identifier import DirectoryEvidence, TrackEvidence
+from resonance.core.identifier import DirectoryEvidence, ProviderRelease, TrackEvidence
 from resonance.providers.acoustid import AcoustIDCache, AcoustIDClient
 
 
@@ -136,3 +136,48 @@ class TestAcoustIDProviderIntegration:
             # Restore original environment variable if it existed
             if original_key is not None:
                 os.environ["ACOUSTID_API_KEY"] = original_key
+
+    def test_acoustid_cache_roundtrip(self, tmp_path) -> None:
+        """AcoustIDCache.put then .get returns the stored data."""
+        cache = AcoustIDCache(cache_dir=str(tmp_path / "acoustid_cache"))
+        key = AcoustIDCache.make_cache_key(["fp-1", "fp-2"])
+        data = {"releases": [{"provider": "acoustid", "release_id": "r-1", "title": "T", "artist": "A", "tracks": [], "year": None, "release_kind": None}]}
+        cache.put(key, data)
+        result = cache.get(key)
+        assert result == data
+
+    def test_acoustid_cache_miss_returns_none(self, tmp_path) -> None:
+        cache = AcoustIDCache(cache_dir=str(tmp_path / "acoustid_cache"))
+        assert cache.get("nonexistent") is None
+
+    def test_acoustid_cache_no_dir_returns_none(self) -> None:
+        cache = AcoustIDCache(cache_dir=None)
+        assert cache.get("any") is None
+        cache.put("any", {"data": 1})  # should not raise
+
+    def test_serialize_deserialize_roundtrip(self) -> None:
+        """_serialize_results and _parse_cached_results are inverses."""
+        from resonance.core.identifier import ProviderTrack
+
+        client = AcoustIDClient()
+        releases = [
+            ProviderRelease(
+                provider="acoustid",
+                release_id="acoustid-123",
+                title="Test Album",
+                artist="Test Artist",
+                tracks=(
+                    ProviderTrack(position=1, title="Track 1", duration_seconds=180),
+                    ProviderTrack(position=2, title="Track 2", duration_seconds=200),
+                ),
+                year=2024,
+                release_kind="album",
+            ),
+        ]
+        serialized = client._serialize_results(releases)
+        deserialized = client._parse_cached_results(serialized)
+        assert len(deserialized) == 1
+        assert deserialized[0].release_id == "acoustid-123"
+        assert deserialized[0].artist == "Test Artist"
+        assert len(deserialized[0].tracks) == 2
+        assert deserialized[0].tracks[0].title == "Track 1"

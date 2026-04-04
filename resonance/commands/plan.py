@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from argparse import Namespace
 import hashlib
+from pathlib import Path
 
 from resonance.commands.output import emit_output
 from resonance.errors import ValidationError
@@ -34,8 +35,13 @@ def run_plan(
     provider_client: ProviderClient | None = None,
     canonicalize_display=None,
     output_sink=print,
+    output_dir: Path | None = None,
 ) -> int:
-    """Generate a plan for a resolved directory."""
+    """Generate a plan for a resolved directory.
+
+    If output_dir is provided, the plan artifact JSON is written to
+    ``output_dir/<dir_id>.plan.json``.
+    """
     if store is None:
         raise ValidationError("store is required; construct it in the CLI composition root")
 
@@ -73,10 +79,20 @@ def run_plan(
             pinned_provider=record.pinned_provider,
             pinned_release_id=record.pinned_release_id,
         )
-    finally:
-        pass
+        # Write plan artifact to disk when output_dir is provided
+        plan_path = None
+        if output_dir is not None:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            plan_path = output_dir / f"{plan.dir_id}.plan.json"
+            plan_path.write_text(serialize_plan(plan), encoding="utf-8")
+    except ValidationError:
+        raise
+    except Exception as exc:
+        raise ValidationError(f"plan generation failed: {exc}") from exc
 
     payload = _plan_payload(plan)
+    if plan_path is not None:
+        payload["plan_path"] = str(plan_path)
     emit_output(
         command="plan",
         payload=payload,

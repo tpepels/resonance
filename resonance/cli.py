@@ -76,6 +76,17 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    resolve_parser.add_argument(
+        "--auto-probable",
+        action="store_true",
+        help="Auto-pin PROBABLE matches when there is a clear winner",
+    )
+    resolve_parser.add_argument(
+        "--auto-probable-min-gap",
+        type=float,
+        default=0.15,
+        help="Minimum score gap for auto-probable (default: 0.15)",
+    )
 
     prompt_parser = subparsers.add_parser(
         "prompt",
@@ -163,6 +174,11 @@ def main() -> int:
         type=Path,
         help="Library root for provider client bootstrap (required unless pinned release is injected)",
     )
+    plan_parser.add_argument(
+        "--plan-dir",
+        type=Path,
+        help="Directory to write plan artifact JSON files into",
+    )
 
     # Prescan command removed - moved to resonance.legacy (V2 code)
 
@@ -216,7 +232,63 @@ def main() -> int:
         help="Library root directory (required when plan uses relative destination paths)",
     )
 
-    # Audit command
+    # Decide command (full pipeline orchestration)
+    decide_parser = subparsers.add_parser(
+        "decide",
+        help="Run full pipeline: scan → resolve → prompt → plan",
+    )
+    decide_parser.add_argument(
+        "library_root",
+        type=Path,
+        help="Library root directory",
+    )
+    decide_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    decide_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path",
+    )
+    decide_parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Run in offline mode (cached responses only)",
+    )
+    decide_parser.add_argument(
+        "--decisions-file",
+        type=Path,
+        help="[ADVANCED] JSON file with scripted decisions (non-interactive mode)",
+    )
+    decide_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
+    )
+    decide_parser.add_argument(
+        "--auto-probable",
+        action="store_true",
+        help="Auto-pin PROBABLE matches when there is a clear winner",
+    )
+    decide_parser.add_argument(
+        "--auto-probable-min-gap",
+        type=float,
+        default=0.15,
+        help="Minimum score gap for auto-probable (default: 0.15)",
+    )
+    decide_parser.add_argument(
+        "--plan-dir",
+        type=Path,
+        help="Directory to write plan artifact JSON files into",
+    )
+    decide_parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run without user interaction (implies --auto-probable, skips prompt stage)",
+    )
     audit_parser = subparsers.add_parser(
         "audit",
         help="Inspect a directory's state and audit artifacts",
@@ -334,7 +406,12 @@ def main() -> int:
 
             store = DirectoryStateStore(args.state_db)
             try:
-                return run_resolve(args, store=store)
+                return run_resolve(
+                    args,
+                    store=store,
+                    auto_probable=getattr(args, "auto_probable", False),
+                    auto_probable_min_gap=getattr(args, "auto_probable_min_gap", 0.15),
+                )
             finally:
                 store.close()
         elif args.command == "prompt":
@@ -422,6 +499,31 @@ def main() -> int:
             store = DirectoryStateStore(args.state_db)
             try:
                 return run_apply(args, store=store)
+            finally:
+                store.close()
+        elif args.command == "decide":
+            from .infrastructure.directory_store import DirectoryStateStore
+            from .commands.decide import run_decide
+
+            store = DirectoryStateStore(args.state_db)
+            try:
+                provider_client = None
+                app = None
+                cache_db = getattr(args, "cache_db", None)
+                if cache_db:
+                    from .app import ResonanceApp
+                    offline = getattr(args, "offline", False)
+                    app = ResonanceApp.from_env(
+                        library_root=Path(args.library_root).resolve(),
+                        cache_path=cache_db,
+                        offline=offline,
+                    )
+                    provider_client = app.provider_client
+                try:
+                    return run_decide(args, store=store, provider_client=provider_client)
+                finally:
+                    if app is not None:
+                        app.close()
             finally:
                 store.close()
         elif args.command == "audit":

@@ -58,6 +58,8 @@ def run_resolve(
     store: DirectoryStateStore | None = None,
     provider_client=None,
     output_sink=print,
+    auto_probable: bool = False,
+    auto_probable_min_gap: float = 0.15,
 ) -> int:
     """Resolve scanned directories using provider metadata."""
     if store is None:
@@ -130,6 +132,8 @@ def run_resolve(
                     evidence=evidence,
                     store=store,
                     provider_client=provider_client,
+                    auto_probable=auto_probable,
+                    auto_probable_min_gap=auto_probable_min_gap,
                 )
 
                 # Count by outcome
