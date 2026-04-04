@@ -7,6 +7,15 @@ import sys
 from pathlib import Path
 
 
+def _add_mode_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--mode",
+        choices=["interactive", "automation", "admin"],
+        default="interactive",
+        help="Invocation profile for policy enforcement",
+    )
+
+
 def main() -> int:
     """Main CLI entry point."""
     # Load environment variables from .env files
@@ -45,6 +54,7 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    _add_mode_argument(scan_parser)
 
     resolve_parser = subparsers.add_parser(
         "resolve",
@@ -87,6 +97,7 @@ def main() -> int:
         default=0.15,
         help="Minimum score gap for auto-probable (default: 0.15)",
     )
+    _add_mode_argument(resolve_parser)
 
     prompt_parser = subparsers.add_parser(
         "prompt",
@@ -123,6 +134,7 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    _add_mode_argument(prompt_parser)
 
     # Diagnostic commands
     identify_parser = subparsers.add_parser(
@@ -144,6 +156,7 @@ def main() -> int:
         type=Path,
         help="Provider cache DB path",
     )
+    _add_mode_argument(identify_parser)
 
     plan_parser = subparsers.add_parser(
         "plan",
@@ -179,6 +192,7 @@ def main() -> int:
         type=Path,
         help="Directory to write plan artifact JSON files into",
     )
+    _add_mode_argument(plan_parser)
 
     # Prescan command removed - moved to resonance.legacy (V2 code)
 
@@ -231,6 +245,7 @@ def main() -> int:
         dest="library_root",
         help="Library root directory (required when plan uses relative destination paths)",
     )
+    _add_mode_argument(apply_parser)
 
     # Decide command (full pipeline orchestration)
     decide_parser = subparsers.add_parser(
@@ -288,6 +303,59 @@ def main() -> int:
         "--headless",
         action="store_true",
         help="Run without user interaction (implies --auto-probable, skips prompt stage)",
+    )
+    decide_parser.add_argument(
+        "--fail-on-prompt",
+        action="store_true",
+        help="In automation/admin mode, return non-zero if prompt queue remains",
+    )
+    _add_mode_argument(decide_parser)
+
+    app_parser = subparsers.add_parser(
+        "app",
+        help="Unified interactive entrypoint for all features",
+    )
+    app_parser.add_argument(
+        "library_root",
+        type=Path,
+        help="Library root directory",
+    )
+    app_parser.add_argument(
+        "--state-db",
+        type=Path,
+        required=True,
+        help="Directory state DB path",
+    )
+    app_parser.add_argument(
+        "--cache-db",
+        type=Path,
+        help="Provider cache DB path",
+    )
+    app_parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Run in offline mode (cached responses only)",
+    )
+    app_parser.add_argument(
+        "--plan-dir",
+        type=Path,
+        help="Directory to write plan artifact JSON files into",
+    )
+    app_parser.add_argument(
+        "--auto-probable",
+        action="store_true",
+        help="Auto-pin PROBABLE matches when there is a clear winner",
+    )
+    app_parser.add_argument(
+        "--auto-probable-min-gap",
+        type=float,
+        default=0.15,
+        help="Minimum score gap for auto-probable (default: 0.15)",
+    )
+    app_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON output",
     )
     audit_parser = subparsers.add_parser(
         "audit",
@@ -382,6 +450,7 @@ def main() -> int:
         action="store_true",
         help="Emit machine-readable JSON output",
     )
+    _add_mode_argument(unjail_parser)
 
     args = parser.parse_args()
 
@@ -390,228 +459,10 @@ def main() -> int:
         return 1
 
     try:
-        # Import here to avoid slow startup
-        if args.command == "scan":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.scan import run_scan
+        from .api.bootstrap import build_service
 
-            store = DirectoryStateStore(args.state_db)
-            try:
-                return run_scan(args, store=store)
-            finally:
-                store.close()
-        elif args.command == "resolve":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.resolve import run_resolve
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                return run_resolve(
-                    args,
-                    store=store,
-                    auto_probable=getattr(args, "auto_probable", False),
-                    auto_probable_min_gap=getattr(args, "auto_probable_min_gap", 0.15),
-                )
-            finally:
-                store.close()
-        elif args.command == "prompt":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.prompt import run_prompt
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                return run_prompt(args, store=store)
-            finally:
-                store.close()
-        elif args.command == "identify":
-            from .commands.identify import run_identify
-
-            # Construct a real provider client for identify
-            cache_db = getattr(args, 'cache_db', None)
-            provider_client = None
-            fingerprint_reader = None
-            app = None
-            if cache_db:
-                from .app import ResonanceApp
-                app = ResonanceApp.from_env(
-                    library_root=Path(args.directory).resolve(),
-                    cache_path=cache_db,
-                )
-                provider_client = app.provider_client
-                fingerprint_reader = app.fingerprint_reader
-
-            if provider_client is None:
-                # Try constructing from env without cache
-                import os
-                acoustid_key = os.getenv("ACOUSTID_API_KEY")
-                discogs_token = os.getenv("DISCOGS_TOKEN")
-                if not acoustid_key and not discogs_token:
-                    print(
-                        "Error: No provider credentials configured. "
-                        "Set ACOUSTID_API_KEY or DISCOGS_TOKEN environment variables, "
-                        "or provide --cache-db with cached provider data.",
-                        file=sys.stderr,
-                    )
-                    return 2
-
-            try:
-                return run_identify(
-                    args,
-                    provider_client=provider_client,
-                    fingerprint_reader=fingerprint_reader,
-                )
-            finally:
-                if app is not None:
-                    app.close()
-        elif args.command == "plan":
-            if not args.state_db:
-                raise ValueError("state_db is required")
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.plan import run_plan
-            from .app import ResonanceApp
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                provider_client = None
-                cache_db = getattr(args, "cache_db", None)
-                library_root = getattr(args, "library_root", None)
-                app = None
-                if cache_db and library_root:
-                    app = ResonanceApp.from_env(
-                        library_root=Path(library_root).resolve(),
-                        cache_path=cache_db,
-                    )
-                    provider_client = app.provider_client
-                try:
-                    return run_plan(args, store=store, provider_client=provider_client)
-                finally:
-                    if app is not None:
-                        app.close()
-            finally:
-                store.close()
-        # prescan command removed - V2 legacy code in resonance.legacy
-        elif args.command == "apply":
-            if not args.state_db:
-                raise ValueError("state_db is required")
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.apply import run_apply
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                return run_apply(args, store=store)
-            finally:
-                store.close()
-        elif args.command == "decide":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.decide import run_decide
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                provider_client = None
-                app = None
-                cache_db = getattr(args, "cache_db", None)
-                if cache_db:
-                    from .app import ResonanceApp
-                    offline = getattr(args, "offline", False)
-                    app = ResonanceApp.from_env(
-                        library_root=Path(args.library_root).resolve(),
-                        cache_path=cache_db,
-                        offline=offline,
-                    )
-                    provider_client = app.provider_client
-                try:
-                    return run_decide(args, store=store, provider_client=provider_client)
-                finally:
-                    if app is not None:
-                        app.close()
-            finally:
-                store.close()
-        elif args.command == "audit":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.audit import run_audit
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                result = run_audit(store=store, dir_id=args.dir_id)
-                json_output = getattr(args, "json", False)
-                if json_output:
-                    import json
-                    print(json.dumps(result, default=str))
-                else:
-                    for key, value in result.items():
-                        print(f"{key}: {value}")
-                return 0
-            finally:
-                store.close()
-        elif args.command == "doctor":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.doctor import run_doctor
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                result = run_doctor(store=store, config_path=args.config)
-                json_output = getattr(args, "json", False)
-                if json_output:
-                    import json
-                    print(json.dumps(result, default=str))
-                else:
-                    issues = result.get("issues", [])
-                    if not issues:
-                        print("doctor: no issues found")
-                    else:
-                        for issue in issues:
-                            print(f"doctor: {issue}")
-                return 0
-            finally:
-                store.close()
-        elif args.command == "rollback":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.rollback import run_rollback
-
-            if not args.report.exists():
-                print(f"Error: Report file not found: {args.report}", file=sys.stderr)
-                return 1
-
-            import json
-            with open(args.report, 'r') as f:
-                report_data = json.load(f)
-
-            # Convert report_data to a simple namespace for rollback
-            from types import SimpleNamespace
-            file_ops = [SimpleNamespace(**op) for op in report_data.get("file_ops", [])]
-            tag_ops = [SimpleNamespace(**op) for op in report_data.get("tag_ops", [])]
-            report = SimpleNamespace(
-                file_ops=file_ops,
-                tag_ops=tag_ops,
-                errors=report_data.get("errors", []),
-            )
-
-            result = run_rollback(
-                report=report,
-                source_dir=Path("."),  # Will be derived from report
-                destination_dir=Path("."),
-                allowed_roots=(Path(args.library_root).resolve(),),
-            )
-            json_output = getattr(args, "json", False)
-            if json_output:
-                print(json.dumps(result, default=str))
-            else:
-                print(f"rollback: restored={result.get('restored', False)}")
-            return 0
-        elif args.command == "unjail":
-            from .infrastructure.directory_store import DirectoryStateStore
-            from .commands.unjail import run_unjail
-
-            store = DirectoryStateStore(args.state_db)
-            try:
-                run_unjail(store=store, dir_id=args.dir_id)
-                print(f"unjail: reset {args.dir_id} to NEW")
-                return 0
-            finally:
-                store.close()
-        else:
-            parser.print_help()
-            return 1
+        service = build_service()
+        return service.execute(args)
     except Exception as exc:  # pragma: no cover - exercised in CLI tests
         from .errors import exit_code_for_exception
 

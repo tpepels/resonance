@@ -10,6 +10,12 @@ The primary story is:
 2. review the results in a human-usable form
 3. preserve accepted authority through deterministic replay
 
+User-facing interface policy:
+
+- `resonance app` is the singular human entrypoint for guided usage
+- command-specific CLI invocations are optimized for automation, administrators, and power users
+- both surfaces execute through one bounded API layer
+
 ## Workflow 1: Decide
 
 ### Goal
@@ -40,7 +46,13 @@ The user wants Resonance to inspect a library, consult evidence, resolve likely 
 ### Primary interface
 
 ```bash
-make corpus-decide
+resonance app <library_root> --state-db <path>
+```
+
+Automation/admin primary interface:
+
+```bash
+resonance decide <library_root> --state-db <path> --mode automation --headless
 ```
 
 ### Success criteria

@@ -14,6 +14,12 @@ This document maps the product behavior of Resonance onto a system architecture.
 
 Resonance can be understood as five cooperating layers.
 
+Cross-cutting interface gateway:
+
+- a bounded application API sits in front of all core functionality
+- both the singular human entrypoint and automation/admin CLI paths call this same API
+- invocation mode policy (interactive, automation, admin) is enforced at this boundary
+
 ### 1. Corpus ingestion and modeling
 
 This layer inspects the filesystem-level input and constructs a structured internal model of the corpus.

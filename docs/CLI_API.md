@@ -21,6 +21,8 @@ Discover audio directories and populate the state DB.
 resonance scan <library_root> --state-db <path> [--json]
 ```
 
+Supports `--mode interactive|automation|admin`.
+
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `library_root` | yes | Root directory to scan |
@@ -33,6 +35,8 @@ Match scanned directories to provider releases using fingerprints and metadata.
 ```
 resonance resolve <library_root> --state-db <path> [--cache-db <path>] [--offline] [--json]
 ```
+
+Supports `--mode interactive|automation|admin`.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
@@ -49,6 +53,9 @@ Interactively resolve directories that couldn't be auto-matched.
 resonance prompt --state-db <path> [--cache-db <path>] [--decisions-file <path>] [--json]
 ```
 
+Supports `--mode interactive|automation|admin`.
+In `automation` and `admin` mode, provide `--decisions-file` or `--replay-file`.
+
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `--state-db` | yes | State database path |
@@ -64,6 +71,8 @@ Generate a deterministic plan artifact for a resolved directory.
 ```
 resonance plan --dir-id <id> --state-db <path> [--cache-db <path>] [--library-root <path>] [--json]
 ```
+
+Supports `--plan-dir <path>` and `--mode interactive|automation|admin`.
 
 | Argument | Required | Description |
 |----------|----------|-------------|
@@ -98,6 +107,10 @@ Single-command orchestration: scan → resolve → prompt → plan.
 resonance decide <library_root> --state-db <path> [--cache-db <path>] [--offline] [--decisions-file <path>] [--json]
 ```
 
+Supports `--auto-probable`, `--auto-probable-min-gap`, `--headless`, `--plan-dir`, `--fail-on-prompt`, and `--mode interactive|automation|admin`.
+
+In `automation` and `admin` mode, decide runs headless by policy.
+
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `library_root` | yes | Library root directory |
@@ -105,6 +118,16 @@ resonance decide <library_root> --state-db <path> [--cache-db <path>] [--offline
 | `--cache-db` | no | Provider cache DB |
 | `--offline` | no | Use cached data only |
 | `--decisions-file` | no | Scripted decisions for non-interactive prompt |
+
+### `app`
+
+Unified interactive entrypoint with access to all major capabilities.
+
+```
+resonance app <library_root> --state-db <path> [--cache-db <path>] [--offline] [--plan-dir <path>] [--json]
+```
+
+`app` is the default human workflow surface; expert automation flows should use command-specific CLI invocations with `--mode automation|admin`.
 
 ---
 

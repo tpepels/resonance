@@ -19,14 +19,26 @@ export ACOUSTID_API_KEY="your-key-here"
 export DISCOGS_TOKEN="your-token-here"       # optional, improves matching
 ```
 
-## One-command pipeline
+## Primary interface (human-guided)
+
+Use the singular app entrypoint for guided interactive usage:
+
+```bash
+resonance app /path/to/music/library \
+  --state-db state.db \
+  --cache-db cache.db
+```
+
+## One-command pipeline (automation/power users)
 
 The `decide` command runs the full workflow: scan → resolve → prompt → plan.
 
 ```bash
 resonance decide /path/to/music/library \
   --state-db state.db \
-  --cache-db cache.db
+  --cache-db cache.db \
+  --mode automation \
+  --headless
 ```
 
 This will:
