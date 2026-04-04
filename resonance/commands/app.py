@@ -44,6 +44,7 @@ def run_app(
         output_sink("  8) doctor")
         output_sink("  9) rollback")
         output_sink("  10) unjail")
+        output_sink("  11) review summary")
         output_sink("  q) quit")
 
         choice = input_provider("app> ").strip().lower()
@@ -67,7 +68,7 @@ def run_app(
                 fail_on_prompt=False,
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "2":
@@ -78,7 +79,7 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "3":
@@ -93,7 +94,7 @@ def run_app(
                 auto_probable_min_gap=getattr(args, "auto_probable_min_gap", 0.15),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "4":
@@ -107,7 +108,7 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "5":
@@ -125,7 +126,7 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "6":
@@ -145,7 +146,10 @@ def run_app(
                 library_root=args.library_root,
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            if not _confirm(input_provider, "Apply plan in dry-run mode? [y/N]: "):
+                output_sink("apply: cancelled")
+                continue
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "7":
@@ -160,7 +164,7 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "8":
@@ -171,7 +175,7 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "9":
@@ -187,7 +191,10 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            if not _confirm(input_provider, "Rollback operations from report? [y/N]: "):
+                output_sink("rollback: cancelled")
+                continue
+            _run_action(service, ns, context, input_provider, output_sink)
             continue
 
         if choice == "10":
@@ -202,10 +209,40 @@ def run_app(
                 json=getattr(args, "json", False),
                 mode="interactive",
             )
-            service.execute_namespace(ns, context=context, input_provider=input_provider, output_sink=output_sink)
+            _run_action(service, ns, context, input_provider, output_sink)
+            continue
+
+        if choice == "11":
+            _show_review_summary(args.state_db, output_sink)
             continue
 
         output_sink("Unknown action")
+
+
+def _run_action(
+    service: ResonanceService,
+    ns: Namespace,
+    context: InvocationContext,
+    input_provider: Callable[[str], str],
+    output_sink: Callable[[str], None],
+) -> None:
+    """Run one action and keep app shell alive on failure."""
+    try:
+        code = service.execute_namespace(
+            ns,
+            context=context,
+            input_provider=input_provider,
+            output_sink=output_sink,
+        )
+        if code != 0:
+            output_sink(f"{ns.command}: exited with code {code}")
+    except Exception as exc:
+        output_sink(f"{ns.command}: failed: {exc}")
+
+
+def _confirm(input_provider: Callable[[str], str], prompt: str) -> bool:
+    """Simple y/N confirmation for risky actions."""
+    return input_provider(prompt).strip().lower() in {"y", "yes"}
 
 
 def _show_status(state_db: Path, output_sink: Callable[[str], None]) -> None:
@@ -228,3 +265,24 @@ def _show_status(state_db: Path, output_sink: Callable[[str], None]) -> None:
         "status: "
         + ", ".join(f"{key}={value}" for key, value in counts.items())
     )
+
+
+def _show_review_summary(state_db: Path, output_sink: Callable[[str], None]) -> None:
+    """Show a concise review-oriented summary for quick triage."""
+    store = DirectoryStateStore(state_db)
+    try:
+        queued = store.list_by_state(DirectoryState.QUEUED_PROMPT)
+        jailed = store.list_by_state(DirectoryState.JAILED)
+        planned = store.list_by_state(DirectoryState.PLANNED)
+        output_sink("review: queued_prompt directories")
+        if not queued:
+            output_sink("  none")
+        else:
+            for record in queued[:10]:
+                output_sink(f"  - {record.dir_id} :: {record.last_seen_path}")
+            if len(queued) > 10:
+                output_sink(f"  ... and {len(queued) - 10} more")
+
+        output_sink(f"review: jailed={len(jailed)} planned={len(planned)}")
+    finally:
+        store.close()

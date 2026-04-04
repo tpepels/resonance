@@ -97,6 +97,11 @@ def main() -> int:
         default=0.15,
         help="Minimum score gap for auto-probable (default: 0.15)",
     )
+    resolve_parser.add_argument(
+        "--fail-on-warning",
+        action="store_true",
+        help="In automation/admin mode, return non-zero on warning conditions",
+    )
     _add_mode_argument(resolve_parser)
 
     prompt_parser = subparsers.add_parser(
@@ -308,6 +313,11 @@ def main() -> int:
         "--fail-on-prompt",
         action="store_true",
         help="In automation/admin mode, return non-zero if prompt queue remains",
+    )
+    decide_parser.add_argument(
+        "--fail-on-warning",
+        action="store_true",
+        help="In automation/admin mode, return non-zero on warning conditions",
     )
     _add_mode_argument(decide_parser)
 

@@ -75,3 +75,48 @@ def test_cli_decide_admin_headless_works_on_empty_library(tmp_path: Path) -> Non
     assert result.returncode == 0
     payload = json.loads(result.stdout)
     assert payload["command"] == "decide"
+
+
+def test_cli_resolve_fail_on_warning_returns_nonzero_when_prompt_needed(tmp_path: Path) -> None:
+    library = tmp_path / "library"
+    album = library / "album"
+    album.mkdir(parents=True)
+    # Create minimal audio stubs with no provider credentials; resolve will process NEW dir
+    (album / "01 Track.flac").write_bytes(b"\x00")
+    state_db = tmp_path / "state.db"
+
+    scan_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "resonance.cli",
+            "scan",
+            str(library),
+            "--state-db",
+            str(state_db),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert scan_result.returncode == 0
+
+    resolve_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "resonance.cli",
+            "resolve",
+            str(library),
+            "--state-db",
+            str(state_db),
+            "--mode",
+            "automation",
+            "--fail-on-warning",
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert resolve_result.returncode == 1

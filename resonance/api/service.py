@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from argparse import Namespace
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Callable
 
 from resonance.api.context import InvocationContext, InvocationMode
 from resonance.errors import ValidationError, exit_code_for_exception
+from resonance.api.output import OutputCollector
 
 
 class ResonanceService:
@@ -50,7 +52,7 @@ class ResonanceService:
         if command == "app":
             return self._run_app(args, input_provider=input_provider, output_sink=output_sink)
         if command == "resolve":
-            return self._run_resolve(args)
+            return self._run_resolve(args, output_sink=output_sink)
         if command == "prompt":
             return self._run_prompt(args, context=context, input_provider=input_provider)
         if command == "identify":
@@ -60,7 +62,12 @@ class ResonanceService:
         if command == "apply":
             return self._run_apply(args)
         if command == "decide":
-            return self._run_decide(args, context=context, input_provider=input_provider)
+            return self._run_decide(
+                args,
+                context=context,
+                input_provider=input_provider,
+                output_sink=output_sink,
+            )
         if command == "audit":
             return self._run_audit(args, output_sink=output_sink)
         if command == "doctor":
@@ -106,18 +113,41 @@ class ResonanceService:
             output_sink=output_sink,
         )
 
-    def _run_resolve(self, args: Namespace) -> int:
+    def _run_resolve(self, args: Namespace, *, output_sink: Callable[[str], None]) -> int:
         from resonance.commands.resolve import run_resolve
+        from resonance.core.state import DirectoryState
         from resonance.infrastructure.directory_store import DirectoryStateStore
 
         store = DirectoryStateStore(args.state_db)
         try:
-            return run_resolve(
+            collector = OutputCollector()
+            code = run_resolve(
                 args,
                 store=store,
                 auto_probable=getattr(args, "auto_probable", False),
                 auto_probable_min_gap=getattr(args, "auto_probable_min_gap", 0.15),
+                output_sink=collector.write,
             )
+            for line in collector.lines:
+                output_sink(line)
+
+            if getattr(args, "mode", "interactive") in ("automation", "admin") and getattr(
+                args, "fail_on_warning", False
+            ):
+                queued = len(store.list_by_state(DirectoryState.QUEUED_PROMPT))
+                if queued > 0:
+                    return 1
+                if getattr(args, "json", False):
+                    for line in reversed(collector.lines):
+                        try:
+                            payload = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        status = payload.get("data", {}).get("status")
+                        if status in {"PARTIAL", "WARNING", "ERROR"}:
+                            return 1
+                        break
+            return code
         finally:
             store.close()
 
@@ -226,6 +256,7 @@ class ResonanceService:
         *,
         context: InvocationContext,
         input_provider: Callable[[str], str],
+        output_sink: Callable[[str], None],
     ) -> int:
         from resonance.commands.decide import run_decide
         from resonance.core.state import DirectoryState
@@ -248,7 +279,16 @@ class ResonanceService:
                 provider_client = app.provider_client
             if context.mode in (InvocationMode.AUTOMATION, InvocationMode.ADMIN):
                 setattr(args, "headless", True)
-            code = run_decide(args, store=store, provider_client=provider_client, input_provider=input_provider)
+            collector = OutputCollector()
+            code = run_decide(
+                args,
+                store=store,
+                provider_client=provider_client,
+                input_provider=input_provider,
+                output_sink=collector.write,
+            )
+            for line in collector.lines:
+                output_sink(line)
             if (
                 context.mode in (InvocationMode.AUTOMATION, InvocationMode.ADMIN)
                 and getattr(args, "fail_on_prompt", False)
@@ -256,6 +296,23 @@ class ResonanceService:
                 queued = len(store.list_by_state(DirectoryState.QUEUED_PROMPT))
                 if queued > 0:
                     return 1
+            if (
+                context.mode in (InvocationMode.AUTOMATION, InvocationMode.ADMIN)
+                and getattr(args, "fail_on_warning", False)
+            ):
+                queued = len(store.list_by_state(DirectoryState.QUEUED_PROMPT))
+                if queued > 0:
+                    return 1
+                if getattr(args, "json", False):
+                    for line in reversed(collector.lines):
+                        try:
+                            payload = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        status = payload.get("data", {}).get("status")
+                        if status in {"PARTIAL", "WARNING", "ERROR"}:
+                            return 1
+                        break
             return code
         finally:
             if "app" in locals() and app is not None:
