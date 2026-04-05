@@ -196,9 +196,30 @@ class ResonanceService:
         input_provider: Callable[[str], str],
     ) -> int:
         from resonance.commands.prompt import run_prompt
-
-        with self._store_scope(args.state_db) as store:
-            return run_prompt(args, store=store, input_provider=input_provider)
+        provider_client = None
+        app = None
+        cache_db = getattr(args, "cache_db", None)
+        if cache_db:
+            from resonance.app import ResonanceApp
+            # Use library_root if available, else fallback to current dir
+            library_root = getattr(args, "library_root", Path("."))
+            app = ResonanceApp.from_env(
+                library_root=Path(library_root).resolve(),
+                cache_path=cache_db,
+                offline=True,
+            )
+            provider_client = app.provider_client
+        try:
+            with self._store_scope(args.state_db) as store:
+                return run_prompt(
+                    args,
+                    store=store,
+                    provider_client=provider_client,
+                    input_provider=input_provider,
+                )
+        finally:
+            if app is not None:
+                app.close()
 
     def _run_identify(self, args: Namespace) -> int:
         from resonance.commands.identify import run_identify

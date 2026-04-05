@@ -120,10 +120,7 @@ def main() -> int:
     )
     _add_json_argument(stability_parser)
 
-    # ...existing code for other subparsers...
-
-    args = parser.parse_args()
-
+    # Prompt command
     prompt_parser = subparsers.add_parser(
         "prompt",
         help="Interactively resolve queued directories",
@@ -151,6 +148,10 @@ def main() -> int:
     )
     _add_json_argument(prompt_parser)
     _add_mode_argument(prompt_parser)
+
+    # ...existing code for other subparsers...
+
+    args = parser.parse_args()
 
     # Diagnostic commands
     identify_parser = subparsers.add_parser(
